@@ -1,3 +1,8 @@
+# ApiKeys
+**/api*
+parsers/yahoo_fin/yahoo_stock_prices/*
+# !parsers/yahoo_stock_data/__init__.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
