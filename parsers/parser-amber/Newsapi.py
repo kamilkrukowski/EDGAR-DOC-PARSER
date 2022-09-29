@@ -1,13 +1,11 @@
-
-import pandas as pd
 from newsapi import NewsApiClient
 from config import * 
 
 
 
-def Newsapi_get(keyword):
+def Newsapi_get(keyword,api_key):
     # Init
-    newsapi = NewsApiClient(api_key=News_api_key)
+    newsapi = NewsApiClient(api_key=api_key)
     # /v2/everything
     all_articles = newsapi.get_everything(q=keyword,
                                           #sources='bbc-news,the-verge',
@@ -46,9 +44,12 @@ def Newsapi_get(keyword):
 
 for keyword in keywords:
     ## Output into csv
-    df = Newsapi_get(keyword)
+    api_key= apikeys["News_api_key"]
+    df = Newsapi_get(keyword,api_key)
     if(len(df) != 0):
-        filepath =  "Data/"+keyword +"_Newsapi_" +str(today)+".csv"
+        if not os.path.exists("Data/Newsapi/"+str(today)):
+            os.makedirs("Data/Newsapi/"+str(today))
+        filepath =  "Data/Newsapi/"+str(today)+"/"+keyword +"_Newsapi_" +str(today)+".csv"
         df.to_csv(filepath)  
 
 

@@ -1,19 +1,10 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[21]:
-
-
-import pandas as pd
-import json
-import requests
 from config import * 
 
 
 
 
-def GNews_get(keyword):
-    link = "https://gnews.io/api/v4/search?q="+str(keyword)+ "&lang=en&token="+ str(Gnews_api_key )
+def GNews_get(keyword,api_key):
+    link = "https://gnews.io/api/v4/search?q="+str(keyword)+ "&lang=en&token="+ str(api_key)
     raw_data = requests.get(link)
     df = pd.DataFrame(columns=column_name)
     try:
@@ -41,13 +32,15 @@ def GNews_get(keyword):
     return df
 
 
-
 for keyword in keywords:
     ## Output into csv
-    df = GNews_get(keyword)
+    api_key= apikeys["Gnews_api_key"]
+    df = GNews_get(keyword,api_key)
     if(len(df) != 0):
-      filepath =  "Data/"+keyword +"_GNewsapi_" +str(today)+".csv"
-      df.to_csv(filepath)  
+        if not os.path.exists("Data/GNewsapi/"+str(today)):
+            os.makedirs("Data/GNewsapi/"+str(today))
+        filepath =  "Data/GNewsapi/"+str(today)+"/"+keyword +"_GNewsapi_" +str(today)+".csv"
+        df.to_csv(filepath)  
 
 # In[ ]:
 
