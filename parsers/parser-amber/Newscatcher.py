@@ -1,16 +1,10 @@
-
-
-
-import pandas as pd
-import json
-import requests
 from config import * 
 
-def Newscatcher_get(keyword):
+def Newscatcher_get(keyword,api_key):
     url = "https://api.newscatcherapi.com/v2/search"
     querystring = {"q":"\""+ keyword+ "\"","lang":"en","sort_by":"relevancy","page":"1"}
     headers = {
-        "x-api-key": Newscatcher_api_key
+        "x-api-key": api_key
     }
     raw_data = requests.request("GET", url, headers=headers, params=querystring)
     
@@ -46,9 +40,12 @@ def Newscatcher_get(keyword):
 
 for keyword in keywords:
     ## Output into csv
-    df = Newscatcher_get(keyword)
+    api_key= apikeys["Newscatcher_api_key"]
+    df = Newscatcher_get(keyword,api_key)
     if(len(df) != 0):
-        filepath =  "Data/"+keyword +"_Newscatcherapi_" +str(today)+".csv"
+        if not os.path.exists("Data/Newscatcher/"+str(today)):
+            os.makedirs("Data/Newscatcher/"+str(today))
+        filepath =  "Data/Newscatcher/"+str(today)+"/"+keyword +"_Newscatcherapi_" +str(today)+".csv"
         df.to_csv(filepath)  
 
 
