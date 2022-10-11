@@ -57,12 +57,14 @@ def get_metadata(fil, keys=False):
         keys = sorted(list(out.keys()), key=lambda x: int(x))
         return out, keys;
 
+"""
 def get_text(html):
     return BeautifulSoup(html, features='html.parser').get_text();
 
 def load_10q(filing):
     f = get_names(filing)[0]
     return get_text(open(os.path.join(filing, '0.'+f)).read())
+"""
 
 
 docs = get_names(fil);
