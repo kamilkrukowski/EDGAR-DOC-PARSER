@@ -6,8 +6,10 @@ path = os.path.abspath(os.path.join(__file__, os.pardir))
 apikeys = load( open(os.path.join(path,'../api_keys.yaml'),
                     'rb'), Loader=Loader)
 
+# Two fields are necessary for EDGAR
+#   The fields are the requester email and name
 assert 'edgar_email' in apikeys, 'Set email';
-assert 'edgar_agent' in apikeys, 'Set email';
+assert 'edgar_agent' in apikeys, 'Set name of user';
 
 data_dir = os.path.join(path, 'edgar_downloads')
 
