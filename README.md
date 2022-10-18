@@ -1,14 +1,31 @@
 # FinDocNLP
 
-Initial Tickers to Investigate
-
-Z,Verizon\nNFLX,Netflix\nGS,Goldman Sachs\nTDY,Teledyne Technologies\nETSY,Etsy\nATVI,Activision Blizzard\nK,Kellogg's\nDIS,Disney\nPFE,Pfizer\nUPS,United Parcel Service\n
-
+First set of tickers to investigate in `tickers.txt`
 
 Bulk SEC EDGAR (CIKs)
 ```https://www.sec.gov/Archives/edgar/cik-lookup-data.txt```
 
-%TODO Find CIKs of Initial Tickets
+## Dependencies
+### Conda
 
-To create conda environment from file:
-``` conda env create -f env_summary.yaml -n edgar ```
+To create conda environment:
+```
+conda create -n edgar scipy numpy selenium pyyaml chardet requests lxml
+conda activate edgar
+pip install secedgar==0.4.0 beautifulsoup4 attrs typing-extensions
+```
+
+### Firefox's Geckodriver
+The Data Pipeline requires a FireFox WebDriver for Selenium
+
+Linux Guide:
+```
+wget https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux32.tar.gz 
+tar -xvf geckodriver-v0.26.0-linux64.tar.gz 
+mv geckodriver /usr/local/bin/
+cd /usr/local/bin/
+chmod +x geckodriver 
+```
+### API Information
+Fill out `apikeys.yaml` with relevant fields
+

@@ -2,8 +2,9 @@
 **/api*
 parsers/yahoo_fin/yahoo_stock_prices/*
 !parsers/yahoo_fin/yahoo_stock_prices/__init__.py
-parsers/api_keys.yaml
-parsers/EDGAR/cache/*
+**/api_keys.yaml
+**/EDGAR/cache/*
+**/EDGAR/edgar_downloads/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
