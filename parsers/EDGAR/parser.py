@@ -1,3 +1,10 @@
+"""
+Should work on Netflix 2013 10-Q
+
+Opens a local 'nflx' 10-Q form (or tries)
+Extracts 'text' elements from HTM tree
+Visualizes elements by red border highlighting in firefox browser
+"""
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import pandas as pd
