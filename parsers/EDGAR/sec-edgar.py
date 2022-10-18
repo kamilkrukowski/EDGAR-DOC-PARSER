@@ -4,7 +4,7 @@ from yaml import load, CLoader as Loader
 
 
 import os
-from datetime import date
+import datetime
 import sys
 
 
@@ -32,7 +32,9 @@ for tikr in tikrs:
     f = filings(cik_lookup=tikr,
                 filing_type=FilingType.FILING_10Q,
                 count=3,
-                user_agent=f"{apikeys['edgar_agent']}: {apikeys['edgar_email']}")
+                user_agent=f"{apikeys['edgar_agent']}: {apikeys['edgar_email']}",
+                start_date=datetime.date(2013, 10, 1),
+                end_date=datetime.date(2013, 10, 30))
 
     f.save(data_dir)
     
