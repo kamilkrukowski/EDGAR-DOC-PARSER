@@ -1,44 +1,71 @@
+from secedgar import filings, FilingType
+from bs4 import BeautifulSoup
 from yaml import load, CLoader as Loader
-import os
 
+
+import os
+from datetime import date
+import sys
+
+
+# our HTML files are so big and nested that the standard
+#   1000 limit is too small.
+sys.setrecursionlimit(3000)
+
+# Always gets the path of the current file
 path = os.path.abspath(os.path.join(__file__, os.pardir))
 
+
+# Loads keys
 apikeys = load( open(os.path.join(path,'../api_keys.yaml'),
                     'rb'), Loader=Loader)
+assert 'edgar_email' in apikeys, 'Set personal email';
+assert 'edgar_agent' in apikeys, 'Set personal name';
 
-data_dir = os.path.join(path, 'edgar_downloads')
 
-assert 'edgar_email' in apikeys, 'Set email';
-assert 'edgar_agent' in apikeys, 'Set email';
+data_dir = os.path.join(path, 'edgar_downloads/raw')
+tikrs=['nflx'];
 
-from secedgar import filings, FilingType
-from datetime import date
+for tikr in tikrs:
+    
 
-f = filings(cik_lookup='nflx',
-            filing_type=FilingType.FILING_10Q,
-            count=3,
-            user_agent=f"{apikeys['edgar_agent']}: {apikeys['edgar_email']}")
-f.save(data_dir)
+    f = filings(cik_lookup=tikr,
+                filing_type=FilingType.FILING_10Q,
+                count=3,
+                user_agent=f"{apikeys['edgar_agent']}: {apikeys['edgar_email']}")
 
-d_dir = data_dir+'/nflx/10-Q/'
-files = os.listdir(d_dir)
+    f.save(data_dir)
+    
+    # sec-edgar data save location for 10-Q filing ticker
+    d_dir = data_dir+f'/{tikr}/10-Q/'
 
-content = None
-with open(d_dir + files[0],'r') as f:
-    content = f.read().strip();
 
-from bs4 import BeautifulSoup
+    # Read each text submission dump for each quarterly filing
+    files = os.listdir(d_dir)
+    for file in files:
+        
+        content = None
+        with open(d_dir + files[0],'r') as f:
+            content = f.read().strip();
 
-d = BeautifulSoup(content, features='lxml').body
-assert len(list(d.children)) == 1, 'sec-document child';
+        d = BeautifulSoup(content, features='lxml').body
+        assert len(list(d.children)) == 1, 'sec-document child';
+        d = [i for i in d.children][0]
 
-d = [i for i in d.children][0]
-documents = d.find_all('document', recursive=False)
+        documents = d.find_all('document', recursive=False)
 
-out_path = './'
-for doc in documents:
-    fname = list(doc.find('filename').children)[0].text.strip('\n')
-    print(f"\'{fname}\'")
-    with open(os.path.join(out_path, fname), 'w') as f:
-        f.write(doc.prettify())
-    break;
+        # Processed data directory path
+        out_path = os.path.join(path, 'edgar_downloads/processed/', tikr, file.split('.txt')[0])
+        if not os.path.exists(out_path):
+            os.system('mkdir -p ' + out_path)
+
+        for doc in documents:
+            fname = list(doc.find('filename').children)[0].text.strip('\n')    
+            form_type = list(doc.find('description').children)[0].text.strip('\n')    
+            
+            # Only Unpack 10-Q HTM
+            if form_type not in {"FORM 10-Q", "10-Q"}:
+                continue;
+
+            with open(os.path.join(out_path, fname), 'w') as f:
+                f.write(doc.prettify())
