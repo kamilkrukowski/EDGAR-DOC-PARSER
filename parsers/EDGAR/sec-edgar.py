@@ -1,3 +1,7 @@
+"""
+Downloads 10-Q filings from SEC website
+Extracts 10-Q htm files from these filing txt dumps
+"""
 from secedgar import filings, FilingType
 from bs4 import BeautifulSoup
 from yaml import load, CLoader as Loader
@@ -15,7 +19,6 @@ sys.setrecursionlimit(3000)
 # Always gets the path of the current file
 path = os.path.abspath(os.path.join(__file__, os.pardir))
 
-
 # Loads keys
 apikeys = load( open(os.path.join(path,'../api_keys.yaml'),
                     'rb'), Loader=Loader)
@@ -25,16 +28,21 @@ assert 'edgar_agent' in apikeys, 'Set personal name';
 
 data_dir = os.path.join(path, 'edgar_downloads/raw')
 tikrs=['nflx'];
+max_num_filings=3;
+start_date=datetime.date(2022, 1, 30)
+end_date=datetime.date(2023, 10, 30)
 
 for tikr in tikrs:
-    
+    time.sleep(1)
 
+    #TODO ADD CHECK/METADATA for whether it has been pulled already
+    #   STRATEGY: enumerate all filing dates in metadata file
     f = filings(cik_lookup=tikr,
                 filing_type=FilingType.FILING_10Q,
-                count=3,
+                count=max_num_filings,
                 user_agent=f"{apikeys['edgar_agent']}: {apikeys['edgar_email']}",
-                start_date=datetime.date(2013, 10, 1),
-                end_date=datetime.date(2013, 10, 30))
+                start_date=start_date,
+                end_date=end_date)
 
     f.save(data_dir)
     

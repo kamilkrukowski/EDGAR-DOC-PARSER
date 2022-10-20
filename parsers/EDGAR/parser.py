@@ -53,3 +53,7 @@ for i in temp:
     border(i, driver);
 
 #tables = [i.get_attribute('innerHTML') for i in driver.find_elements(By.TAG_NAME, 'table')]
+
+elem = temp[0]
+out = driver.execute_script(f"return arguments[0].getBoundingClientRect()", elem)
+
