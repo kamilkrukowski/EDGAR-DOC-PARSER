@@ -12,12 +12,9 @@ import datetime
 import time
 import sys
 
-# Always gets the path of the current file
-path = os.path.abspath(os.path.join(__file__, os.pardir))
-
 class edgar_dataloader:
     
-    def __init__(self, data_dir = 'edgar_downloads/'):
+    def __init__(self, data_dir = 'edgar_downloads/', api_keys_path='../api_keys.yaml'):
         
         self.data_dir = data_dir
         
@@ -29,8 +26,8 @@ class edgar_dataloader:
         self.path = os.path.abspath(os.path.join(__file__, os.pardir))
         
         # Loads keys
-        key_path = os.path.join(path,'../api_keys.yaml')
-        assert os.path.exists(key_path), 'No api_keys.yaml in parent dir';
+        key_path = os.path.join(path, api_keys_path)
+        assert os.path.exists(key_path), 'No api_keys.yaml located';
         self.apikeys = load( open(key_path, 'rb'), Loader=Loader)
         assert 'edgar_email' in self.apikeys, 'Set personal email';
         assert 'edgar_agent' in self.apikeys, 'Set personal name';
@@ -102,14 +99,17 @@ class edgar_dataloader:
         #back to normal
         sys.setrecursionlimit(1000);
 
-loader = edgar_dataloader('edgar_downloads');
-tikrs=['nflx'];
-max_num_filings=3;
-start_date=datetime.date(2022, 1, 30)
-end_date=datetime.date(2023, 10, 30)
+# Test example
+if __name__ == '__main__':
+    
+    loader = edgar_dataloader('edgar_downloads');
+    tikrs=['nflx'];
+    max_num_filings=3;
+    start_date=datetime.date(2022, 1, 30)
+    end_date=datetime.date(2023, 10, 30)
 
-for tikr in tikrs:
-    time.sleep(1)
+    for tikr in tikrs:
+        time.sleep(1)
 
-    loader.__query_server__(tikr, start_date, end_date, max_num_filings)
-    loader.__unpack_bulk__(tikr)
+        loader.__query_server__(tikr, start_date, end_date, max_num_filings)
+        loader.__unpack_bulk__(tikr)
