@@ -1,33 +1,59 @@
+"""
+Should work on Netflix 2013 10-Q
+
+Opens a local 'nflx' 10-Q form (or tries)
+Extracts 'text' elements from HTM tree
+Visualizes elements by red border highlighting in firefox browser
+"""
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import pandas as pd
+
+
+import itertools
 from yaml import load, CLoader as Loader
 import os
 
+# Absolute path of current python script directory
 path = os.path.abspath(os.path.join(__file__, os.pardir))
 
 apikeys = load( open(os.path.join(path,'../api_keys.yaml'),
                     'rb'), Loader=Loader)
 
+# Two fields are necessary for EDGAR
+#   The fields are the requester email and name
 assert 'edgar_email' in apikeys, 'Set email';
-assert 'edgar_agent' in apikeys, 'Set email';
+assert 'edgar_agent' in apikeys, 'Set name of user';
 
-data_dir = os.path.join(path, 'edgar_downloads')
+data_dir = os.path.join(path, 'edgar_downloads/processed/')
 
-import xbrl
-import logging
-from xbrl.cache import HttpCache
-from xbrl.instance import XbrlParser, XbrlInstance
-# just to see which files are downloaded
-logging.basicConfig(level=logging.INFO)
+tikr = 'nflx'
 
-cache: HttpCache = HttpCache('./cache')
-cache.set_headers({'From': apikeys['edgar_email'], 'User-Agent': apikeys['edgar_agent']})
-parser = XbrlParser(cache)
+# Directory of current ticker
+fpath = os.path.join(data_dir, f'{tikr}/')
+# List of filing directories
+files = os.listdir(fpath)
+# Some document in some filed submission
+f2 = os.listdir(os.path.join(fpath, files[0]))[0]
 
-schema_url = "https://www.sec.gov/Archives/edgar/data/0000320193/000032019321000105/aapl-20210925.htm"
-inst: XbrlInstance = parser.parse_instance(schema_url)
+driver_path = "file:\/" + os.path.join(fpath, files[0], f2)
 
-numerics = [str(i) for i in inst.facts if type(i) is xbrl.instance.NumericFact]
+driver = webdriver.Firefox()
+driver.get(driver_path)
 
-texts = [str(i) for i in inst.facts if type(i) is not xbrl.instance.NumericFact]
-texts = sorted(texts, key=lambda x: len(x), reverse=True)
-texts = [(len(i), i.split(':')[0], i) for i in texts]
+found = driver.find_elements(By.TAG_NAME, 'font')
+
+# Executes javascript in Firefox to make pretty borders around detected elements
+def border(elem, driver):
+    driver.execute_script(f"arguments[0].setAttribute(arguments[1], arguments[2])", elem, "style", "padding: 1px; border: 2px solid red; display: inline-block")
+
+
+temp = [i for i in found if i.text not in set([' ', ''])]
+for i in temp:
+    border(i, driver);
+
+#tables = [i.get_attribute('innerHTML') for i in driver.find_elements(By.TAG_NAME, 'table')]
+
+elem = temp[0]
+out = driver.execute_script(f"return arguments[0].getBoundingClientRect()", elem)
 

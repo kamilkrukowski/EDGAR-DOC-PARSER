@@ -4,6 +4,7 @@ parsers/yahoo_fin/yahoo_stock_prices/*
 !parsers/yahoo_fin/yahoo_stock_prices/__init__.py
 parsers/api_keys.yaml
 parsers/EDGAR/cache/*
+parsers/EDGAR/edgar_downloads/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
