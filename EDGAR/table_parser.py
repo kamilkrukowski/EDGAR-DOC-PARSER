@@ -62,7 +62,7 @@ def get_annotated_label_from_table(driver: webdriver, table: dict, page_num = fl
         annotations[-1]["info"]["location"]["y"] -= page_num_y
     return annotations
 
-def table_parsing(found_table, table_is_numeric, driver):
+def table_parsing_2022(found_table, table_is_numeric, driver):
     # create a list of numeric table. Each table has its correspond index to the found table.
     numeric_table = [{"index": index, "element": found_table[index]} for index, val in enumerate(table_is_numeric) if val == 0 ]
     # dictionary that store the range of y for each page
