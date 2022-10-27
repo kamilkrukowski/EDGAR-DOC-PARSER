@@ -193,8 +193,8 @@ class edgar_dataloader:
 
         fname = metadata[sequence]['filename']
 
-        with open(os.path.join(out_path, fname), 'w') as f:
-            f.write(doc.prettify(), encoding='utf-8')
+        with open(os.path.join(out_path, fname, encoding='utf-8'), 'w') as f:
+            f.write(doc.prettify())
             metadata[sequence]['processed'] = True
 
     """
