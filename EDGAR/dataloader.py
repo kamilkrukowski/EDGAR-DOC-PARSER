@@ -27,7 +27,7 @@ class edgar_dataloader:
 
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
-        sys.setrecursionlimit(3000)
+        sys.setrecursionlimit(5000)
 
         # Always gets the path of the current file
         self.path = os.path.abspath(os.path.join(__file__, os.pardir))
@@ -57,7 +57,10 @@ class edgar_dataloader:
         path = os.path.join(
                     self.proc_dir, f"{tikr}/metadata.pkl"
                     )
-        os.system('mkdir -p ' + os.path.join(self.proc_dir, tikr))
+
+        ensure_path = os.path.join(self.proc_dir, str(tikr))
+        if not os.path.exists(ensure_path):
+            os.system('mkdir -p ' + ensure_path)
 
         with open(path, 'wb') as f:
             pkl.dump(self.metadata[tikr], f)
@@ -75,12 +78,22 @@ class edgar_dataloader:
             seq = seq.text[:i].split('\n')[0]
             out[seq] = dict()
 
-            for nextElem in ['type', 'filename']:
-                doc = doc.find(nextElem)
+
+            for nextElem in ['type', 'filename', 'description']:
+                doc2 = doc.find(nextElem)
+                
+                #Sentinel for missing fields in early 2000s
+                if doc2 is None:
+                    if nextElem == 'filename':
+                        out[seq][nextElem] = f"{seq}.htm"
+                    else:
+                        out[seq][nextElem] = ''
+                    continue
+                
                 i = 20
-                while ('\n') not in doc.text[:i]:
+                while ('\n') not in doc2.text[:i]:
                     i += 20
-                out[seq][nextElem] = doc.text[:i].split('\n')[0]
+                out[seq][nextElem] = doc2.text[:i].split('\n')[0]
 
             out[seq]['processed'] = False
 
@@ -142,7 +155,7 @@ class edgar_dataloader:
     """
     def get_unpackable_files(self, tikr):
         # sec-edgar data save location for 10-Q filing ticker
-        d_dir = self.raw_dir+f'/{tikr}/10-Q/'
+        d_dir = os.path.join(self.raw_dir,f'{tikr}', '10-Q')
         return os.listdir(d_dir)
     
     """
@@ -151,7 +164,7 @@ class edgar_dataloader:
     """
     def get_submissions(self, tikr):
         # sec-edgar data save location for 10-Q filing ticker
-        d_dir = self.raw_dir+f'/{tikr}/10-Q/'
+        d_dir = os.path.join(self.raw_dir,f'{tikr}', '10-Q')
         return [i.split('.txt')[0] for i in os.listdir(d_dir)]
 
     """
@@ -180,7 +193,7 @@ class edgar_dataloader:
 
         fname = metadata[sequence]['filename']
 
-        with open(os.path.join(out_path, fname), 'w') as f:
+        with open(os.path.join(out_path, fname, encoding='utf-8'), 'w') as f:
             f.write(doc.prettify())
             metadata[sequence]['processed'] = True
 
@@ -205,19 +218,20 @@ class edgar_dataloader:
         d_dir = self.raw_dir+f'/{tikr}/10-Q/'
 
         content = None
-        with open(d_dir + file, 'r') as f:
+        with open(d_dir + file, 'r', encoding='utf-8') as f:
             content = f.read().strip()
 
-        #"Warning about Parsing HTML with embedded iXML -- ignored
         d = BeautifulSoup(content, features='lxml').body
 
-        assert len(list(d.children)) == 1, 'sec-document child'
-        d = [i for i in d.children][0]
+        p = d.find('sec-document')
+        if p is None:
+            p = d.find('ims-document')
+            print('Skipping ims-document')
+            return
+        d = p
+        assert d is not None, 'No sec-document tag found in submission'
 
         documents = d.find_all('document', recursive=False)
-        if len(documents) == 0:
-            d = d.find('sec-document')
-            documents = d.find_all('document', recursive=False)
 
         fsub = file.split('.txt')[0]
         self.__gen_metadata__(tikr, documents, fsub)
@@ -260,7 +274,7 @@ class edgar_dataloader:
         self.__load_metadata__(tikr)
 
         # sec-edgar data save location for 10-Q filing ticker
-        d_dir = self.raw_dir+f'/{tikr}/10-Q/'
+        d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
 
         # Read each text submission dump for each quarterly filing
         files = self.get_unpackable_files(tikr)
