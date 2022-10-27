@@ -17,7 +17,6 @@ import os
 
 from dataloader import edgar_dataloader
 
-
 # Helper for Driver configurations
 #   headless - Whether it appears as pop-up window
 def get_driver(headless=True):
