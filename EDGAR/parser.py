@@ -8,7 +8,7 @@ Visualizes elements by red border highlighting in firefox browser
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.remote.webelement import WebElement 
+from selenium.webdriver.remote.webelement import WebElement
 import pandas as pd
 import numpy as np
 
@@ -45,7 +45,7 @@ class edgar_parser:
     def _save_driver_source(self, fpath: str) -> None:
         with open(fpath, 'w') as f:
             f.write(self.driver.page_source);
-            
+
     """
         Javascript Helper Functions executed on Driver
             - border - draws color box around element
@@ -64,7 +64,7 @@ class edgar_parser:
         save -- save htm copy (with/without highlighting) to out_path
     """
     def parse_unannotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
-        
+
         if driver_path is None:
             self.driver.get(driver_path)
 
@@ -90,7 +90,7 @@ class edgar_parser:
         save -- save htm copy (with/without highlighting) to out_path
     """
     def parse_annotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
-        
+
         if driver_path is not None:
             self.driver.get(driver_path)
 
@@ -126,7 +126,7 @@ class edgar_parser:
         save -- save htm copy (with/without highlighting) to out_path
     """
     def parse_annotated_tables(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
-        
+
         # If path is None, stay on current document
         if driver_path is not None:
             self.driver.get(driver_path)
@@ -136,21 +136,21 @@ class edgar_parser:
         table_is_numeric = np.zeros_like(found_table, 'int')# 0: numerical, 1: non-numerical, 2: unannotated
         for i in range(len(found_table)):
             table_is_numeric[i] = 2
-            
+
             # If a table has both non-numeric and non-fraction, the non-fraction takes precedence
-            
+
             try:
                 found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonfraction')
                 table_is_numeric[i] = 0
                 continue;
-            
+
             except NoSuchElementException:
                 pass;
-            
+
             try:
                 found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonnumeric')
                 table_is_numeric[i] = 1
-            
+
             except NoSuchElementException:
                 pass;
 
@@ -187,7 +187,7 @@ class edgar_parser:
     def parsed_to_data(self, webelements: list, annotations: dict,
             save: bool = False, out_path: str = None, keep_unlabeled=False):
 
-        
+
         data = []
         for elem in webelements:
             tags = annotations[elem];
@@ -203,13 +203,13 @@ class edgar_parser:
         if save:
             parse_dir = os.path.join(self.data_dir, 'parsed')
             out_path = os.path.join(parse_dir, out_path.split('.')[0] + '.pkl')
-            
+
             if not os.path.exists(os.path.dirname(out_path)):
                 os.system(f"mkdir -p {os.path.dirname(out_path)}")
-            
+
             with open(out_path, 'wb') as f:
                 pkl.dump(data, f)
-    
+
         return data
 
     def __del__(self):
@@ -219,7 +219,7 @@ found = None
 annotation_dict = None
 parser = None
 if __name__ == '__main__':
-    
+
     # Hyperparameters
     tikr = 'nflx'
     submission_date = '20210101' #Find nearest AFTER this date
@@ -243,4 +243,7 @@ if __name__ == '__main__':
     data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
     #temp = input('Press Enter to close  Window')
 
-
+    # Parsing
+    parser = edgar_parser(headless=headless)
+    found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=False)
+    tables, table_types = parser.parse_annotated_tables(driver_path=None, highlight=True, save=True, out_path='./sample.htm')
