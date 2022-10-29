@@ -121,15 +121,26 @@ class edgar_parser:
 
         table_is_numeric = np.zeros_like(found_table, 'int')# 0: numerical, 1: non-numerical, 2: unannotated
         for i in range(len(found_table)):
+            table_is_numeric[i] = 2
+            
+            # If a table has both non-numeric and non-fraction, the non-fraction takes precedence
+            
             try:
                 found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonfraction')
                 table_is_numeric[i] = 0
+                continue;
+            
             except NoSuchElementException:
-                try:
-                    found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonnumeric')
-                    table_is_numeric[i] = 1
-                except NoSuchElementException:
-                    table_is_numeric[i] = 2
+                pass;
+            
+            try:
+                found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonnumeric')
+                table_is_numeric[i] = 1
+            
+            except NoSuchElementException:
+                pass;
+
+
 
         for i in range(len(found_table)):
             if table_is_numeric[i] == 0:
