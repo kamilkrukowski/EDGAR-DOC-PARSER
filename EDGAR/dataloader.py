@@ -17,8 +17,6 @@ import sys
 from tqdm.auto import tqdm
     
 
-
-
 class edgar_dataloader:
     def __init__(self, data_dir='edgar_downloads/',
                  api_keys_path='../api_keys.yaml'):
@@ -44,7 +42,7 @@ class edgar_dataloader:
 
         self.metadata = dict()
 
-    def load_metadata(self, tikr):
+    def load_tikr_metadata(self, tikr):
 
         data_path = os.path.join(self.proc_dir, f"{tikr}/metadata.pkl")
 
@@ -54,9 +52,11 @@ class edgar_dataloader:
                 self.metadata[tikr] = pkl.load(f)
             return True
 
+        self._initialize_tikr_metadata(tikr);
+
         return False
 
-    def __save_metadata__(self, tikr):
+    def _save_tikr_metadata(self, tikr):
 
         path = os.path.join(
                     self.proc_dir, f"{tikr}/metadata.pkl"
@@ -69,7 +69,7 @@ class edgar_dataloader:
         with open(path, 'wb') as f:
             pkl.dump(self.metadata[tikr], f)
 
-    def __gen_metadata__(self, tikr, documents, key):
+    def _gen_tikr_metadata(self, tikr, documents, key):
         out = dict()
 
         for idx, doc in enumerate(documents):
@@ -103,31 +103,33 @@ class edgar_dataloader:
 
         # Extend existing tikr metadata with new results,
         #   or start with empty dict and add new results
-        self. __assure_tikr_metadata_exists__(tikr)
+        self. _initialize_tikr_metadata(tikr)
         
-        if key not in self.metadata[tikr]:
-            self.metadata[tikr]['submissions'][key] = {'documents': out}
-        else:
-            self.metadata[tikr]['submissions'][key]['documents'] = \
-                    dict(out, **self.metadata[tikr]['submissions'][key]['documents'])
+        # Extending documents in existing submission or start new one
+        self._initialize_submission_metadata(tikr, key)
+        
+        # Add documents to submission of tikr
+        self.metadata[tikr]['submissions'][key]['documents'] = \
+                dict(out, **self.metadata[tikr]['submissions'][key]['documents'])
 
-    def __assure_tikr_metadata_exists__(self, tikr):
+    def _initialize_tikr_metadata(self, tikr):
         if tikr not in self.metadata:
-            if not self.load_metadata(tikr):
-                self.metadata[tikr] = {'attrs': dict(), 'submissions': dict()}
+            self.metadata[tikr] = {'attrs': dict(), 'submissions': dict()}
+                
+    def _initialize_submission_metadata(self, tikr, fname):
+        pdict = self.metadata[tikr]['submissions']
+        if fname not in pdict:
+            pdict[fname] = {'attrs': dict(), 'documents': dict()}
 
     # Returns True if TIKR had previous bulk download
-    def __check_downloaded__(self, tikr):
-        self.__assure_tikr_metadata_exists__(tikr)
-        if 'downloaded' not in self.metadata[tikr]['attrs']:
-            self.metadata[tikr]['attrs']['downloaded'] = False
-        return self.metadata[tikr]['attrs']['downloaded']
+    def _is_downloaded(self, tikr):
+        return self.metadata[tikr]['attrs'].get('downloaded', False)
 
     def query_server(
             self, tikr, start_date=None, end_date=None, max_num_filings=None,
             filing_type=FilingType.FILING_10Q, force=False):
 
-        if self.__check_downloaded__(tikr) and not force:
+        if self._is_downloaded(tikr) and not force:
             print('\talready downloaded')
             return
 
@@ -136,7 +138,7 @@ class edgar_dataloader:
             ):
 
             self.metadata[tikr]['attrs']['downloaded'] = True
-            self.__save_metadata__(tikr)
+            self._save_tikr_metadata(tikr)
 
         user_agent = "".join([f"{self.apikeys['edgar_agent']}", 
                               f": {self.apikeys['edgar_email']}"])
@@ -228,7 +230,7 @@ class edgar_dataloader:
             p = d.find('ims-document')
             fname = file.split('.txt')[0]
             if fname not in self.metadata[tikr]['submissions']:
-                self.metadata[tikr]['submissions'][fname] = {'attrs': dict(), 'documents': dict()}
+                self._initialize_submission_metadata(tikr, fname)
             self.metadata[tikr]['submissions'][fname]['attrs']['is_ims-document'] = True
             return
         d = p
@@ -237,7 +239,7 @@ class edgar_dataloader:
         documents = d.find_all('document', recursive=False)
 
         fsub = file.split('.txt')[0]
-        self.__gen_metadata__(tikr, documents, fsub)
+        self._gen_tikr_metadata(tikr, documents, fsub)
 
         sec_header = d.find('sec-header').text.replace('\t', '').split('\n')
         sec_header = [i for i in sec_header if ':' in i]
@@ -256,12 +258,12 @@ class edgar_dataloader:
         for doc in documents:
             self.__unpack_doc__(
                 doc, metadata, out_path, complete=complete, force=force)
-        self.__save_metadata__(tikr)
+        self._save_tikr_metadata(tikr)
 
-    def __10q_unpacked__(self, tikr):
+    def _is_10q_unpacked(self, tikr):
         return self.metadata[tikr]['attrs'].get('10q_unpacked', False)
     
-    def __fully_unpacked__(self, tikr):
+    def _is_fully_unpacked(self, tikr):
         return self.metadata[tikr]['attrs'].get('complete_unpacked', False)
 
     """
@@ -281,8 +283,8 @@ class edgar_dataloader:
 
         # Early quitting conditions
         if not force:
-            if self.__10q_unpacked__(tikr):
-                if not complete or self.__fully_unpacked__(tikr):
+            if self._is_10q_unpacked(tikr):
+                if not complete or self._is_fully_unpacked(tikr):
                             return
 
         # sec-edgar data save location for 10-Q filing ticker
@@ -303,7 +305,7 @@ class edgar_dataloader:
         if complete:
             self.metadata[tikr]['attrs']['complete_unpacked'] = True
 
-        self.__save_metadata__(tikr)
+        self._save_tikr_metadata(tikr)
 
     def get_dates(self, tikr):
         out = dict()
@@ -377,7 +379,7 @@ if __name__ == '__main__':
 
     for tikr in tikrs:
         time.sleep(1)
-        loader.load_metadata(tikr)
+        loader.load_tikr_metadata(tikr)
 
         print("First we download...")
         loader.query_server(tikr, start_date, end_date, max_num_filings)

@@ -12,12 +12,12 @@ tikrs = open(os.path.join(loader.path, '../tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
 for tikr in tikrs:
-    loader.load_metadata(tikr)
+    loader.load_tikr_metadata(tikr)
 
 # Check if some are already downloaded, do not redownload
 to_download = [];
 for tikr in tikrs:
-    if not loader.__check_downloaded__(tikr):
+    if not loader._is_downloaded(tikr):
         to_download.append(tikr)
 
 # Download missing files
@@ -32,7 +32,7 @@ else:
 # Unpack downloaded files into relevant directories
 to_unpack = []
 for tikr in tikrs:
-    if not loader.__10q_unpacked__(tikr):
+    if not loader._is_10q_unpacked(tikr):
         to_unpack.append(tikr)
 
 if len(to_unpack) != 0:
