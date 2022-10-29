@@ -27,7 +27,7 @@ class edgar_dataloader:
 
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
-        sys.setrecursionlimit(5000)
+        sys.setrecursionlimit(10000)
 
         # Always gets the path of the current file
         self.path = os.path.abspath(os.path.join(__file__, os.pardir))
@@ -44,7 +44,7 @@ class edgar_dataloader:
 
         self.metadata = dict()
 
-    def __load_metadata__(self, tikr):
+    def load_metadata(self, tikr):
 
         data_path = os.path.join(self.proc_dir, f"{tikr}/metadata.pkl")
 
@@ -113,7 +113,7 @@ class edgar_dataloader:
 
     def __assure_tikr_metadata_exists__(self, tikr):
         if tikr not in self.metadata:
-            if not self.__load_metadata__(tikr):
+            if not self.load_metadata(tikr):
                 self.metadata[tikr] = {'attrs': dict(), 'submissions': dict()}
 
     # Returns True if TIKR had previous bulk download
@@ -123,7 +123,7 @@ class edgar_dataloader:
             self.metadata[tikr]['attrs']['downloaded'] = False
         return self.metadata[tikr]['attrs']['downloaded']
 
-    def __query_server__(
+    def query_server(
             self, tikr, start_date=None, end_date=None, max_num_filings=None,
             filing_type=FilingType.FILING_10Q, force=False):
 
@@ -168,8 +168,7 @@ class edgar_dataloader:
     """
     def get_submissions(self, tikr):
         # sec-edgar data save location for 10-Q filing ticker
-        d_dir = os.path.join(self.raw_dir,f'{tikr}', '10-Q')
-        return [i.split('.txt')[0] for i in os.listdir(d_dir)]
+        return [i.split('.txt')[0] for i in self.get_unpackable_files(tikr)]
 
     """
         Private utility, parses SEC submission dump into components
@@ -215,9 +214,6 @@ class edgar_dataloader:
     """
     def unpack_file(self, tikr, file, complete=True, force=True):
 
-        # Look at metadata to see if files have been unpacked
-        self.__load_metadata__(tikr)
-
         # sec-edgar data save location for 10-Q filing ticker
         d_dir = self.raw_dir+f'/{tikr}/10-Q/'
 
@@ -230,8 +226,10 @@ class edgar_dataloader:
         p = d.find('sec-document')
         if p is None:
             p = d.find('ims-document')
-            print('Skipping ims-document')
-            self.metadata[tikr]['submissions'][file]['attrs']['is_ims-document'] = True
+            fname = file.split('.txt')[0]
+            if fname not in self.metadata[tikr]['submissions']:
+                self.metadata[tikr]['submissions'][fname] = {'attrs': dict(), 'documents': dict()}
+            self.metadata[tikr]['submissions'][fname]['attrs']['is_ims-document'] = True
             return
         d = p
         assert d is not None, 'No sec-document tag found in submission'
@@ -260,6 +258,12 @@ class edgar_dataloader:
                 doc, metadata, out_path, complete=complete, force=force)
         self.__save_metadata__(tikr)
 
+    def __10q_unpacked__(self, tikr):
+        return self.metadata[tikr]['attrs'].get('10q_unpacked', False)
+    
+    def __fully_unpacked__(self, tikr):
+        return self.metadata[tikr]['attrs'].get('complete_unpacked', False)
+
     """
         Processes all raw data from one company;
 
@@ -275,15 +279,11 @@ class edgar_dataloader:
             self, tikr, complete=False, force=False,
             loading_bar=False, desc='Inflating HTM'):
 
-        # Look at metadata to see if files have been unpacked
-        self.__load_metadata__(tikr)
-
         # Early quitting conditions
         if not force:
-            if self.metadata[tikr]['attrs'].get('10q_unpacked', False):
-                if not complete or \
-                    self.metadata[tikr]['attrs'].get('complete_unpacked', False):
-                        return
+            if self.__10q_unpacked__(tikr):
+                if not complete or self.__fully_unpacked__(tikr):
+                            return
 
         # sec-edgar data save location for 10-Q filing ticker
         d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
@@ -344,6 +344,9 @@ class edgar_dataloader:
                         return dates[start].split('.txt')[0], start
                     return dates[start].split('.txt')[0]
 
+    """
+        Returns 10-q filename associated with submission
+    """
     def get_10q_name(self, filename, tikr):
         meta = self.metadata[tikr]['submissions'][filename]['documents']
         for file in meta:
@@ -374,11 +377,12 @@ if __name__ == '__main__':
 
     for tikr in tikrs:
         time.sleep(1)
+        loader.load_metadata(tikr)
 
         print("First we download...")
-        loader.__query_server__(tikr, start_date, end_date, max_num_filings)
+        loader.query_server(tikr, start_date, end_date, max_num_filings)
         print("Look: if we try again it declines;")
-        loader.__query_server__(tikr, start_date, end_date, max_num_filings)
+        loader.query_server(tikr, start_date, end_date, max_num_filings)
         print("""Now we unpack all tikr filings in bulk locally
         but only for the 10-Q...""")
         loader.unpack_bulk(tikr, loading_bar=True)
