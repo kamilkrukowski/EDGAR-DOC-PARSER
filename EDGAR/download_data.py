@@ -13,7 +13,7 @@ tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
 # Check if some are already downloaded, do not redownload
 to_download = [];
-for tikr in tikrs[2:]:
+for tikr in tikrs:
     if not loader.__check_downloaded__(tikr):
         to_download.append(tikr)
 

@@ -19,14 +19,14 @@ from dataloader import edgar_dataloader
 
 # Helper for Driver configurations
 #   headless - Whether it appears as pop-up window
-def get_driver(headless=True):
+def get_driver(headless:bool = True) -> webdriver:
     fireFoxOptions = webdriver.FirefoxOptions()
     if headless:
         fireFoxOptions.add_argument("--headless")
     return webdriver.Firefox(options=fireFoxOptions)
 
 # dumps page source of driver at fpath
-def save_driver_source(driver, fpath):
+def save_driver_source(driver: webdriver, fpath: str) -> None:
     with open(fpath, 'w') as f:
         f.write(driver.page_source);
         
@@ -35,7 +35,7 @@ def save_driver_source(driver, fpath):
         - border - draws color box around element
         - getPos - gets x,y coordinate of element
 """
-def border(elem, driver, color='red'):
+def border(elem, driver: webdriver, color: str = 'red'):
     driver.execute_script(f"arguments[0].setAttribute(arguments[1], arguments[2])", elem, "style", f"padding: 1px; border: 2px solid {color}; display: inline-block")
 
 def getElemCoord(elem):
@@ -47,7 +47,7 @@ Parses some documents (2001-2013) at least
     highlight -- add red box around detected fields
     save -- save htm copy (with/without highlighting) to out_path
 """
-def parse(driver_path, highlight=False, save=False, out_path='./sample.htm'):
+def parse(driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
     
     driver.get(driver_path)
 

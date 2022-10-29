@@ -49,8 +49,12 @@ class edgar_dataloader:
         data_path = os.path.join(self.proc_dir, f"{tikr}/metadata.pkl")
 
         if os.path.exists(data_path):
+        
             with open(data_path, 'rb') as f:
                 self.metadata[tikr] = pkl.load(f)
+            return True
+
+        return False
 
     def __save_metadata__(self, tikr):
 
@@ -99,25 +103,25 @@ class edgar_dataloader:
 
         # Extend existing tikr metadata with new results,
         #   or start with empty dict and add new results
-        if tikr not in self.metadata:
-            self.metadata[tikr] = dict()
-
+        self. __assure_tikr_metadata_exists__(tikr)
+        
         if key not in self.metadata[tikr]:
-            self.metadata[tikr][key] = {'documents': out}
+            self.metadata[tikr]['submissions'][key] = {'documents': out}
         else:
-            self.metadata[tikr][key]['documents'] = \
-                    dict(out, **self.metadata[tikr][key]['documents'])
+            self.metadata[tikr]['submissions'][key]['documents'] = \
+                    dict(out, **self.metadata[tikr]['submissions'][key]['documents'])
+
+    def __assure_tikr_metadata_exists__(self, tikr):
+        if tikr not in self.metadata:
+            if not self.__load_metadata__(tikr):
+                self.metadata[tikr] = {'attrs': dict(), 'submissions': dict()}
 
     # Returns True if TIKR had previous bulk download
     def __check_downloaded__(self, tikr):
-        self.__load_metadata__(tikr)
-        if tikr not in self.metadata:
-            self.metadata[tikr] = dict()
-        if 'downloaded' not in self.metadata[tikr]:
-            self.metadata[tikr]['downloaded'] = False
-        if self.metadata[tikr]['downloaded']:
-            return True
-        return False
+        self.__assure_tikr_metadata_exists__(tikr)
+        if 'downloaded' not in self.metadata[tikr]['attrs']:
+            self.metadata[tikr]['attrs']['downloaded'] = False
+        return self.metadata[tikr]['attrs']['downloaded']
 
     def __query_server__(
             self, tikr, start_date=None, end_date=None, max_num_filings=None,
@@ -131,7 +135,7 @@ class edgar_dataloader:
             max_num_filings is None
             ):
 
-            self.metadata[tikr]['downloaded'] = True
+            self.metadata[tikr]['attrs']['downloaded'] = True
             self.__save_metadata__(tikr)
 
         user_agent = "".join([f"{self.apikeys['edgar_agent']}", 
@@ -193,7 +197,7 @@ class edgar_dataloader:
 
         fname = metadata[sequence]['filename']
 
-        with open(os.path.join(out_path, fname, encoding='utf-8'), 'w') as f:
+        with open(os.path.join(out_path, fname), 'w', encoding='utf-8') as f:
             f.write(doc.prettify())
             metadata[sequence]['processed'] = True
 
@@ -227,6 +231,7 @@ class edgar_dataloader:
         if p is None:
             p = d.find('ims-document')
             print('Skipping ims-document')
+            self.metadata[tikr]['submissions'][file]['attrs']['is_ims-document'] = True
             return
         d = p
         assert d is not None, 'No sec-document tag found in submission'
@@ -238,10 +243,10 @@ class edgar_dataloader:
 
         sec_header = d.find('sec-header').text.replace('\t', '').split('\n')
         sec_header = [i for i in sec_header if ':' in i]
-        sec_attrs = {i.split(':')[0]: i.split(':')[1] for i in sec_header}
-        self.metadata[tikr][fsub]['sec_attrs'] = sec_attrs
+        attrs = {i.split(':')[0]: i.split(':')[1] for i in sec_header}
+        self.metadata[tikr]['submissions'][fsub]['attrs'] = attrs
 
-        metadata = self.metadata[tikr][fsub]['documents']
+        metadata = self.metadata[tikr]['submissions'][fsub]['documents']
 
         # Processed data directory path
         out_path = os.path.join(
@@ -273,6 +278,13 @@ class edgar_dataloader:
         # Look at metadata to see if files have been unpacked
         self.__load_metadata__(tikr)
 
+        # Early quitting conditions
+        if not force:
+            if self.metadata[tikr]['attrs'].get('10q_unpacked', False):
+                if not complete or \
+                    self.metadata[tikr]['attrs'].get('complete_unpacked', False):
+                        return
+
         # sec-edgar data save location for 10-Q filing ticker
         d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
 
@@ -285,13 +297,18 @@ class edgar_dataloader:
 
         for file in itera:
             self.unpack_file(tikr, file, complete=complete, force=force)
+ 
+        # Metadata tags to autoskip this bulk unpack later
+        self.metadata[tikr]['attrs']['10q_unpacked'] = True
+        if complete:
+            self.metadata[tikr]['attrs']['complete_unpacked'] = True
 
         self.__save_metadata__(tikr)
 
     def get_dates(self, tikr):
         out = dict()
         for i in self.get_submissions(tikr):
-            date_str = self.metadata[tikr][i]['sec_attrs'].get(
+            date_str = self.metadata[tikr]['submissions'][i]['attrs'].get(
                     'FILED AS OF DATE', None)
             if date_str is None:
                 print('broken')
@@ -328,7 +345,7 @@ class edgar_dataloader:
                     return dates[start].split('.txt')[0]
 
     def get_10q_name(self, filename, tikr):
-        meta = self.metadata[tikr][filename]['documents']
+        meta = self.metadata[tikr]['submissions'][filename]['documents']
         for file in meta:
             if meta[file]['type'] in ['10-Q', 'FORM 10-Q']:
                 return meta[file]['filename']
