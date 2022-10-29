@@ -35,14 +35,17 @@ class edgar_parser:
     """
         Javascript Helper Functions executed on Driver
             - border - draws color box around element
-            - getPos - gets x,y coordinate of element
     """
     def _draw_border(self, elem, color: str = 'red'):
-        self.driver.execute_script(f"arguments[0].setAttribute(arguments[1], arguments[2])", elem, "style", f"padding: 1px; border: 2px solid {color}; display: inline-block")
+        self.driver.execute_script(
+            f"arguments[0].setAttribute(arguments[1], arguments[2])",
+            elem, "style",
+            f"padding: 1px; border: 2px solid {color}; display: inline-block")
 
     """
     Parses some documents (2001-2013) at least
 
+        driver_path -- path of file to open, or 'NONE' to keep current file
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
@@ -68,6 +71,7 @@ class edgar_parser:
     """
     Parses some documents 2020+ at least
 
+        driver_path -- path of file to open, or 'NONE' to keep current file
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
@@ -103,6 +107,7 @@ class edgar_parser:
     """
     Parses some documents 2020+ at least
 
+        driver_path -- path of file to open, or 'NONE' to keep current file
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
@@ -155,6 +160,7 @@ if __name__ == '__main__':
     loader = edgar_dataloader();
     loader.load_metadata(tikr)
 
+    # Get nearest 10Q form path to above date
     dname = loader.get_nearest_date_filename(submission_date, tikr)
     fname = loader.get_10q_name(dname, tikr)
     driver_path = "file:\/" + os.path.join(loader.proc_dir, tikr, dname, fname)
