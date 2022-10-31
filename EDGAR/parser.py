@@ -8,6 +8,7 @@ Visualizes elements by red border highlighting in firefox browser
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.remote.webelement import WebElement 
 import pandas as pd
 import numpy as np
 
@@ -15,17 +16,30 @@ import numpy as np
 import itertools
 from yaml import load, CLoader as Loader
 import os
+import pickle as pkl
 
 
-from dataloader import edgar_dataloader
+from metadata_manager import metadata_manager
+from dataloader import edgar_dataloader #for __main__
 
 class edgar_parser:
 
-    def __init__(self, headless: bool = True):
+    def __init__(self, metadata: metadata_manager = None,
+                 data_dir: str = 'edgar_downloads',
+                 headless: bool = True):
+
         fireFoxOptions = webdriver.FirefoxOptions()
         if headless:
             fireFoxOptions.add_argument("--headless")
         self.driver = webdriver.Firefox(options=fireFoxOptions)
+
+
+        self.data_dir = data_dir
+
+        if metadata is None:
+            self.metadata = metadata_manager(data_dir=self.data_dir)
+        else:
+            self.metadata = metadata
 
     # dumps page source of driver at fpath
     def _save_driver_source(self, fpath: str) -> None:
@@ -156,20 +170,65 @@ class edgar_parser:
 
         return found_table, table_is_numeric
 
+    def load_parsed(self, tikr, submission):
+        path = os.path.join(self.data_dir, 'parsed', tikr, submission.split('.')[0] + '.pkl')
+
+        with open(path, 'rb') as f:
+            return pkl.load(f)
+
+    def get_annotation_info(self, elem: WebElement):
+        return {'value': elem.text, 'name': elem.get_attribute('name'), 'id': elem.get_attribute('id')}
+
+
+    def get_element_info(self, element: WebElement)-> list():
+        return {"value": element.text,"location": element.location, "size": element.size}
+
+
+    def parsed_to_data(self, webelements: list, annotations: dict,
+            save: bool = False, out_path: str = None, keep_unlabeled=False):
+
+        
+        data = []
+        for elem in webelements:
+            tags = annotations[elem];
+
+            if not keep_unlabeled and len(tags) == 0:
+                continue;
+
+            infos = []
+            for tag in tags:
+                infos.append(self.get_annotation_info(tag))
+            data.append([self.get_element_info(elem), infos])
+
+        if save:
+            parse_dir = os.path.join(self.data_dir, 'parsed')
+            out_path = os.path.join(parse_dir, out_path.split('.')[0] + '.pkl')
+            
+            if not os.path.exists(os.path.dirname(out_path)):
+                os.system(f"mkdir -p {os.path.dirname(out_path)}")
+            
+            with open(out_path, 'wb') as f:
+                pkl.dump(data, f)
+    
+        return data
+
     def __del__(self):
         self.driver.quit();
 
+found = None
+annotation_dict = None
+parser = None
 if __name__ == '__main__':
     
     # Hyperparameters
     tikr = 'nflx'
     submission_date = '20210101' #Find nearest AFTER this date
 
-    headless = False
+    headless = True
 
     # Set up
     loader = edgar_dataloader();
-    loader.load_metadata(tikr)
+    loader.metadata.load_tikr_metadata(tikr)
 
     # Get nearest 10Q form path to above date
     dname = loader.get_nearest_date_filename(submission_date, tikr)
@@ -177,8 +236,11 @@ if __name__ == '__main__':
     driver_path = "file:\/" + os.path.join(loader.proc_dir, tikr, dname, fname)
 
     # Parsing
-    parser = edgar_parser(headless=headless)
+    parser = edgar_parser(metadata=loader.metadata, headless=headless)
     found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=False)
     tables, table_types = parser.parse_annotated_tables(driver_path=None, highlight=True, save=True, out_path='./sample.htm')
 
-    temp = input('Press Enter to close  Window')
+    data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
+    #temp = input('Press Enter to close  Window')
+
+

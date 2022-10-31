@@ -5,14 +5,14 @@ import time
 from dataloader import edgar_dataloader
 
 
-loader = edgar_dataloader('edgar_downloads')
+loader = edgar_dataloader(data_dir='edgar_downloads')
 
 # List of companies to process
 tikrs = open(os.path.join(loader.path, '../tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
 for tikr in tikrs:
-    loader.load_tikr_metadata(tikr)
+    loader.metadata.load_tikr_metadata(tikr)
 
 # Check if some are already downloaded, do not redownload
 to_download = [];
@@ -26,6 +26,7 @@ if len(to_download) != 0:
     print(f"Downloading... {str(to_download)}")
     for tikr in to_download:
         loader.query_server(tikr)
+        time.sleep(5)
 else:
     print('Everything on Ticker List already downloaded.')
 
