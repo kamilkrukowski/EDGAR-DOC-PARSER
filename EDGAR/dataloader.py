@@ -14,12 +14,16 @@ import warnings
 import datetime
 import time
 import sys
-from tqdm.auto import tqdm
-    
+from tqdm.auto import tqdm 
+
+
+from metadata_manager import metadata_manager
+
 
 class edgar_dataloader:
-    def __init__(self, data_dir='edgar_downloads/',
-                 api_keys_path='../api_keys.yaml'):
+    def __init__(self, metadata = None, 
+                 data_dir = 'edgar_downloads/',
+                 api_keys_path = '../api_keys.yaml'):
 
         self.data_dir = data_dir
 
@@ -40,34 +44,10 @@ class edgar_dataloader:
         self.raw_dir = os.path.join(self.path, self.data_dir, 'raw')
         self.proc_dir = os.path.join(self.path, self.data_dir, 'processed')
 
-        self.metadata = dict()
-
-    def load_tikr_metadata(self, tikr):
-
-        data_path = os.path.join(self.proc_dir, f"{tikr}/metadata.pkl")
-
-        if os.path.exists(data_path):
-        
-            with open(data_path, 'rb') as f:
-                self.metadata[tikr] = pkl.load(f)
-            return True
-
-        self._initialize_tikr_metadata(tikr);
-
-        return False
-
-    def _save_tikr_metadata(self, tikr):
-
-        path = os.path.join(
-                    self.proc_dir, f"{tikr}/metadata.pkl"
-                    )
-
-        ensure_path = os.path.join(self.proc_dir, str(tikr))
-        if not os.path.exists(ensure_path):
-            os.system('mkdir -p ' + ensure_path)
-
-        with open(path, 'wb') as f:
-            pkl.dump(self.metadata[tikr], f)
+        if metadata is None:
+            self.metadata = metadata_manager(data_dir=data_dir);
+        else:
+            self.metadata = metadata
 
     def _gen_tikr_metadata(self, tikr, documents, key):
         out = dict()
@@ -103,23 +83,14 @@ class edgar_dataloader:
 
         # Extend existing tikr metadata with new results,
         #   or start with empty dict and add new results
-        self. _initialize_tikr_metadata(tikr)
+        self.metadata.initialize_tikr_metadata(tikr)
         
         # Extending documents in existing submission or start new one
-        self._initialize_submission_metadata(tikr, key)
+        self.metadata.initialize_submission_metadata(tikr, key)
         
         # Add documents to submission of tikr
         self.metadata[tikr]['submissions'][key]['documents'] = \
                 dict(out, **self.metadata[tikr]['submissions'][key]['documents'])
-
-    def _initialize_tikr_metadata(self, tikr):
-        if tikr not in self.metadata:
-            self.metadata[tikr] = {'attrs': dict(), 'submissions': dict()}
-                
-    def _initialize_submission_metadata(self, tikr, fname):
-        pdict = self.metadata[tikr]['submissions']
-        if fname not in pdict:
-            pdict[fname] = {'attrs': dict(), 'documents': dict()}
 
     # Returns True if TIKR had previous bulk download
     def _is_downloaded(self, tikr):
@@ -138,7 +109,7 @@ class edgar_dataloader:
             ):
 
             self.metadata[tikr]['attrs']['downloaded'] = True
-            self._save_tikr_metadata(tikr)
+            self.metadata.save_tikr_metadata(tikr)
 
         user_agent = "".join([f"{self.apikeys['edgar_agent']}", 
                               f": {self.apikeys['edgar_email']}"])
@@ -230,7 +201,7 @@ class edgar_dataloader:
             p = d.find('ims-document')
             fname = file.split('.txt')[0]
             if fname not in self.metadata[tikr]['submissions']:
-                self._initialize_submission_metadata(tikr, fname)
+                self.metadata.initialize_submission_metadata(tikr, fname)
             self.metadata[tikr]['submissions'][fname]['attrs']['is_ims-document'] = True
             return
         d = p
@@ -258,7 +229,7 @@ class edgar_dataloader:
         for doc in documents:
             self.__unpack_doc__(
                 doc, metadata, out_path, complete=complete, force=force)
-        self._save_tikr_metadata(tikr)
+        self.metadata.save_tikr_metadata(tikr)
 
     def _is_10q_unpacked(self, tikr):
         return self.metadata[tikr]['attrs'].get('10q_unpacked', False)
@@ -305,7 +276,7 @@ class edgar_dataloader:
         if complete:
             self.metadata[tikr]['attrs']['complete_unpacked'] = True
 
-        self._save_tikr_metadata(tikr)
+        self.metadata.save_tikr_metadata(tikr)
 
     def get_dates(self, tikr):
         out = dict()
@@ -379,7 +350,7 @@ if __name__ == '__main__':
 
     for tikr in tikrs:
         time.sleep(1)
-        loader.load_tikr_metadata(tikr)
+        loader.metadata.load_tikr_metadata(tikr)
 
         print("First we download...")
         loader.query_server(tikr, start_date, end_date, max_num_filings)
