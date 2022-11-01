@@ -335,7 +335,7 @@ class edgar_dataloader:
 loader = None
 if __name__ == '__main__':
 
-    loader = edgar_dataloader('edgar_downloads')
+    loader = edgar_dataloader(data_dir='edgar_downloads')
     tikrs = ['nflx']
 
     max_num_filings = 3
