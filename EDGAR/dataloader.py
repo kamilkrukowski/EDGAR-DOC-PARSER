@@ -22,10 +22,12 @@ from metadata_manager import metadata_manager
 
 class edgar_dataloader:
     def __init__(self, metadata = None, 
-                 data_dir = 'edgar_downloads/',
-                 api_keys_path = '../api_keys.yaml'):
+                 data_dir = 'default',
+                 api_keys_path = 'default'):
 
-        self.data_dir = data_dir
+        if data_dir == 'default':
+            data_dir = 'edgar_downloads'
+        self.data_dir = os.path.join(data_dir, '')
 
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
@@ -33,7 +35,10 @@ class edgar_dataloader:
 
         # Always gets the path of the current file
         self.path = os.path.abspath(os.path.join(__file__, os.pardir))
+
         # Loads keys
+        if api_keys_path == 'default':
+            api_keys_path = os.path.join('..','api_keys.yaml');
         key_path = os.path.join(self.path, api_keys_path)
         assert os.path.exists(api_keys_path), 'No api_keys.yaml located'
         self.apikeys = load(open(api_keys_path, 'rb'), Loader=Loader)
@@ -188,7 +193,7 @@ class edgar_dataloader:
     def unpack_file(self, tikr, file, complete=True, force=True):
 
         # sec-edgar data save location for 10-Q filing ticker
-        d_dir = self.raw_dir+f'/{tikr}/10-Q/'
+        d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
 
         content = None
         with open(d_dir + file, 'r', encoding='utf-8') as f:
@@ -221,7 +226,7 @@ class edgar_dataloader:
 
         # Processed data directory path
         out_path = os.path.join(
-            self.path, 'edgar_downloads/processed/',
+            self.path, self.data_dir, 'processed',
             tikr, file.split('.txt')[0])
         if not os.path.exists(out_path):
             os.system('mkdir -p ' + out_path)
