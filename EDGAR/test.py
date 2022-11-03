@@ -51,7 +51,8 @@ if not os.path.exists(os.path.join('./edgar_downloads', 'parsed', tikr, f"{fname
 else:
     print('Loading cached parsed data')
     data= parser.load_parsed(tikr, fname)
-
+print(annotation_dict[1])
+'''
 print('Saving sample data to \'./sample_data.txt\'')
 with open('./sample_data.txt', 'w') as f:
     for i in data:
@@ -62,3 +63,4 @@ with open('./sample_data.txt', 'w') as f:
             f.write(',')
             f.write(j['name'])
         f.write('\n')
+'''
