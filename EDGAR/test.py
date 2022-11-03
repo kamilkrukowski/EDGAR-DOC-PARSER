@@ -39,6 +39,7 @@ driver_path = "file:\/" + os.path.join(loader.proc_dir, tikr, dname, fname)
 
 parser = edgar_parser(metadata=loader.metadata, headless=headless)
 
+print(driver_path)
 
 # Parsing
 data = None
@@ -46,12 +47,14 @@ if not os.path.exists(os.path.join('./edgar_downloads', 'parsed', tikr, f"{fname
     print('Parsed Data does not exist... creating and caching')
 
     found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=False)
+    parser.get_annotation_features(found, annotation_dict,save = True)
+    #input("enter to continue")
 
-    data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
+    #data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
 else:
     print('Loading cached parsed data')
     data= parser.load_parsed(tikr, fname)
-print(annotation_dict[1])
+#print(annotation_dict)
 '''
 print('Saving sample data to \'./sample_data.txt\'')
 with open('./sample_data.txt', 'w') as f:
