@@ -109,7 +109,7 @@ class edgar_parser:
         if driver_path is not None:
             self.driver.get(driver_path)
 
-        found = self.driver.find_elements(By.TAG_NAME, 'div')
+        found = self.driver.find_elements(By.TAG_NAME, 'span')
 
         # Filter symbols using 'hashmap' set
         forbidden = {i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'','**'})
@@ -302,9 +302,9 @@ class edgar_parser:
 
         time_diff = datetime.now() - time_start
         print(f'INFO Finished running function: val, total: {time_diff.seconds}s')
-        print("before drop duplictates..", len(df))
+        #print("before drop duplictates..", len(df))
         df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
-        print("after drop duplictates..", len(df))
+        #print("after drop duplictates..", len(df))
         if(save):
             df.to_csv('sample.csv')
         return df
