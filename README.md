@@ -29,3 +29,5 @@ chmod +x geckodriver
 ### API Information
 Fill out `apikeys.yaml` with relevant fields
 
+### Word2Vec
+https://www.kaggle.com/datasets/leadbest/googlenewsvectorsnegative300
