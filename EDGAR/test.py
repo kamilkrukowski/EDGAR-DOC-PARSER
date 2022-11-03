@@ -26,7 +26,7 @@ from parser import edgar_parser
 # Hyperparameters
 tikr = 'nflx'
 submission_date = '20210101' #Find nearest AFTER this date
-headless = True
+headless = False
 
 # Set up
 loader = edgar_dataloader();
@@ -35,29 +35,26 @@ loader.metadata.load_tikr_metadata(tikr)
 # Get nearest 10Q form path to above date
 dname = loader.get_nearest_date_filename(submission_date, tikr)
 fname = loader.get_10q_name(dname, tikr)
-driver_path = "file:\/" + os.path.join(loader.proc_dir, tikr, dname, fname)
+driver_path = "file:\\" + os.path.join(loader.proc_dir, tikr, dname, fname)
 
 parser = edgar_parser(metadata=loader.metadata, headless=headless)
 
-print(driver_path)
-
 # Parsing
 data = None
-if not os.path.exists(os.path.join('./edgar_downloads', 'parsed', tikr, f"{fname.split(',')[0]}.pkl")):
+if not os.path.exists(os.path.join('.', 'edgar_downloads', 'parsed', tikr, f"{fname.split(',')[0]}.pkl")):
     print('Parsed Data does not exist... creating and caching')
 
     found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=False)
     parser.get_annotation_features(found, annotation_dict,save = True)
-    #input("enter to continue")
+    input("enter to continue")
 
-    #data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
+    data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
 else:
     print('Loading cached parsed data')
     data= parser.load_parsed(tikr, fname)
-#print(annotation_dict)
-'''
+
 print('Saving sample data to \'./sample_data.txt\'')
-with open('./sample_data.txt', 'w') as f:
+with open('sample_data.txt', 'w') as f:
     for i in data:
         f.write(i[0]['value'])
         f.write('\t')
@@ -66,4 +63,3 @@ with open('./sample_data.txt', 'w') as f:
             f.write(',')
             f.write(j['name'])
         f.write('\n')
-'''
