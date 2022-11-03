@@ -21,6 +21,20 @@ import pickle as pkl
 
 from metadata_manager import metadata_manager
 from dataloader import edgar_dataloader #for __main__
+from datetime import datetime
+
+# a decorator to measure the time of a function
+def func_running_time(func):
+    def inner(*args, **kwargs):
+        print(f'INFO Begin to run function: {func.__name__} …')
+        time_start = datetime.now()
+        res = func(*args, **kwargs)
+        time_diff = datetime.now() - time_start
+        print(f'INFO Finished running function: {func.__name__}, total: {time_diff.seconds}s')
+        print()
+        return res
+    return inner
+
 
 class edgar_parser:
 
@@ -89,12 +103,13 @@ class edgar_parser:
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
+    #@func_running_time
     def parse_annotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
         
         if driver_path is not None:
             self.driver.get(driver_path)
 
-        found = self.driver.find_elements(By.TAG_NAME, 'span')
+        found = self.driver.find_elements(By.TAG_NAME, 'div')
 
         # Filter symbols using 'hashmap' set
         forbidden = {i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'','**'})
@@ -111,6 +126,7 @@ class edgar_parser:
             for i in found:
                 self._draw_border(i, 'red');
                 for j in annotation_dict[i]:
+                    #print(j.get_attribute("outerHTML"))
                     self._draw_border(j, 'blue')
 
         if save:
@@ -170,6 +186,7 @@ class edgar_parser:
 
         return found_table, table_is_numeric
 
+
     def load_parsed(self, tikr, submission):
         path = os.path.join(self.data_dir, 'parsed', tikr, submission.split('.')[0] + '.pkl')
 
@@ -177,13 +194,13 @@ class edgar_parser:
             return pkl.load(f)
 
     def get_annotation_info(self, elem: WebElement):
-        return {'value': elem.text, 'name': elem.get_attribute('name'), 'id': elem.get_attribute('id')}
+        return {'value': elem.text, 'name': elem.get_attribute('name') , 'id': elem.get_attribute('id')}
 
 
     def get_element_info(self, element: WebElement)-> list():
         return {"value": element.text,"location": element.location, "size": element.size}
 
-
+    #@func_running_time
     def parsed_to_data(self, webelements: list, annotations: dict,
             save: bool = False, out_path: str = None, keep_unlabeled=False):
 
@@ -211,6 +228,87 @@ class edgar_parser:
                 pkl.dump(data, f)
     
         return data
+
+    def find_page_location(self) -> dict:
+        page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
+        page_number = 1
+        # get the range of y for page 1
+        page_location = {page_number: [0,page_breaks[0].location["y"]]}
+        next_page_start =  page_location[page_number][1] + 2  # plus 2 b/c page break height = 2
+        
+        # get the range of y for page 2 to  n-1 (n is the last page)
+        for hr in page_breaks[1:]:
+            page_number += 1
+            page_location[page_number]= [next_page_start,hr.location["y"]]
+            next_page_start =  page_location[page_number][1] + 2  # plus 2 b/c page break height = 2
+        # get the range of y for last page
+        page_number += 1
+        page_location[page_number]= [next_page_start,float('inf')]
+        return page_location
+
+    def get_page_number(self, page_location: dict, element: WebElement) -> int:
+        element_y = element.location["y"]
+        for i in range(1,len(page_location)+1):
+            if( element_y > page_location[i][0] and element_y <page_location[i][1]):
+                return i, element_y - page_location[i][0]
+            
+        return None, None
+    #-----------get attribute-------------------------------------------------#
+    # name == tag
+    #@func_running_time
+    def get_annotation_features(self, webelements: list, annotations: dict,save: bool = False, out_path: str = None):
+        COLUMN_NAMES = ["value","found_index","full_text", "annotation_index", "annotation_name","annotation_id",
+                        "annotation_format","annotation_ix_type",'annotation_unitref',"annotation_decimals",
+                        "annotation_contextref","page_number","x","y", "height", "width","is_annotation"]
+        page_location = self.find_page_location()
+        NUM_COLUMN = len(COLUMN_NAMES)
+       
+        df = pd.DataFrame(columns=COLUMN_NAMES) 
+        print(f'INFO Begin to run function: val …')
+        time_start = datetime.now()
+        for i, elem in enumerate(webelements):
+            
+            default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
+            page_num, y = self.get_page_number(page_location, elem)
+            default_dict.update({"value": elem.text, "found_index": i,"full_text": elem.text, "is_annotation": 0,
+                                "x": elem.location['x'], "y": y, "page_number": page_num,
+                                "height": elem.size["height"], "width": elem.size["width"]})
+
+            count = 0
+            
+            for j, annotation in enumerate(annotations[elem]):
+                new_dict = default_dict.copy()
+                page_num, y = self.get_page_number(page_location, annotation)
+                val = {"annotation_index": j, "is_annotation": 1,"value": annotation.text,
+                        "annotation_name": annotation.get_attribute('name'), "annotation_id": annotation.get_attribute('id'), 
+                        "annotation_id": annotation.get_attribute('id'), "annotation_contextref":  annotation.get_attribute('contextref'),
+                        "annotation_decimals": annotation.get_attribute('decimals'), "annotation_format": annotation.get_attribute('format'),
+                        "annotation_ix_type": annotation.tag_name, "annotation_unitref" : annotation.get_attribute('unitref'),"x": annotation.location['x'],
+                        "y": y, "height": annotation.size["height"], "width": annotation.size["width"],"page_number": page_num
+
+                        }
+                
+                new_dict.update(val)
+                temp_df = pd.DataFrame(new_dict,index=[0])
+                df = pd.concat([temp_df,df], ignore_index=True)
+                
+                count += 1
+            
+            default_dict = default_dict if count == 0 else None
+        
+            if default_dict != None:
+                temp_df = pd.DataFrame(default_dict,index=[0])
+                df = pd.concat([temp_df,df], ignore_index=True)
+
+        time_diff = datetime.now() - time_start
+        print(f'INFO Finished running function: val, total: {time_diff.seconds}s')
+        print("before drop duplictates..", len(df))
+        df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
+        print("after drop duplictates..", len(df))
+        if(save):
+            df.to_csv('sample.csv')
+        return df
+
 
     def __del__(self):
         self.driver.quit();
@@ -242,5 +340,11 @@ if __name__ == '__main__':
 
     data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
     #temp = input('Press Enter to close  Window')
+
+
+
+
+
+
 
 
