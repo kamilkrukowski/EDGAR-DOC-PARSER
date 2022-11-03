@@ -196,7 +196,7 @@ class edgar_dataloader:
         d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
 
         content = None
-        with open(d_dir + file, 'r', encoding='utf-8') as f:
+        with open(os.path.join(d_dir, file), 'r', encoding='utf-8') as f:
             content = f.read().strip()
 
         d = BeautifulSoup(content, features='lxml').body
