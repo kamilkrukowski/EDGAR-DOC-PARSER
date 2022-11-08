@@ -254,7 +254,6 @@ class edgar_parser:
             
         return None, None
     #-----------get attribute-------------------------------------------------#
-    # name == tag
     #@func_running_time
     def get_annotation_features(self, webelements: list, annotations: dict,save: bool = False, out_path: str = None):
         COLUMN_NAMES = ["value","found_index","full_text", "annotation_index", "annotation_name","annotation_id",
@@ -302,13 +301,32 @@ class edgar_parser:
 
         time_diff = datetime.now() - time_start
         print(f'INFO Finished running function: val, total: {time_diff.seconds}s')
-        #print("before drop duplicates..", len(df))
         df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
-        #print("after drop duplicates..", len(df))
         if(save):
             df.to_csv('sample.csv')
         return df
+        
+    def parse_text_by_page(self):
+        page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
+        page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
 
+        
+        num_page = len(page_breaks) + 1
+        print('total number of page',num_page)
+        if(num_page == 1):
+            return {}
+        text_on_page = {i: {"text": "", "elements": []} for i in range(1,num_page+1)}
+        page_number = 1
+        hr_parent = page_breaks[0].find_element(By.XPATH, "./..")
+        sibling = hr_parent.find_elements(By.XPATH, "./*")
+
+        for elem in sibling:
+            if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
+                page_number += 1
+                continue
+            text_on_page[page_number]['text'] += "/n" + elem.text
+            text_on_page[page_number]["elements"].append(elem)
+        return text_on_page
 
     def __del__(self):
         self.driver.quit();
