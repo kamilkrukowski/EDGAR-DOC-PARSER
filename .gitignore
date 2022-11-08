@@ -1,10 +1,7 @@
 # ApiKeys
-**/api*
-parsers/yahoo_fin/yahoo_stock_prices/*
-!parsers/yahoo_fin/yahoo_stock_prices/__init__.py
-**/api_keys.yaml
-**/EDGAR/cache/*
-**/EDGAR/edgar_downloads/*
+api_keys.yaml
+data/*
+**/geckodriver.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

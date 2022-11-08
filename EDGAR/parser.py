@@ -19,8 +19,8 @@ import os
 import pickle as pkl
 
 
-from metadata_manager import metadata_manager
-from dataloader import edgar_dataloader #for __main__
+from .metadata_manager import metadata_manager
+from .dataloader import edgar_dataloader #for __main__
 from datetime import datetime
 
 # a decorator to measure the time of a function
