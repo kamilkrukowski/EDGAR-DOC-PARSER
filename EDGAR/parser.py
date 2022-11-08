@@ -310,6 +310,28 @@ class edgar_parser:
         return df
 
 
+    def parse_text_by_page(self):
+        page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
+        page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
+
+        
+        num_page = len(page_breaks) + 1
+        if(num_page == 1):
+            return {}
+        text_on_page = {i: {"text": "", "elements": []} for i in range(1,num_page+1)}
+        page_number = 1
+        hr_parent = page_breaks[0].find_element(By.XPATH, "./..")
+        sibiling = hr_parent.find_elements(By.XPATH, "./*")
+
+        for elem in sibiling:
+            if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
+                page_number += 1
+                continue
+            text_on_page[page_number]['text'] += "/n" + elem.text
+            text_on_page[page_number]["elements"].append(elem)
+        return text_on_page
+
+
     def __del__(self):
         self.driver.quit();
 
