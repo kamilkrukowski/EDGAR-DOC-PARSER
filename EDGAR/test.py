@@ -22,6 +22,7 @@ import pickle as pkl
 from metadata_manager import metadata_manager
 from dataloader import edgar_dataloader #for __main__
 from parser import edgar_parser
+import json
 
 # Hyperparameters
 tikr = 'nflx'
@@ -39,7 +40,17 @@ driver_path = "file:\/" + os.path.join(loader.proc_dir, tikr, dname, fname)
 
 parser = edgar_parser(metadata=loader.metadata, headless=headless)
 
-print(driver_path)
+#print(driver_path)
+
+########### testing for parse_text_by_page ##################
+
+def Test_parse_text_by_page(parser):
+    # Serializing json
+    text = parser.parse_text_by_page()
+    # Writing to sample.json
+    with open("sample.json", "w") as outfile:
+        json.dump(text, outfile, default=lambda o: '<not serializable>',sort_keys=True, indent=4)
+
 
 # Parsing
 data = None
@@ -47,6 +58,7 @@ if not os.path.exists(os.path.join('./edgar_downloads', 'parsed', tikr, f"{fname
     print('Parsed Data does not exist... creating and caching')
 
     found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=False)
+    Test_parse_text_by_page(parser)
     parser.get_annotation_features(found, annotation_dict,save = True)
     #input("enter to continue")
 
