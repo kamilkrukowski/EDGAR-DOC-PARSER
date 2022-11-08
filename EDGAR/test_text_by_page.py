@@ -15,15 +15,14 @@ import numpy as np
 
 import itertools
 from yaml import load, CLoader as Loader
+import sys; sys.path.append('../')
 import os
 import pickle as pkl
-
-
-from metadata_manager import metadata_manager
-from dataloader import edgar_dataloader #for __main__
-from parser import edgar_parser
-
 import json
+
+
+from EDGAR import Metadata, parser, dataloader
+
 
 # Hyperparameters
 tikr = 'nflx'
@@ -41,8 +40,6 @@ fname = loader.get_10q_name(dname, tikr)
 driver_path = "file:\/" + os.path.join(loader.proc_dir, tikr, dname, fname)
 print(driver_path)
 parser = edgar_parser(metadata=loader.metadata, headless=headless)
-
-
 
 
 ########### testing for parse_text_by_page ##################
@@ -65,27 +62,8 @@ if not os.path.exists(os.path.join('./edgar_downloads', 'parsed', tikr, f"{fname
 
     found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=True)
 
-    Test_parse_text_by_page(parser)
-
-    
-
-    #parser.get_annotation_features(found, annotation_dict,save = True)
-    #input("enter to continue")
-
-    #data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
 else:
     print('Loading cached parsed data')
     data= parser.load_parsed(tikr, fname)
-#print(annotation_dict)
-'''
-print('Saving sample data to \'./sample_data.txt\'')
-with open('./sample_data.txt', 'w') as f:
-    for i in data:
-        f.write(i[0]['value'])
-        f.write('\t')
-        f.write(i[1][0]['name'])
-        for j in i[1][1:]:
-            f.write(',')
-            f.write(j['name'])
-        f.write('\n')
-'''
+    
+Test_parse_text_by_page(parser)
