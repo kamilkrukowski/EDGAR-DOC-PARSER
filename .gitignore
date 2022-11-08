@@ -136,3 +136,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 EDGAR/sample.json
+EDGAR/test.py
