@@ -10,6 +10,7 @@ import pickle as pkl
 
 
 import os
+import pathlib
 import warnings
 import datetime
 import time
@@ -17,16 +18,13 @@ import sys
 from tqdm.auto import tqdm 
 
 
-from metadata_manager import metadata_manager
+from .metadata_manager import metadata_manager
 
 
 class edgar_dataloader:
-    def __init__(self, metadata = None, 
-                 data_dir = 'default',
-                 api_keys_path = 'default'):
+    def __init__(self, data_dir, 
+                 api_keys_path, metadata = None):
 
-        if data_dir == 'default':
-            data_dir = 'edgar_downloads'
         self.data_dir = os.path.join(data_dir, '')
 
         # our HTML files are so big and nested that the standard
@@ -34,11 +32,9 @@ class edgar_dataloader:
         sys.setrecursionlimit(10000)
 
         # Always gets the path of the current file
-        self.path = os.path.abspath(os.path.join(__file__, os.pardir))
+        self.path = pathlib.Path().absolute()
 
         # Loads keys
-        if api_keys_path == 'default':
-            api_keys_path = os.path.join('..','api_keys.yaml');
         key_path = os.path.join(self.path, api_keys_path)
         assert os.path.exists(api_keys_path), 'No api_keys.yaml located'
         self.apikeys = load(open(api_keys_path, 'rb'), Loader=Loader)

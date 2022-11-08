@@ -1,11 +1,12 @@
 import os
 import time
+import sys ; sys.path.append('../')
 
 
-from dataloader import edgar_dataloader
+import EDGAR
 
 
-loader = edgar_dataloader(data_dir='edgar_downloads')
+loader = EDGAR.dataloader(data_dir='../data', api_keys_path='../api_keys.yaml');
 
 # List of companies to process
 tikrs = open(os.path.join(loader.path, '../tickers.txt')).read().strip()
