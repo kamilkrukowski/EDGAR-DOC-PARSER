@@ -318,9 +318,9 @@ class edgar_parser:
         text_on_page = {i: {"text": "", "elements": []} for i in range(1,num_page+1)}
         page_number = 1
         hr_parent = page_breaks[0].find_element(By.XPATH, "./..")
-        sibiling = hr_parent.find_elements(By.XPATH, "./*")
+        sibling = hr_parent.find_elements(By.XPATH, "./*")
 
-        for elem in sibiling:
+        for elem in sibling:
             if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
                 page_number += 1
                 continue
