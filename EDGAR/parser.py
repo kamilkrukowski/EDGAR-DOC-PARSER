@@ -302,9 +302,9 @@ class edgar_parser:
 
         time_diff = datetime.now() - time_start
         print(f'INFO Finished running function: val, total: {time_diff.seconds}s')
-        #print("before drop duplictates..", len(df))
+        #print("before drop duplicates..", len(df))
         df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
-        #print("after drop duplictates..", len(df))
+        #print("after drop duplicates..", len(df))
         if(save):
             df.to_csv('sample.csv')
         return df
@@ -334,39 +334,3 @@ class edgar_parser:
 
     def __del__(self):
         self.driver.quit();
-
-found = None
-annotation_dict = None
-parser = None
-if __name__ == '__main__':
-    
-    # Hyperparameters
-    tikr = 'nflx'
-    submission_date = '20210101' #Find nearest AFTER this date
-
-    headless = True
-
-    # Set up
-    loader = edgar_dataloader();
-    loader.metadata.load_tikr_metadata(tikr)
-
-    # Get nearest 10Q form path to above date
-    dname = loader.get_nearest_date_filename(submission_date, tikr)
-    fname = loader.get_10q_name(dname, tikr)
-    driver_path = "file:\/" + os.path.join(loader.proc_dir, tikr, dname, fname)
-
-    # Parsing
-    parser = edgar_parser(metadata=loader.metadata, headless=headless)
-    found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=False)
-    tables, table_types = parser.parse_annotated_tables(driver_path=None, highlight=True, save=True, out_path='./sample.htm')
-
-    data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
-    #temp = input('Press Enter to close  Window')
-
-
-
-
-
-
-
-

@@ -22,10 +22,12 @@ from metadata_manager import metadata_manager
 
 class edgar_dataloader:
     def __init__(self, metadata = None, 
-                 data_dir = 'edgar_downloads/',
-                 api_keys_path = '../api_keys.yaml'):
+                 data_dir = 'default',
+                 api_keys_path = 'default'):
 
-        self.data_dir = data_dir
+        if data_dir == 'default':
+            data_dir = 'edgar_downloads'
+        self.data_dir = os.path.join(data_dir, '')
 
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
@@ -33,7 +35,10 @@ class edgar_dataloader:
 
         # Always gets the path of the current file
         self.path = os.path.abspath(os.path.join(__file__, os.pardir))
+
         # Loads keys
+        if api_keys_path == 'default':
+            api_keys_path = os.path.join('..','api_keys.yaml');
         key_path = os.path.join(self.path, api_keys_path)
         assert os.path.exists(api_keys_path), 'No api_keys.yaml located'
         self.apikeys = load(open(api_keys_path, 'rb'), Loader=Loader)
@@ -188,10 +193,10 @@ class edgar_dataloader:
     def unpack_file(self, tikr, file, complete=True, force=True):
 
         # sec-edgar data save location for 10-Q filing ticker
-        d_dir = self.raw_dir+f'/{tikr}/10-Q/'
+        d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
 
         content = None
-        with open(d_dir + file, 'r', encoding='utf-8') as f:
+        with open(os.path.join(d_dir, file), 'r', encoding='utf-8') as f:
             content = f.read().strip()
 
         d = BeautifulSoup(content, features='lxml').body
@@ -221,7 +226,7 @@ class edgar_dataloader:
 
         # Processed data directory path
         out_path = os.path.join(
-            self.path, 'edgar_downloads/processed/',
+            self.path, self.data_dir, 'processed',
             tikr, file.split('.txt')[0])
         if not os.path.exists(out_path):
             os.system('mkdir -p ' + out_path)
@@ -329,40 +334,3 @@ class edgar_dataloader:
     def __del__(self):
         # back to normal
         sys.setrecursionlimit(1000)
-
-
-# Test example
-loader = None
-if __name__ == '__main__':
-
-    loader = edgar_dataloader(data_dir='edgar_downloads')
-    tikrs = ['nflx']
-
-    max_num_filings = 3
-    start_date = datetime.datetime(2020, 1, 15)
-    end_date = datetime.datetime(2023, 7, 15)
-
-    # If we set all to None, we get everything
-    #    Metadata will note this and prevent re-pulling
-    max_num_filings = None
-    start_date = None
-    end_date = None
-
-    for tikr in tikrs:
-        time.sleep(1)
-        loader.metadata.load_tikr_metadata(tikr)
-
-        print("First we download...")
-        loader.query_server(tikr, start_date, end_date, max_num_filings)
-        print("Look: if we try again it declines;")
-        loader.query_server(tikr, start_date, end_date, max_num_filings)
-        print("""Now we unpack all tikr filings in bulk locally
-        but only for the 10-Q...""")
-        loader.unpack_bulk(tikr, loading_bar=True)
-        print("""We can also unpack individual files more thoroughly
-                , i.e. for supporting figures.""")
-        files = loader.get_unpackable_files(tikr)
-        print(f"Here is one: {files[0]}")
-        print("We are unpacking it...")
-        loader.unpack_file(tikr, files[0], complete=False)
-        print("All done!")
