@@ -1,3 +1,6 @@
+from dataloader import edgar_dataloader
+import datetime
+import time
 loader = edgar_dataloader(data_dir='edgar_downloads')
 tikrs = ['nflx']
 
