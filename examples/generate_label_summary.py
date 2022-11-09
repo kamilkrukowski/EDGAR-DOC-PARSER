@@ -21,17 +21,13 @@ tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 trainset = []
 for tikr in tikrs:
     metadata.load_tikr_metadata(tikr)
-    
-    t = time()
     annotated_docs = parser.get_annotated_submissions(tikr)
     
     for doc in annotated_docs:
         fname = metadata.get_10q_name(tikr, doc)
         elems, annotation_dict = parser._parse_annotated_text(parser.get_driver_path(tikr, doc, fname))
 
-        parser.
-
-       # TODO ADD FUNCTION TO GET TRAINING DATA FROM ELEMS, ANNOTATIONS 
+        # TODO collect summary statistics on parsed information 
 
         break
     break;
