@@ -9,7 +9,7 @@ import EDGAR
 
 data_dir = '../data'
 
-metadata = EDGAR.Metadata(data_dir = data_dir)
+metadata = EDGAR.Metadata(data_dir=data_dir)
 loader = EDGAR.dataloader(data_dir=data_dir, api_keys_path='../api_keys.yaml',metadata=metadata);
 parser = EDGAR.parser(data_dir=data_dir, metadata=metadata)
 
@@ -27,6 +27,8 @@ for tikr in tikrs:
     for doc in annotated_docs:
         fname = metadata.get_10q_name(tikr, doc)
         elems, annotation_dict = parser._parse_annotated_text(parser.get_driver_path(tikr, doc, fname))
+
+        parser.
 
        # TODO ADD FUNCTION TO GET TRAINING DATA FROM ELEMS, ANNOTATIONS 
 

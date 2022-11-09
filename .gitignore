@@ -2,6 +2,7 @@
 api_keys.yaml
 data/*
 **/geckodriver.log
+outputs/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
