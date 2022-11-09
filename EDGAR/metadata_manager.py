@@ -45,3 +45,12 @@ class metadata_manager(dict):
         pdict = self[tikr]['submissions']
         if fname not in pdict:
             pdict[fname] = {'attrs': dict(), 'documents': dict()}
+    
+    """
+        Returns 10-q filename associated with submission
+    """
+    def get_10q_name(self, tikr, filename):
+        meta = self[tikr]['submissions'][filename]['documents']
+        for file in meta:
+            if meta[file]['type'] in ['10-Q', 'FORM 10-Q']:
+                return meta[file]['filename']

@@ -318,15 +318,6 @@ class edgar_dataloader:
                         return dates[start].split('.txt')[0], start
                     return dates[start].split('.txt')[0]
 
-    """
-        Returns 10-q filename associated with submission
-    """
-    def get_10q_name(self, filename, tikr):
-        meta = self.metadata[tikr]['submissions'][filename]['documents']
-        for file in meta:
-            if meta[file]['type'] in ['10-Q', 'FORM 10-Q']:
-                return meta[file]['filename']
-
     def __del__(self):
         # back to normal
         sys.setrecursionlimit(1000)

@@ -17,6 +17,8 @@ import itertools
 from yaml import load, CLoader as Loader
 import os
 import pickle as pkl
+import re
+import pathlib
 
 
 from .metadata_manager import metadata_manager
@@ -77,7 +79,7 @@ class edgar_parser:
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
-    def parse_unannotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
+    def _parse_unannotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
         
         if driver_path is None:
             self.driver.get(driver_path)
@@ -97,14 +99,19 @@ class edgar_parser:
         return found;
 
     """
+        Get a driver filename uri path from data identifiers
+    """
+    def get_driver_path(self, tikr, submission, fname, partition='processed'):
+        return pathlib.Path(os.path.join(self.data_dir, partition, tikr, submission, fname)).absolute().as_uri()
+
+    """
     Parses some documents 2020+ at least
 
         driver_path -- path of file to open, or 'NONE' to keep current file
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
-    #@func_running_time
-    def parse_annotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
+    def _parse_annotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
         
         if driver_path is not None:
             self.driver.get(driver_path)
@@ -126,13 +133,54 @@ class edgar_parser:
             for i in found:
                 self._draw_border(i, 'red');
                 for j in annotation_dict[i]:
-                    #print(j.get_attribute("outerHTML"))
                     self._draw_border(j, 'blue')
 
         if save:
             self._save_driver_source(out_path)
 
         return found, annotation_dict;
+
+    """
+        Return list of submissions names with annotated 10-Q forms
+    """
+    def get_annotated_submissions(self, tikr):
+        return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i)]
+
+    """
+        Returns whether given tikr submission has annotated ix elements
+    """
+    def _is_10q_annotated(self, tikr, submission) -> bool:
+        
+        assert tikr in self.metadata;
+        assert submission in self.metadata[tikr]['submissions']
+
+        is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get('is_10q_annotated', None)
+        if is_annotated is not None:
+            return is_annotated
+        else:
+            return self._gen_10q_annotated_metadata(tikr, submission)
+            
+    def _gen_10q_annotated_metadata(self, tikr, submission):
+                
+        annotated_tag_list = {'ix:nonnumeric','ix:nonfraction'}
+
+        _file = None
+        files = self.metadata[tikr]['submissions'][submission]['documents']
+        for file in files:
+            if files[file]['type'] == '10-Q':
+                _file = files[file]['filename']
+
+        data = None
+        fname = os.path.join(self.data_dir, 'processed', tikr, submission, _file)
+        with open(fname, 'r') as f:
+            data = f.read();
+        for tag in annotated_tag_list:
+            if re.search(tag, data):
+                files = self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = True
+                return True
+        files = self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+        return False
+
 
     """
     Parses some documents 2020+ at least
