@@ -244,13 +244,11 @@ class edgar_parser:
     def get_annotation_info(self, elem: WebElement):
         return {'value': elem.text, 'name': elem.get_attribute('name') , 'id': elem.get_attribute('id')}
 
-
     def get_element_info(self, element: WebElement)-> list():
         return {"value": element.text,"location": element.location, "size": element.size}
 
-    #@func_running_time
     def parsed_to_data(self, webelements: list, annotations: dict,
-            save: bool = False, out_path: str = None, keep_unlabeled=False):
+            save: bool = False, tikr: str = None, submission: str = None, keep_unlabeled=False):
 
         
         data = []
@@ -266,6 +264,8 @@ class edgar_parser:
             data.append([self.get_element_info(elem), infos])
 
         if save:
+            assert tikr is not None, 'Saving but no tikr provided' ;
+            assert submission is not None, 'Saving but no submission provided' ;
             parse_dir = os.path.join(self.data_dir, 'parsed')
             out_path = os.path.join(parse_dir, out_path.split('.')[0] + '.pkl')
             
@@ -351,7 +351,7 @@ class edgar_parser:
         print(f'INFO Finished running function: val, total: {time_diff.seconds}s')
         df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
         if(save):
-            df.to_csv('sample.csv')
+            df.to_csv(out_path)
         return df
         
     def parse_text_by_page(self):
