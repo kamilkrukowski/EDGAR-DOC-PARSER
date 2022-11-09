@@ -57,7 +57,7 @@ def Test_parse_text_by_page(parser):
 
 # Parsing
 data = None
-if not os.path.exists(os.path.join('./edgar_downloads', 'parsed', tikr, f"{fname.split(',')[0]}.pkl")):
+if not os.path.exists(os.path.join('../data', 'parsed', tikr, f"{fname.split(',')[0]}.pkl")):
     print('Parsed Data does not exist... creating and caching')
 
     found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=True)
