@@ -81,7 +81,7 @@ class edgar_parser:
     """
     def _parse_unannotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
         
-        if driver_path is None:
+        if driver_path is not None:
             self.driver.get(driver_path)
 
         found = self.driver.find_elements(By.TAG_NAME, 'font')
@@ -94,7 +94,7 @@ class edgar_parser:
             for i in found:
                 self._draw_border(i, 'red');
         if save:
-            self.save_driver_source(out_path)
+            self._save_driver_source(out_path)
 
         return found;
 
@@ -302,8 +302,26 @@ class edgar_parser:
             
         return None, None
     #-----------get attribute-------------------------------------------------#
-    #@func_running_time
-    def get_annotation_features(self, webelements: list, annotations: dict,save: bool = False, out_path: str = None):
+    """
+    value - the text value of the annotated label (e.g. 10-Q)
+    found_index - index of the parent span webelement in the list of webelements
+    full_text - neighboring text (based on the text value of the parent span) (** replace it with new identify neighboring text function)
+    annotation_index - index of the annotation in the list of annotation based on its webelement
+    annotation_name - the name attribute from the annotation tag (e.g. us-gaap:SegmentReportingDisclosureTextBlock)
+    annotation_id - the id attribute from the annotation tag (e.g. id3VybDovL2RvY3MudjEvZG9jOjY0OTlhYTNmZjJk...)
+    annotation_format - the format attribute from the annotation tag (e.g. ixt:numdotdecimal)
+    annotation_ix_type - the ix type attribute from the annotation tag (e.g. ix:nonfraction)
+    annotation_unitref - the unit reference attribute from the annotation tag (e.g. usd)
+    annotation_decimals - the decimal place attribute from the annotation tag (e.g. -3)
+    annotation_contextref - the context reference attribute from the annotation tag (e.g. ic6b57dd3d48343d99e743248386420fc_I20201231)
+    page_number - the page number for the label
+    x - x coordinate
+    y - y coordinate base on page number
+    height - the height of the tag
+    width - the width of the tag
+    is_annotation - 1 if the value is annotation, 0 otherwise.
+    """
+    def get_annotation_features(self, webelements: list, annotations: dict,save: bool = False, out_path: str = 'sample.csv'):
         COLUMN_NAMES = ["value","found_index","full_text", "annotation_index", "annotation_name","annotation_id",
                         "annotation_format","annotation_ix_type",'annotation_unitref',"annotation_decimals",
                         "annotation_contextref","page_number","x","y", "height", "width","is_annotation"]
@@ -311,13 +329,11 @@ class edgar_parser:
         NUM_COLUMN = len(COLUMN_NAMES)
        
         df = pd.DataFrame(columns=COLUMN_NAMES) 
-        print(f'INFO Begin to run function: val …')
-        time_start = datetime.now()
         for i, elem in enumerate(webelements):
             
             default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
-            default_dict.update({"value": elem.text, "found_index": i,"full_text": elem.text, "is_annotation": 0,
+            default_dict.update({"value": np.nan, "found_index": int(i),"full_text": elem.text, "is_annotation": 0,
                                 "x": elem.location['x'], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"]})
 
@@ -326,7 +342,7 @@ class edgar_parser:
             for j, annotation in enumerate(annotations[elem]):
                 new_dict = default_dict.copy()
                 page_num, y = self.get_page_number(page_location, annotation)
-                val = {"annotation_index": j, "is_annotation": 1,"value": annotation.text,
+                val = {"annotation_index": int(j), "is_annotation": 1,"value": annotation.text,
                         "annotation_name": annotation.get_attribute('name'), "annotation_id": annotation.get_attribute('id'), 
                         "annotation_id": annotation.get_attribute('id'), "annotation_contextref":  annotation.get_attribute('contextref'),
                         "annotation_decimals": annotation.get_attribute('decimals'), "annotation_format": annotation.get_attribute('format'),
@@ -347,8 +363,6 @@ class edgar_parser:
                 temp_df = pd.DataFrame(default_dict,index=[0])
                 df = pd.concat([temp_df,df], ignore_index=True)
 
-        time_diff = datetime.now() - time_start
-        print(f'INFO Finished running function: val, total: {time_diff.seconds}s')
         df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
         if(save):
             df.to_csv(out_path)
@@ -369,11 +383,22 @@ class edgar_parser:
         sibling = hr_parent.find_elements(By.XPATH, "./*")
 
         for elem in sibling:
+            ########## highlighting ###################
+            if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
+                self._draw_border(elem, 'purple')
+            elif(page_number % 2 == 0):
+                self._draw_border(elem, 'red')
+            else:
+                self._draw_border(elem, 'blue')
+            ########## highlighting ###################
+
             if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
                 page_number += 1
                 continue
             text_on_page[page_number]['text'] += "/n" + elem.text
             text_on_page[page_number]["elements"].append(elem)
+
+        self._save_driver_source("sample.html")    
         return text_on_page
 
     def __del__(self):
