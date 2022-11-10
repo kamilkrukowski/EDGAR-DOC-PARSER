@@ -57,7 +57,7 @@ data = None
 if not os.path.exists(os.path.join('../data', 'parsed', tikr, f"{fname.split(',')[0]}.pkl")):
     print('Parsed Data does not exist... creating and caching')
     found, annotation_dict = parser._parse_annotated_text(driver_path)
-    data = parser.parsed_to_data(found, annotation_dict, tikr=tikr, submission=dname)
+    data = parser.parsed_to_data(found, annotation_dict, save=True, tikr=tikr, submission=dname)
     features = parser.get_annotation_features(found, annotation_dict, save=True, out_path=os.path.join('..','outputs','features.csv'))
 
 else:
