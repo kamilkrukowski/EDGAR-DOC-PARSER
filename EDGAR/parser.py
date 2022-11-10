@@ -311,13 +311,12 @@ class edgar_parser:
         NUM_COLUMN = len(COLUMN_NAMES)
        
         df = pd.DataFrame(columns=COLUMN_NAMES) 
-        print(f'INFO Begin to run function: val …')
-        time_start = datetime.now()
+        
         for i, elem in enumerate(webelements):
             
             default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
-            default_dict.update({"value": elem.text, "found_index": i,"full_text": elem.text, "is_annotation": 0,
+            default_dict.update({"value": elem.text, "found_index": i,"full_text": elem.text, "is_annotation": False,
                                 "x": elem.location['x'], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"]})
 
@@ -325,15 +324,16 @@ class edgar_parser:
             
             for j, annotation in enumerate(annotations[elem]):
                 new_dict = default_dict.copy()
-                page_num, y = self.get_page_number(page_location, annotation)
-                val = {"annotation_index": j, "is_annotation": 1,"value": annotation.text,
-                        "annotation_name": annotation.get_attribute('name'), "annotation_id": annotation.get_attribute('id'), 
-                        "annotation_id": annotation.get_attribute('id'), "annotation_contextref":  annotation.get_attribute('contextref'),
-                        "annotation_decimals": annotation.get_attribute('decimals'), "annotation_format": annotation.get_attribute('format'),
-                        "annotation_ix_type": annotation.tag_name, "annotation_unitref" : annotation.get_attribute('unitref'),"x": annotation.location['x'],
-                        "y": y, "height": annotation.size["height"], "width": annotation.size["width"],"page_number": page_num
+                
+                val = {'annotation_index': j , 'x': annotation.location['x'], 'is_annotation': True,
+                        'value': annotation.text, 'annotation_ix_type': annotation.tag_name}
+                
+                val['page_number'], val['y'] = self.get_page_number(page_location, annotation)
 
-                        }
+                for _attr in ['name', 'id', 'contextref', 'decimals', 'format', 'unitref']:
+                    val[_attr] = annotation.get_attribute(_attr)
+                for _size in ['width', 'height']:
+                    val[_size] = annotation.size[_size]
                 
                 new_dict.update(val)
                 temp_df = pd.DataFrame(new_dict,index=[0])
@@ -347,12 +347,32 @@ class edgar_parser:
                 temp_df = pd.DataFrame(default_dict,index=[0])
                 df = pd.concat([temp_df,df], ignore_index=True)
 
-        time_diff = datetime.now() - time_start
-        print(f'INFO Finished running function: val, total: {time_diff.seconds}s')
         df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
         if(save):
             df.to_csv(out_path)
         return df
+    
+    def process_file(self, tikr: str, submission: str, filename: str, force: bool = False):
+        if not force and self.metadata.file_was_processed(tikr, submission, filename):
+            return self.load_processed(tikr, submission, filename)
+        else:
+            elems, annotation_dict = self._parse_annotated_text(self.get_driver_path(tikr, submission, filename))
+            features = self.get_annotation_features(elems, annotation_dict)
+            self.save_processed(tikr, submission, filename, elems, annotation_dict, features)
+            return features
+    
+    def save_processed(self, tikr: str, submission: str, filename: str, elems, annotations: dict, features):
+        path = os.path.join(self.data_dir, 'parsed', tikr, submission, filename)
+        if not os.path.exists(path):
+            os.system(f"mkdir -p {path}")
+        with open(os.path.join(path, 'features.pkl'), 'wb') as f:
+            pkl.dump(features, f)
+        self.metadata.file_set_processed(tikr, submission, filename, True)
+
+    def load_processed(self, tikr, submission, filename):
+        path = os.path.join(self.data_dir, 'parsed', tikr, submission, filename.split('.')[0])
+        with open(os.path.join(path, 'features.pkl'), 'rb') as f:
+            return pkl.load(f)
         
     def parse_text_by_page(self):
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')

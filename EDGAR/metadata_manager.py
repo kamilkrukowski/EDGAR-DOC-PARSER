@@ -54,3 +54,20 @@ class metadata_manager(dict):
         for file in meta:
             if meta[file]['type'] in ['10-Q', 'FORM 10-Q']:
                 return meta[file]['filename']
+
+    def find_sequence_of_file(self, tikr: str, submission: str, filename: str):
+        level = self[tikr]['submissions'][submission]['documents']
+        for sequence in level:
+            if level[sequence]['filename'] == filename:
+                return sequence
+        return None
+            
+    def file_set_processed(self, tikr: str, submission: str, filename: str, val: bool):
+        sequence = self.find_sequence_of_file(tikr, submission, filename)
+        assert sequence is not None, "Error: filename not found"
+        self[tikr]['submissions'][submission]['documents'][sequence]['processed'] = val
+
+    def file_was_processed(self, tikr: str, submission: str, filename: str):
+        sequence = self.find_sequence_of_file(tikr, submission, filename)
+        assert sequence is not None, "Error: filename not found"
+        return self[tikr]['submissions'][submission]['documents'][sequence].get('processed', False)
