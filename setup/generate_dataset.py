@@ -21,7 +21,6 @@ parser = EDGAR.parser(data_dir=data_dir, metadata=metadata)
 # List of companies to process
 tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
-tikrs = ['nflx']
 
 trainset = []
 for tikr in tikrs:
