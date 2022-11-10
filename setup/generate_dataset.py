@@ -31,7 +31,7 @@ for tikr in tikrs:
         fname = metadata.get_10q_name(tikr, doc)
 
         features = parser.process_file(tikr, doc, fname) 
-
+    
         found_indices = np.unique([int(i) for i in features['found_index']])
         data = {i:{'text':None, 'labels':dict(), 'labelled':False } for i in found_indices}
         

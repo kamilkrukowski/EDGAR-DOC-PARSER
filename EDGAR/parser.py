@@ -279,6 +279,9 @@ class edgar_parser:
 
     def find_page_location(self) -> dict:
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
+        # TODO add logic to handle this
+        if len(page_breaks) == 0:
+            return None
         page_number = 1
         # get the range of y for page 1
         page_location = {page_number: [0,page_breaks[0].location["y"]]}
@@ -295,6 +298,9 @@ class edgar_parser:
         return page_location
 
     def get_page_number(self, page_location: dict, element: WebElement) -> int:
+        if page_location is None:
+            return None, None
+
         element_y = element.location["y"]
         for i in range(1,len(page_location)+1):
             if( element_y > page_location[i][0] and element_y <page_location[i][1]):
@@ -376,9 +382,11 @@ class edgar_parser:
         if not force and self.metadata.file_was_processed(tikr, submission, filename):
             return self.load_processed(tikr, submission, filename)
         else:
+            # TODO make process_file detect and work on unannotated files
             elems, annotation_dict = self._parse_annotated_text(self.get_driver_path(tikr, submission, filename))
             features = self.get_annotation_features(elems, annotation_dict)
             self.save_processed(tikr, submission, filename, elems, annotation_dict, features)
+            self.metadata.save_tikr_metadata(tikr)
             return features
     
     def save_processed(self, tikr: str, submission: str, filename: str, elems, annotations: dict, features):
