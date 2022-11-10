@@ -390,7 +390,7 @@ class edgar_parser:
         self.metadata.file_set_processed(tikr, submission, filename, True)
 
     def load_processed(self, tikr, submission, filename):
-        path = os.path.join(self.data_dir, 'parsed', tikr, submission, filename.split('.')[0])
+        path = os.path.join(self.data_dir, 'parsed', tikr, submission, filename)
         with open(os.path.join(path, 'features.pkl'), 'rb') as f:
             return pkl.load(f)
         

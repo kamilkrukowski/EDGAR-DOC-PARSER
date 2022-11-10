@@ -65,9 +65,9 @@ class metadata_manager(dict):
     def file_set_processed(self, tikr: str, submission: str, filename: str, val: bool):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
-        self[tikr]['submissions'][submission]['documents'][sequence]['processed'] = val
+        self[tikr]['submissions'][submission]['documents'][sequence]['features_pregenerated'] = val
 
     def file_was_processed(self, tikr: str, submission: str, filename: str):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
-        return self[tikr]['submissions'][submission]['documents'][sequence].get('processed', False)
+        return self[tikr]['submissions'][submission]['documents'][sequence].get('features_pregenerated', False)

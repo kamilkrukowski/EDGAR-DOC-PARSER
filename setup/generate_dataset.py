@@ -50,6 +50,7 @@ for tikr in tikrs:
             if not d['labelled']:
                 continue; 
             trainset.append((d['text'], list(d['labels'].values())))
+            
     
         with open(os.path.join('..','outputs','sample_data.csv'), 'w') as f:
             text, labels = trainset[0]
