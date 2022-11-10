@@ -21,26 +21,26 @@ import pickle as pkl
 import json
 
 
-from EDGAR import Metadata, parser, dataloader
+import EDGAR
 
 
 # Hyperparameters
 tikr = 'nflx'
-#submission_date = '20210101' #Find nearest AFTER this date
-submission_date = '20070101'
+submission_date = '20210101'
 headless = True
+data_dir = os.path.join('..','data')
 
 # Set up
-loader = dataloader(data_dir='../data/',api_keys_path ='../api_keys.yaml');
+loader EDGAR.dataloader(data_dir=data_dir, api_keys_path = os.path.join('..' ,'api_keys.yaml'))
 loader.metadata.load_tikr_metadata(tikr)
 
 # Get nearest 10Q form path to above date
 dname = loader.get_nearest_date_filename(submission_date, tikr)
 fname = loader.metadata.get_10q_name(tikr, dname)
-driver_path = "file:\/" + os.path.join(loader.proc_dir, tikr, dname, fname)
-print(driver_path)
-parser = parser(metadata=loader.metadata, headless=headless)
 
+parser = EDGAR.parser(data_dir=data_dir, metadata=loader.metadata, headless=headless)
+
+driver_path =  parser.get_driver_path(tikr, dname, fname)
 
 ########### testing for parse_text_by_page ##################
 
@@ -48,25 +48,18 @@ def Test_parse_text_by_page(parser):
     # Serializing json
     text = parser.parse_text_by_page()
     # Writing to sample.json
-    with open("sample.json", "w") as outfile:
-        json.dump(text, outfile, default=lambda o: '<not serializable>',sort_keys=True, indent=4)
+    with open(os.path.join("..", "outputs", "sample.json"), "w") as outfile:
+        json.dump(text, outfile, default=lambda o: '<not serializable>', sort_keys=True, indent=4)
 
 ########### testing for get_annotation_feature ##################
 def Test_get_annotation_features(found, annotation_dict):
-	parser.get_annotation_features(found, annotation_dict,save= True, out_path=  'sample.csv')
+	parser.get_annotation_features(found, annotation_dict,save= True, out_path = os.path.join('..', 'outputs', 'sample.csv'))
 
-# Parsing
-data = None
-if not os.path.exists(os.path.join('../data', 'parsed', tikr, f"{fname.split(',')[0]}.pkl")):
-    print('Parsed Data does not exist... creating and caching')
-    if(int(submission_date) > 20200101):
-    	found, annotation_dict = parser._parse_annotated_text(driver_path, highlight=False, save=False)
-    	Test_get_annotation_features(found, annotation_dict)
-    else:
-    	found = parser._parse_unannotated_text(driver_path, highlight=False, save=True)
-
+found = None
+if(int(submission_date) > 20200101):
+  found, annotation_dict = parser._parse_annotated_text(driver_path, highlight=False, save=False)
+  Test_get_annotation_features(found, annotation_dict)
 else:
-    print('Loading cached parsed data')
-    data= parser.load_parsed(tikr, fname)
+  found = parser._parse_unannotated_text(driver_path, highlight=False, save=True)
     
-Test_parse_text_by_page(parser)
+text_on = Test_parse_text_by_page(parser)
