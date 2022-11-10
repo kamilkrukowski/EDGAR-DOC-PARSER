@@ -5,7 +5,7 @@ import sys; sys.path.append('../')
 
 import EDGAR
 
-loader = EDGAR.dataloader(data_dir='../data/')
+loader = EDGAR.dataloader(data_dir='../data/',api_keys_path ='../api_keys.yaml')
 tikrs = ['nflx']
 
 for tikr in tikrs:

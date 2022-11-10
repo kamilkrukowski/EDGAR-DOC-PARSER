@@ -31,15 +31,15 @@ submission_date = '20070101'
 headless = True
 
 # Set up
-loader = edgar_dataloader();
+loader = dataloader(data_dir='../data/',api_keys_path ='../api_keys.yaml');
 loader.metadata.load_tikr_metadata(tikr)
 
 # Get nearest 10Q form path to above date
 dname = loader.get_nearest_date_filename(submission_date, tikr)
-fname = loader.get_10q_name(dname, tikr)
+fname = loader.metadata.get_10q_name(tikr, dname)
 driver_path = "file:\/" + os.path.join(loader.proc_dir, tikr, dname, fname)
 print(driver_path)
-parser = edgar_parser(metadata=loader.metadata, headless=headless)
+parser = parser(metadata=loader.metadata, headless=headless)
 
 
 ########### testing for parse_text_by_page ##################
@@ -52,15 +52,18 @@ def Test_parse_text_by_page(parser):
         json.dump(text, outfile, default=lambda o: '<not serializable>',sort_keys=True, indent=4)
 
 ########### testing for get_annotation_feature ##################
-#def Test_get_annotation_features(,)
-
+def Test_get_annotation_features(found, annotation_dict):
+	parser.get_annotation_features(found, annotation_dict,save= True, out_path=  'sample.csv')
 
 # Parsing
 data = None
 if not os.path.exists(os.path.join('../data', 'parsed', tikr, f"{fname.split(',')[0]}.pkl")):
     print('Parsed Data does not exist... creating and caching')
-
-    found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=True)
+    if(int(submission_date) > 20200101):
+    	found, annotation_dict = parser._parse_annotated_text(driver_path, highlight=False, save=False)
+    	Test_get_annotation_features(found, annotation_dict)
+    else:
+    	found = parser._parse_unannotated_text(driver_path, highlight=False, save=True)
 
 else:
     print('Loading cached parsed data')
