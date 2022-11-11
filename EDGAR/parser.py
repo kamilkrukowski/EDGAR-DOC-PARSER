@@ -13,8 +13,7 @@ import pandas as pd
 import numpy as np
 
 
-import itertools
-from yaml import load, CLoader as Loader
+import warnings
 import os
 import pickle as pkl
 import re
@@ -169,6 +168,20 @@ class edgar_parser:
         for file in files:
             if files[file]['type'] == '10-Q':
                 _file = files[file]['filename']
+                
+        # TODO handle ims-document
+        if _file is None:
+            warnings.warn("Document Encountered without 10-Q", RuntimeWarning)
+            for file in files:
+                if files[file].get('is_ims-document', False):
+                    self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+                    warnings.warn("Encountered unlabeled IMS-DOCUMENT", RuntimeWarning)
+                    return False 
+            if len(files) == 0:
+                warnings.warn("No Files under Document", RuntimeWarning)
+                return False
+
+        assert _file is not None, 'Missing 10-Q'
 
         data = None
         fname = os.path.join(self.data_dir, 'processed', tikr, submission, _file)
@@ -176,9 +189,9 @@ class edgar_parser:
             data = f.read();
         for tag in annotated_tag_list:
             if re.search(tag, data):
-                files = self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = True
+                self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = True
                 return True
-        files = self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+        self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
         return False
 
 
@@ -234,7 +247,7 @@ class edgar_parser:
 
         return found_table, table_is_numeric
 
-
+    #legacy?
     def load_parsed(self, tikr, submission):
         path = os.path.join(self.data_dir, 'parsed', tikr, submission.split('.')[0] + '.pkl')
 

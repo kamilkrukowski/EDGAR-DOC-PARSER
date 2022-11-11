@@ -200,11 +200,13 @@ class edgar_dataloader:
         p = d.find('sec-document')
         if p is None:
             p = d.find('ims-document')
-            fname = file.split('.txt')[0]
-            if fname not in self.metadata[tikr]['submissions']:
-                self.metadata.initialize_submission_metadata(tikr, fname)
-            self.metadata[tikr]['submissions'][fname]['attrs']['is_ims-document'] = True
-            return
+            if p is not None:
+                warnings.warn("IMS-DOCUMENT skipped during loading")
+                fname = file.split('.txt')[0]
+                if fname not in self.metadata[tikr]['submissions']:
+                    self.metadata.initialize_submission_metadata(tikr, fname)
+                self.metadata[tikr]['submissions'][fname]['attrs']['is_ims-document'] = True
+                return
         d = p
         assert d is not None, 'No sec-document tag found in submission'
 
