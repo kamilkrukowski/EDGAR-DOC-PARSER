@@ -1,7 +1,9 @@
+"""
+    This file will featurize the 10-ticker companies and saved the cached feature pandas dataframe
+    That dataframe can be loaded for downstream transformations, such as selection of subfields which is done below and saved in a sample_data.csv
+"""
 import os
-import time
 import sys ; sys.path.append('../')
-from time import time
 
 
 from tqdm.auto import tqdm

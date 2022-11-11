@@ -13,8 +13,7 @@ import pandas as pd
 import numpy as np
 
 
-import itertools
-from yaml import load, CLoader as Loader
+import warnings
 import os
 import pickle as pkl
 import re
@@ -22,20 +21,6 @@ import pathlib
 
 
 from .metadata_manager import metadata_manager
-from .dataloader import edgar_dataloader #for __main__
-from datetime import datetime
-
-# a decorator to measure the time of a function
-def func_running_time(func):
-    def inner(*args, **kwargs):
-        print(f'INFO Begin to run function: {func.__name__} …')
-        time_start = datetime.now()
-        res = func(*args, **kwargs)
-        time_diff = datetime.now() - time_start
-        print(f'INFO Finished running function: {func.__name__}, total: {time_diff.seconds}s')
-        print()
-        return res
-    return inner
 
 
 class edgar_parser:
@@ -169,6 +154,20 @@ class edgar_parser:
         for file in files:
             if files[file]['type'] == '10-Q':
                 _file = files[file]['filename']
+                
+        # TODO handle ims-document
+        if _file is None:
+            warnings.warn("Document Encountered without 10-Q", RuntimeWarning)
+            for file in files:
+                if files[file].get('is_ims-document', False):
+                    self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+                    warnings.warn("Encountered unlabeled IMS-DOCUMENT", RuntimeWarning)
+                    return False 
+            if len(files) == 0:
+                warnings.warn("No Files under Document", RuntimeWarning)
+                return False
+
+        assert _file is not None, 'Missing 10-Q'
 
         data = None
         fname = os.path.join(self.data_dir, 'processed', tikr, submission, _file)
@@ -176,9 +175,9 @@ class edgar_parser:
             data = f.read();
         for tag in annotated_tag_list:
             if re.search(tag, data):
-                files = self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = True
+                self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = True
                 return True
-        files = self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+        self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
         return False
 
 
@@ -202,6 +201,8 @@ class edgar_parser:
             table_is_numeric[i] = 2
             
             # If a table has both non-numeric and non-fraction, the non-fraction takes precedence
+
+            # TODO convert to regex on inner text
             
             try:
                 found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonfraction')
@@ -234,7 +235,7 @@ class edgar_parser:
 
         return found_table, table_is_numeric
 
-
+    #legacy?
     def load_parsed(self, tikr, submission):
         path = os.path.join(self.data_dir, 'parsed', tikr, submission.split('.')[0] + '.pkl')
 
@@ -281,6 +282,7 @@ class edgar_parser:
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
         # TODO add logic to handle this
         if len(page_breaks) == 0:
+            warnings.warn("No page breaks detected in document", RuntimeWarning)
             return None
         page_number = 1
         # get the range of y for page 1
