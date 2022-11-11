@@ -21,20 +21,6 @@ import pathlib
 
 
 from .metadata_manager import metadata_manager
-from .dataloader import edgar_dataloader #for __main__
-from datetime import datetime
-
-# a decorator to measure the time of a function
-def func_running_time(func):
-    def inner(*args, **kwargs):
-        print(f'INFO Begin to run function: {func.__name__} …')
-        time_start = datetime.now()
-        res = func(*args, **kwargs)
-        time_diff = datetime.now() - time_start
-        print(f'INFO Finished running function: {func.__name__}, total: {time_diff.seconds}s')
-        print()
-        return res
-    return inner
 
 
 class edgar_parser:
@@ -215,6 +201,8 @@ class edgar_parser:
             table_is_numeric[i] = 2
             
             # If a table has both non-numeric and non-fraction, the non-fraction takes precedence
+
+            # TODO convert to regex on inner text
             
             try:
                 found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonfraction')
