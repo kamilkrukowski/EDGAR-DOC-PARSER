@@ -282,6 +282,7 @@ class edgar_parser:
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
         # TODO add logic to handle this
         if len(page_breaks) == 0:
+            warnings.warn("No page breaks detected in document", RuntimeWarning)
             return None
         page_number = 1
         # get the range of y for page 1
