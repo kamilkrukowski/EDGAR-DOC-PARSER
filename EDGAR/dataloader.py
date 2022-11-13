@@ -5,15 +5,12 @@ Extracts 10-Q htm files from these filing txt dumps
 from secedgar import filings, FilingType
 from secedgar.exceptions import NoFilingsError
 from bs4 import BeautifulSoup
-from yaml import load, CLoader as Loader
-import pickle as pkl
 
 
 import os
 import pathlib
 import warnings
 import datetime
-import time
 import sys
 from tqdm.auto import tqdm 
 
@@ -33,22 +30,37 @@ class edgar_dataloader:
 
         # Always gets the path of the current file
         self.path = pathlib.Path().absolute()
-
-        # Loads keys
-        key_path = os.path.join(self.path, api_keys_path)
-        assert os.path.exists(api_keys_path), 'No api_keys.yaml located'
-        self.apikeys = load(open(api_keys_path, 'rb'), Loader=Loader)
-        assert 'edgar_email' in self.apikeys, 'Set personal email'
-        assert 'edgar_agent' in self.apikeys, 'Set personal name'
-
-        # Download and processed directories
-        self.raw_dir = os.path.join(self.path, self.data_dir, 'raw')
-        self.proc_dir = os.path.join(self.path, self.data_dir, 'processed')
-
+        
         if metadata is None:
             self.metadata = metadata_manager(data_dir=data_dir);
         else:
             self.metadata = metadata
+
+        # Loads keys
+        self.metadata.load_keys();
+
+        if 'edgar_email' not in self.metadata.keys or 'edgar_agent' not in self.metadata.keys:
+            print(f"No API Header detected.\nThe SEC requires all EDGAR API users to identify themselves\n\n")
+            if 'edgar_agent' not in self.metadata.keys:
+               print("The SEC requires a legal name of the user and any organizational affiliation")
+               answer = 'n'
+               while (answer[0] != 'y'):
+                    self.metadata.keys['edgar_agent'] = input("User(s): ")
+                    answer = input(f"Input User(s) \'{self.metadata.keys['edgar_agent']}\'\n Is this correct? (y/n)")
+            if 'edgar_email' not in self.metadata.keys:
+               print("The SEC requires a contact email for the API user")
+               answer = 'n'
+               while (answer[0] != 'y'):
+                    self.metadata.keys['edgar_email'] = input("Email: ")
+                    answer = input(f"Input Email \'{self.metadata.keys['edgar_email']}\'\n Is this correct? (y/n)")
+            self.metadata.save_keys()
+
+        assert 'edgar_email' in self.metadata.keys, 'Set personal email'
+        assert 'edgar_agent' in self.metadata.keys, 'Set personal name'
+
+        # Download and processed directories
+        self.raw_dir = os.path.join(self.path, self.data_dir, 'raw')
+        self.proc_dir = os.path.join(self.path, self.data_dir, 'processed')
 
     def _gen_tikr_metadata(self, tikr, documents, key):
         out = dict()
@@ -112,8 +124,8 @@ class edgar_dataloader:
             self.metadata[tikr]['attrs']['downloaded'] = True
             self.metadata.save_tikr_metadata(tikr)
 
-        user_agent = "".join([f"{self.apikeys['edgar_agent']}", 
-                              f": {self.apikeys['edgar_email']}"])
+        user_agent = "".join([f"{self.metadata.keys['edgar_agent']}", 
+                              f": {self.metadata.keys['edgar_email']}"])
         f = filings(cik_lookup=tikr,
                     filing_type=filing_type,
                     count=max_num_filings,
@@ -201,7 +213,7 @@ class edgar_dataloader:
         if p is None:
             p = d.find('ims-document')
             if p is not None:
-                warnings.warn("IMS-DOCUMENT skipped during loading")
+                warnings.warn("IMS-DOCUMENT skipped during loading", RuntimeWarning)
                 fname = file.split('.txt')[0]
                 if fname not in self.metadata[tikr]['submissions']:
                     self.metadata.initialize_submission_metadata(tikr, fname)

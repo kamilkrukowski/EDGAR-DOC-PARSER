@@ -1,4 +1,0 @@
-# The name of the user, institutional affiliation
-edgar_agent: str
-# The email associated with the user (for SEC to contact them if issues arise) 
-edgar_email: str
