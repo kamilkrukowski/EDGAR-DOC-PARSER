@@ -16,7 +16,7 @@ from yaml import load, CLoader as Loader
 import os
 import pathlib
 import pickle as pkl
-import sys ; sys.path.append('../')
+import sys ; sys.path.append('..')
 
 
 import EDGAR
@@ -28,7 +28,7 @@ submission_date = '20210101' #Find nearest AFTER this date
 headless = False
 
 # Set up
-loader = EDGAR.dataloader(data_dir='../data', api_keys_path='../api_keys.yaml');
+loader = EDGAR.dataloader(data_dir=os.path.join('..','data'), api_keys_path=os.path.join('..','api_keys.yaml'));
 loader.metadata.load_tikr_metadata(tikr)
 
 # Get nearest 10Q form path to above date
@@ -47,14 +47,14 @@ if not os.path.exists(os.path.join('..', 'edgar_downloads', 'parsed', tikr, f"{f
     parser.get_annotation_features(found, annotation_dict,save = True)
     input("enter to continue")
 
-    data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=f"{tikr}/{fname}.pkl")
+    data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=os.path.join(str(tikr),str(fname)+"pkl"))
 else:
     print('Loading cached parsed data')
     data= parser.load_parsed(tikr, fname)
 
 print(f'Saving sample data to \'outputs/sample_data.txt\'')
 if not os.path.exists(os.path.join('..','outputs')):
-    os.system('mkdir -p ../outputs')
+    os.system('mkdir -p '+os.path.join('..','outputs'))
 with open(os.path.join('..', 'outputs', 'sample_data.txt'), 'w') as f:
     for i in data:
         f.write(i[0]['value'])

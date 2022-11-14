@@ -64,7 +64,8 @@ class edgar_parser:
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
-    def _parse_unannotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
+    def _parse_unannotated_text(self, driver_path: str, 
+                                highlight: bool = False, save: bool = False, out_path: str = os.path.join('.','sample.htm')):
         
         if driver_path is not None:
             self.driver.get(driver_path)
@@ -96,7 +97,7 @@ class edgar_parser:
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
-    def _parse_annotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
+    def _parse_annotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = os.path.join('.','sample.htm')):
         
         if driver_path is not None:
             self.driver.get(driver_path)
@@ -188,7 +189,7 @@ class edgar_parser:
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
-    def parse_annotated_tables(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
+    def parse_annotated_tables(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = os.path.join('.','sample.htm')):
         
         # If path is None, stay on current document
         if driver_path is not None:

@@ -1,6 +1,6 @@
 import os
 import time
-import sys ; sys.path.append('../')
+import sys ; sys.path.append('..')
 from time import time
 
 
