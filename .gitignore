@@ -1,5 +1,6 @@
 # ApiKeys
 api_keys.yaml
+**/.keys.yaml
 data/*
 **/geckodriver.log
 outputs/*

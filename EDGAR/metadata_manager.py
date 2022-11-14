@@ -1,6 +1,8 @@
 
 import os
 import pickle as pkl
+from yaml import load, CLoader as Loader, dump, CDumper as Dumper
+import warnings
 
 
 class metadata_manager(dict):
@@ -13,6 +15,22 @@ class metadata_manager(dict):
         self.meta_dir = os.path.join(self.path, data_dir, 'metadata')
         if not os.path.exists(self.meta_dir):
             os.system('mkdir -p ' + self.meta_dir)
+        
+        # Used by dataloader for API
+        self.keys_path = os.path.join(self.path, data_dir, 'metadata', '.keys.yaml')
+        self.keys = None
+        
+    def load_keys(self):
+
+        if not os.path.exists(self.keys_path):
+            warnings.warn("No .keys.yaml located", RuntimeWarning)
+            self.keys = dict()
+            return;
+        self.keys = load(open(self.keys_path, 'r'), Loader=Loader)
+    
+    def save_keys(self):
+        
+        dump(self.keys, open(self.keys_path, 'w'), Dumper=Dumper) 
     
     def load_tikr_metadata(self, tikr):
 
