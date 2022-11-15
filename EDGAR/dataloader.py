@@ -44,13 +44,13 @@ class edgar_dataloader:
             if 'edgar_agent' not in self.metadata.keys:
                print("The SEC requires a legal name of the user and any organizational affiliation")
                answer = 'n'
-               while (answer[0] != 'y'):
+               while (answer[0] != 'y' or len(answer) > 4):
                     self.metadata.keys['edgar_agent'] = input("User(s): ")
                     answer = input(f"Input User(s) \'{self.metadata.keys['edgar_agent']}\'\n Is this correct? (y/n)")
             if 'edgar_email' not in self.metadata.keys:
                print("The SEC requires a contact email for the API user")
                answer = 'n'
-               while (answer[0] != 'y'):
+               while (answer[0] != 'y' or len(answer) > 4):
                     self.metadata.keys['edgar_email'] = input("Email: ")
                     answer = input(f"Input Email \'{self.metadata.keys['edgar_email']}\'\n Is this correct? (y/n)")
             self.metadata.save_keys()
