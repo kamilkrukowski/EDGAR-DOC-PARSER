@@ -3,7 +3,7 @@
     That dataframe can be loaded for downstream transformations, such as selection of subfields which is done below and saved in a sample_data.csv
 """
 import os
-import sys ; sys.path.append('../')
+import sys ; sys.path.append('..')
 
 
 from tqdm.auto import tqdm

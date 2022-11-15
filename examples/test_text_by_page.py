@@ -15,7 +15,7 @@ import numpy as np
 
 import itertools
 from yaml import load, CLoader as Loader
-import sys; sys.path.append('../')
+import sys; sys.path.append('..')
 import os
 import pickle as pkl
 import json
