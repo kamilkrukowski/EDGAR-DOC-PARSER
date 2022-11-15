@@ -13,11 +13,10 @@ import numpy as np
 import EDGAR
 
 data_dir = os.path.join('..', 'data')
-api_keys_path = os.path.join('..','api_keys.yaml')
 
-metadata = EDGAR.Metadata(data_dir=data_dir)
-loader = EDGAR.dataloader(data_dir=data_dir, api_keys_path=api_keys_path,metadata=metadata);
-parser = EDGAR.parser(data_dir=data_dir, metadata=metadata)
+metadata = EDGAR.metadata(data_dir=data_dir)
+loader = EDGAR.dataloader(data_dir=data_dir);
+parser = EDGAR.parser(data_dir=data_dir)
 
 # List of companies to process
 tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()

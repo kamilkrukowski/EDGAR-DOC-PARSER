@@ -3,19 +3,12 @@ Opens a local 'nflx' 10-Q form (or tries)
 Extracts 'text' elements from HTM tree
 Visualizes elements by red border highlighting in firefox browser
 """
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.remote.webelement import WebElement 
 import pandas as pd
 import numpy as np
 
 
-import itertools
-from yaml import load, CLoader as Loader
 import os
 import pathlib
-import pickle as pkl
 import sys ; sys.path.append('..')
 
 
@@ -28,7 +21,7 @@ submission_date = '20210101' #Find nearest AFTER this date
 headless = False
 
 # Set up
-loader = EDGAR.dataloader(data_dir=os.path.join('..','data'), api_keys_path=os.path.join('..','api_keys.yaml'));
+loader = EDGAR.downloader(data_dir=os.path.join('..','data'));
 loader.metadata.load_tikr_metadata(tikr)
 
 # Get nearest 10Q form path to above date
