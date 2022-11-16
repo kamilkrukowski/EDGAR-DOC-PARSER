@@ -31,7 +31,7 @@ for tikr in tikrs:
  
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
         fname = metadata.get_10q_name(tikr, doc)
-
+        
         features = parser.process_file(tikr, doc, fname) 
     
         found_indices = np.unique([int(i) for i in features['found_index']])
@@ -46,7 +46,7 @@ for tikr in tikrs:
             if d['text'] is None:
                 d['text'] = i['value']
             d['labels'][i['annotation_index']] = i['name']
-        
+
         for i in data:
             d = data[i]
             if not d['labelled']:
