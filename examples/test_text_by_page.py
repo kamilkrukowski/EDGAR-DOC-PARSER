@@ -31,7 +31,7 @@ headless = True
 data_dir = os.path.join('..','data')
 
 # Set up
-loader EDGAR.dataloader(data_dir=data_dir, api_keys_path = os.path.join('..' ,'api_keys.yaml'))
+loader = EDGAR.dataloader(data_dir=data_dir, api_keys_path = os.path.join('..' ,'api_keys.yaml'))
 loader.metadata.load_tikr_metadata(tikr)
 
 # Get nearest 10Q form path to above date
