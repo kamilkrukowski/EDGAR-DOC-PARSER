@@ -15,7 +15,7 @@ import EDGAR
 data_dir = os.path.join('..', 'data')
 
 metadata = EDGAR.metadata(data_dir=data_dir)
-loader = EDGAR.dataloader(data_dir=data_dir);
+loader = EDGAR.downloader(data_dir=data_dir);
 parser = EDGAR.parser(data_dir=data_dir)
 
 # List of companies to process
@@ -43,15 +43,14 @@ for tikr in tikrs:
             if not i['is_annotation']:
                 continue;
             d = data[i['found_index']]
-            d['labelled'] = True
             if d['text'] is None:
-                d['text'] = i['value']
+                d['text'] = i['text']
             d['labels'][i['annotation_index']] = i['name']
         
         # Add all labelled documents to trainset
         for i in data:
             #Only add labelled documents to trainset
-            if not data[i]['labelled']:
+            if not data[i]['is_annotation']:
                 continue; 
             d = data[i]
             # Data format: (x,y) where x refers to training features (present for unnannotated docs), and y refers to labels to predict
