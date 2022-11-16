@@ -31,6 +31,8 @@ parser = EDGAR.parser(data_dir=data_dir)
 tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
+kept_labels = set(open(os.path.join('..','popular_labels.txt'), 'r').read().strip().split('\n'))
+
 trainset = []
 for tikr in tikrs:
     metadata.load_tikr_metadata(tikr)
