@@ -305,7 +305,7 @@ class edgar_downloader:
         Return the filing submission txt closest to provided date
     """
     def get_nearest_date_filename(
-            self, date, tikr, return_date=False, prefer_recent=True):
+            self, tikr, date, return_date=False, prefer_recent=True):
 
         # Provide AAAABBCC format (Year, Month, Day) with 0 padding
         if type(date) is str:

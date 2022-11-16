@@ -237,11 +237,13 @@ class edgar_parser:
         return found_table, table_is_numeric
 
     #legacy?
+    """
     def load_parsed(self, tikr, submission):
         path = os.path.join(self.data_dir, 'parsed', tikr, submission.split('.')[0] + '.pkl')
 
         with open(path, 'rb') as f:
             return pkl.load(f)
+    """
 
     def get_annotation_info(self, elem: WebElement):
         return {'value': elem.text, 'name': elem.get_attribute('name') , 'id': elem.get_attribute('id')}
@@ -249,6 +251,8 @@ class edgar_parser:
     def get_element_info(self, element: WebElement)-> list():
         return {"value": element.text,"location": element.location, "size": element.size}
 
+    #legacy?
+    """
     def parsed_to_data(self, webelements: list, annotations: dict,
             save: bool = False, tikr: str = None, submission: str = None, keep_unlabeled=False):
 
@@ -278,6 +282,7 @@ class edgar_parser:
                 pkl.dump(data, f)
     
         return data
+    """
 
     def find_page_location(self) -> dict:
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')

@@ -23,5 +23,7 @@ class edgar_preprocesser:
         else:
             self.parser = parser
         
-    def preprocess_file(self):
-        pass
+    def preprocess_file(self, tikr: str, submission: str, filename: str, force: bool = False):
+        features = self.parser.parse_file(self, tikr, submission, filename, force=force)
+
+        return features
