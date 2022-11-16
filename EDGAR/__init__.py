@@ -17,33 +17,33 @@ class EDGAR_singleton:
         self.dataloader = None
         self.preprocesser = None
     
-    def _get_metadata(self, reuse: bool = False, *args, **kwargs):
+    def _get_metadata(self,reuse: bool = True, *args, **kwargs):
         if self.metadata is None or not reuse:
             self.metadata = edgar_metadata.metadata_manager(*args, **kwargs)
         return self.metadata
     
-    def _get_downloader(self, reuse: bool = False, *args, **kwargs):
+    def _get_downloader(self,reuse: bool = True, *args, **kwargs):
         if 'metadata' not in kwargs:
             kwargs['metadata'] = self._get_metadata(data_dir=kwargs['data_dir'], reuse=reuse)
         if self.downloader is None or not reuse:
             self.downloader = edgar_downloader.edgar_downloader(*args, **kwargs)
         return self.downloader
  
-    def _get_parser(self, reuse: bool = False, *args, **kwargs):
+    def _get_parser(self,reuse: bool = True, *args, **kwargs):
         if 'metadata' not in kwargs:
             kwargs['metadata'] = self._get_metadata(data_dir=kwargs['data_dir'], reuse=reuse)
         if self.parser is None or not reuse:
             self.parser = edgar_parser.edgar_parser(*args, **kwargs)
         return self.parser 
     
-    def _get_dataloader(self, reuse: bool = False, *args, **kwargs):
+    def _get_dataloader(self,reuse: bool = True, *args, **kwargs):
         if 'metadata' not in kwargs:
             kwargs['metadata'] = self._get_metadata(data_dir=kwargs['data_dir'], reuse=reuse)
         if self.dataloader is None or not reuse:
             self.dataloader = edgar_dataloader.EDGARDataset(*args, **kwargs)
         return self.dataloader
     
-    def _get_preprocesser(self, reuse: bool = False, *args, **kwargs):
+    def _get_preprocesser(self,reuse: bool = True, *args, **kwargs):
         if 'metadata' not in kwargs:
             kwargs['metadata'] = self._get_metadata(data_dir=kwargs['data_dir'], reuse=reuse)
         if 'parser' not in kwargs:
