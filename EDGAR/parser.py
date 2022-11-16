@@ -386,7 +386,7 @@ class edgar_parser:
             df.to_csv(out_path)
         return df
     
-    def process_file(self, tikr: str, submission: str, filename: str, force: bool = False):
+    def featurize_file(self, tikr: str, submission: str, filename: str, force: bool = False):
         if not force and self.metadata.file_was_processed(tikr, submission, filename):
             return self.load_processed(tikr, submission, filename)
         else:

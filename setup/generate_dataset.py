@@ -31,7 +31,7 @@ for tikr in tikrs:
         fname = metadata.get_10q_name(tikr, doc)
 
         # Try load cached, otherwise regenerate new file
-        features = parser.process_file(tikr, doc, fname) 
+        features = parser.featurize_file(tikr, doc, fname) 
     
         found_indices = np.unique([int(i) for i in features['found_index']])
         # Structure: Text str, Labels dict, labelled bool
