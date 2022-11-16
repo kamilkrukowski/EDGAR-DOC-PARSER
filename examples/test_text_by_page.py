@@ -5,19 +5,11 @@ Opens a local 'nflx' 10-Q form (or tries)
 Extracts 'text' elements from HTM tree
 Visualizes elements by red border highlighting in firefox browser
 """
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.remote.webelement import WebElement 
-import pandas as pd
 import numpy as np
 
 
-import itertools
-from yaml import load, CLoader as Loader
-import sys; sys.path.append('../')
+import sys; sys.path.append('..')
 import os
-import pickle as pkl
 import json
 
 
@@ -31,14 +23,14 @@ headless = True
 data_dir = os.path.join('..','data')
 
 # Set up
-loader = EDGAR.dataloader(data_dir=data_dir, api_keys_path = os.path.join('..' ,'api_keys.yaml'))
+loader = EDGAR.downloader(data_dir=data_dir)
 loader.metadata.load_tikr_metadata(tikr)
 
 # Get nearest 10Q form path to above date
 dname = loader.get_nearest_date_filename(submission_date, tikr)
 fname = loader.metadata.get_10q_name(tikr, dname)
 
-parser = EDGAR.parser(data_dir=data_dir, metadata=loader.metadata, headless=headless)
+parser = EDGAR.parser(data_dir=data_dir, headless=headless)
 
 driver_path =  parser.get_driver_path(tikr, dname, fname)
 

@@ -1,12 +1,12 @@
 import time
 import os
-import sys; sys.path.append('../')
+import sys; sys.path.append('..')
 
 
 import EDGAR
 
 
-loader = EDGAR.dataloader(data_dir=os.path.join('..', 'data'), api_keys_path = os.path.join('..', 'api_keys.yaml'))
+loader = EDGAR.downloader(data_dir=os.path.join('..', 'data'))
 tikrs = ['nflx']
 
 for tikr in tikrs:

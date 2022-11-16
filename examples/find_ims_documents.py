@@ -9,15 +9,14 @@ from bs4 import BeautifulSoup
 
 
 import os
-import time
 
 
 import EDGAR
 
-loader = EDGAR.dataloader(data_dir='../data', api_keys_path='../api_keys.yaml');
+loader = EDGAR.downloader(data_dir=os.path.join('..','data'));
 
 # List of companies to process
-tikrs = open(os.path.join(loader.path, '../tickers.txt')).read().strip()
+tikrs = open(os.path.join(loader.path, os.path.join('..','tickers.txt'))).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
 troublemakers= ['atvi:0000718877-95-000013.txt', 'k:0000055067-03-000251.txt'][1:]
@@ -41,7 +40,7 @@ for t in troublemakers:
     tikr = t[0]
     fname = t[1]
 
-    d_dir = f'./edgar_downloads/raw/{tikr}/10-Q/'
+    d_dir = os.path.join('.','edgar_downloads','raw',str(tikr),'10-Q')
 
     content = None
     with open(d_dir + fname, 'r') as f:

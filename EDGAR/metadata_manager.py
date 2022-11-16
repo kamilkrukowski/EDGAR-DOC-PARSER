@@ -6,7 +6,7 @@ import warnings
 
 
 class metadata_manager(dict):
-    def __init__(self, data_dir='edgar_downloads', *arg, **kw):
+    def __init__(self, data_dir='data', *arg, **kw):
         super(metadata_manager, self).__init__(*arg, **kw)
         
         # Always gets the path of the current file
