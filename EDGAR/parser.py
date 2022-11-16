@@ -249,7 +249,7 @@ class edgar_parser:
         return {'value': elem.text, 'name': elem.get_attribute('name') , 'id': elem.get_attribute('id')}
 
     def get_element_info(self, element: WebElement)-> list():
-        return {"value": element.text,"location": element.location, "size": element.size}
+        return {"text": element.text,"location": element.location, "size": element.size}
 
     #legacy?
     """
@@ -317,17 +317,17 @@ class edgar_parser:
         return None, None
     #-----------get attribute-------------------------------------------------#
     """
-    value - the text value of the annotated label (e.g. 10-Q)
+    text - the text value of the annotated label (e.g. 10-Q)
     found_index - index of the parent span webelement in the list of webelements
     full_text - neighboring text (based on the text value of the parent span) (** replace it with new identify neighboring text function)
-    annotation_index - index of the annotation in the list of annotation based on its webelement
-    annotation_name - the name attribute from the annotation tag (e.g. us-gaap:SegmentReportingDisclosureTextBlock)
-    annotation_id - the id attribute from the annotation tag (e.g. id3VybDovL2RvY3MudjEvZG9jOjY0OTlhYTNmZjJk...)
-    annotation_format - the format attribute from the annotation tag (e.g. ixt:numdotdecimal)
-    annotation_ix_type - the ix type attribute from the annotation tag (e.g. ix:nonfraction)
-    annotation_unitref - the unit reference attribute from the annotation tag (e.g. usd)
-    annotation_decimals - the decimal place attribute from the annotation tag (e.g. -3)
-    annotation_contextref - the context reference attribute from the annotation tag (e.g. ic6b57dd3d48343d99e743248386420fc_I20201231)
+    anno_index - index of the annotation in the list of annotation based on its webelement
+    anno_name - the name attribute from the annotation tag (e.g. us-gaap:SegmentReportingDisclosureTextBlock)
+    anno_id - the id attribute from the annotation tag (e.g. id3VybDovL2RvY3MudjEvZG9jOjY0OTlhYTNmZjJk...)
+    anno_format - the format attribute from the annotation tag (e.g. ixt:numdotdecimal)
+    anno_ix_type - the ix type attribute from the annotation tag (e.g. ix:nonfraction)
+    anno_unitref - the unit reference attribute from the annotation tag (e.g. usd)
+    anno_decimals - the decimal place attribute from the annotation tag (e.g. -3)
+    anno_contextref - the context reference attribute from the annotation tag (e.g. ic6b57dd3d48343d99e743248386420fc_I20201231)
     page_number - the page number for the label
     x - x coordinate
     y - y coordinate base on page number
@@ -336,40 +336,37 @@ class edgar_parser:
     is_annotation - 1 if the value is annotation, 0 otherwise.
     """
     def get_annotation_features(self, webelements: list, annotations: dict,save: bool = False, out_path: str = 'sample.csv'):
-        COLUMN_NAMES = ["value","found_index","full_text", "annotation_index", "annotation_name","annotation_id",
-                        "annotation_format","annotation_ix_type",'annotation_unitref',"annotation_decimals",
-                        "annotation_contextref","page_number","x","y", "height", "width","is_annotation"]
+        COLUMN_NAMES = ["text","found_index","full_text", "anno_index", "anno_name","anno_id",
+                        "anno_format","anno_ix_type",'annotation_unitref',"anno_decimals",
+                        "anno_contextref","page_number","x","y", "height", "width","is_annotation"]
         page_location = self.find_page_location()
         NUM_COLUMN = len(COLUMN_NAMES)
        
         df = pd.DataFrame(columns=COLUMN_NAMES) 
-        # return list of dictionary key is the page number. 
-        # value is text on the page and list of webelements
-
-        full_texts = self.parse_text_by_page() 
 
         for i, elem in enumerate(webelements):
             
             default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
 
-            default_dict.update({"value": np.nan, "found_index": int(i),"full_text": full_texts[page_num]["text"], "is_annotation": False,
-                                "x": elem.location['x'], "y": y, "page_number": page_num,
+            default_dict.update({"text": np.nan, "found_index": int(i),"full_text": elem.text, "is_annotation": False,
+
+                                "x": elem.location["x"], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"]})
-    
+
             count = 0
             
             for j, annotation in enumerate(annotations[elem]):
                 new_dict = default_dict.copy()
                 
-                val = {'annotation_index': j , 'x': annotation.location['x'], 'is_annotation': True,
-                        'value': annotation.text, 'annotation_ix_type': annotation.tag_name}
+                val = {"anno_index": j , "x": annotation.location["x"], "is_annotation": True,
+                        "value": annotation.text, "anno_ix_type": annotation.tag_name}
                 
-                val['page_number'], val['y'] = self.get_page_number(page_location, annotation)
+                val["page_number"], val["y"] = self.get_page_number(page_location, annotation)
 
-                for _attr in ['name', 'id', 'contextref', 'decimals', 'format', 'unitref']:
+                for _attr in ["name", "id", "contextref", "decimals", "format", "unitref"]:
                     val[_attr] = annotation.get_attribute(_attr)
-                for _size in ['width', 'height']:
+                for _size in ["width", "height"]:
                     val[_size] = annotation.size[_size]
                 
                 new_dict.update(val)
@@ -384,8 +381,7 @@ class edgar_parser:
                 temp_df = pd.DataFrame(default_dict,index=[0])
                 df = pd.concat([temp_df,df], ignore_index=True)
 
-        df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
-
+        df.drop_duplicates(subset = ["text","page_number","anno_id"], keep="last", inplace=True)
         if(save):
             df.to_csv(out_path)
         return df
@@ -414,13 +410,13 @@ class edgar_parser:
         with open(os.path.join(path, 'features.pkl'), 'rb') as f:
             return pkl.load(f)
         
-    def parse_text_by_page(self,highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
+    def parse_text_by_page(self):
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
         page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
 
         
         num_page = len(page_breaks) + 1
-        
+        print('total number of page',num_page)
         if(num_page == 1):
             return {}
         text_on_page = {i: {"text": "", "elements": []} for i in range(1,num_page+1)}
@@ -430,13 +426,12 @@ class edgar_parser:
 
         for elem in sibling:
             ########## highlighting ###################
-            if(highlight):
-                if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
-                    self._draw_border(elem, 'purple')
-                elif(page_number % 2 == 0):
-                    self._draw_border(elem, 'red')
-                else:
-                    self._draw_border(elem, 'blue')
+            if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
+                self._draw_border(elem, 'purple')
+            elif(page_number % 2 == 0):
+                self._draw_border(elem, 'red')
+            else:
+                self._draw_border(elem, 'blue')
             ########## highlighting ###################
 
             if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
@@ -444,9 +439,8 @@ class edgar_parser:
                 continue
             text_on_page[page_number]['text'] += "/n" + elem.text
             text_on_page[page_number]["elements"].append(elem)
-        if(save):   
-            self._save_driver_source(out_path)    
 
+        self._save_driver_source("sample.html")    
         return text_on_page
 
     def __del__(self):
