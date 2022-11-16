@@ -337,17 +337,20 @@ class edgar_parser:
         NUM_COLUMN = len(COLUMN_NAMES)
        
         df = pd.DataFrame(columns=COLUMN_NAMES) 
+        # return list of dictionary key is the page number. 
+        # value is text on the page and list of webelements
+
+        full_texts = self.parse_text_by_page() 
 
         for i, elem in enumerate(webelements):
             
             default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
 
-            default_dict.update({"value": np.nan, "found_index": int(i),"full_text": elem.text, "is_annotation": False,
-
+            default_dict.update({"value": np.nan, "found_index": int(i),"full_text": full_texts[page_num]["text"], "is_annotation": False,
                                 "x": elem.location['x'], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"]})
-
+    
             count = 0
             
             for j, annotation in enumerate(annotations[elem]):
@@ -376,6 +379,7 @@ class edgar_parser:
                 df = pd.concat([temp_df,df], ignore_index=True)
 
         df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
+
         if(save):
             df.to_csv(out_path)
         return df
@@ -404,13 +408,13 @@ class edgar_parser:
         with open(os.path.join(path, 'features.pkl'), 'rb') as f:
             return pkl.load(f)
         
-    def parse_text_by_page(self):
+    def parse_text_by_page(self,highlight: bool = False, save: bool = False, out_path: str = './sample.htm'):
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
         page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
 
         
         num_page = len(page_breaks) + 1
-        print('total number of page',num_page)
+        
         if(num_page == 1):
             return {}
         text_on_page = {i: {"text": "", "elements": []} for i in range(1,num_page+1)}
@@ -420,12 +424,13 @@ class edgar_parser:
 
         for elem in sibling:
             ########## highlighting ###################
-            if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
-                self._draw_border(elem, 'purple')
-            elif(page_number % 2 == 0):
-                self._draw_border(elem, 'red')
-            else:
-                self._draw_border(elem, 'blue')
+            if(highlight):
+                if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
+                    self._draw_border(elem, 'purple')
+                elif(page_number % 2 == 0):
+                    self._draw_border(elem, 'red')
+                else:
+                    self._draw_border(elem, 'blue')
             ########## highlighting ###################
 
             if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
@@ -433,8 +438,9 @@ class edgar_parser:
                 continue
             text_on_page[page_number]['text'] += "/n" + elem.text
             text_on_page[page_number]["elements"].append(elem)
+        if(save):   
+            self._save_driver_source(out_path)    
 
-        self._save_driver_source("sample.html")    
         return text_on_page
 
     def __del__(self):
