@@ -249,7 +249,7 @@ class edgar_parser:
         return {'value': elem.text, 'name': elem.get_attribute('name') , 'id': elem.get_attribute('id')}
 
     def get_element_info(self, element: WebElement)-> list():
-        return {"value": element.text,"location": element.location, "size": element.size}
+        return {"text": element.text,"location": element.location, "size": element.size}
 
     #legacy?
     """
@@ -317,17 +317,17 @@ class edgar_parser:
         return None, None
     #-----------get attribute-------------------------------------------------#
     """
-    value - the text value of the annotated label (e.g. 10-Q)
+    text - the text value of the annotated label (e.g. 10-Q)
     found_index - index of the parent span webelement in the list of webelements
     full_text - neighboring text (based on the text value of the parent span) (** replace it with new identify neighboring text function)
-    annotation_index - index of the annotation in the list of annotation based on its webelement
-    annotation_name - the name attribute from the annotation tag (e.g. us-gaap:SegmentReportingDisclosureTextBlock)
-    annotation_id - the id attribute from the annotation tag (e.g. id3VybDovL2RvY3MudjEvZG9jOjY0OTlhYTNmZjJk...)
-    annotation_format - the format attribute from the annotation tag (e.g. ixt:numdotdecimal)
-    annotation_ix_type - the ix type attribute from the annotation tag (e.g. ix:nonfraction)
-    annotation_unitref - the unit reference attribute from the annotation tag (e.g. usd)
-    annotation_decimals - the decimal place attribute from the annotation tag (e.g. -3)
-    annotation_contextref - the context reference attribute from the annotation tag (e.g. ic6b57dd3d48343d99e743248386420fc_I20201231)
+    anno_index - index of the annotation in the list of annotation based on its webelement
+    anno_name - the name attribute from the annotation tag (e.g. us-gaap:SegmentReportingDisclosureTextBlock)
+    anno_id - the id attribute from the annotation tag (e.g. id3VybDovL2RvY3MudjEvZG9jOjY0OTlhYTNmZjJk...)
+    anno_format - the format attribute from the annotation tag (e.g. ixt:numdotdecimal)
+    anno_ix_type - the ix type attribute from the annotation tag (e.g. ix:nonfraction)
+    anno_unitref - the unit reference attribute from the annotation tag (e.g. usd)
+    anno_decimals - the decimal place attribute from the annotation tag (e.g. -3)
+    anno_contextref - the context reference attribute from the annotation tag (e.g. ic6b57dd3d48343d99e743248386420fc_I20201231)
     page_number - the page number for the label
     x - x coordinate
     y - y coordinate base on page number
@@ -336,9 +336,9 @@ class edgar_parser:
     is_annotation - 1 if the value is annotation, 0 otherwise.
     """
     def get_annotation_features(self, webelements: list, annotations: dict,save: bool = False, out_path: str = 'sample.csv'):
-        COLUMN_NAMES = ["value","found_index","full_text", "annotation_index", "annotation_name","annotation_id",
-                        "annotation_format","annotation_ix_type",'annotation_unitref',"annotation_decimals",
-                        "annotation_contextref","page_number","x","y", "height", "width","is_annotation"]
+        COLUMN_NAMES = ["text","found_index","full_text", "anno_index", "anno_name","anno_id",
+                        "anno_format","anno_ix_type",'annotation_unitref',"anno_decimals",
+                        "anno_contextref","page_number","x","y", "height", "width","is_annotation"]
         page_location = self.find_page_location()
         NUM_COLUMN = len(COLUMN_NAMES)
        
@@ -349,9 +349,9 @@ class edgar_parser:
             default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
 
-            default_dict.update({"value": np.nan, "found_index": int(i),"full_text": elem.text, "is_annotation": False,
+            default_dict.update({"text": np.nan, "found_index": int(i),"full_text": elem.text, "is_annotation": False,
 
-                                "x": elem.location['x'], "y": y, "page_number": page_num,
+                                "x": elem.location["x"], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"]})
 
             count = 0
@@ -359,14 +359,14 @@ class edgar_parser:
             for j, annotation in enumerate(annotations[elem]):
                 new_dict = default_dict.copy()
                 
-                val = {'annotation_index': j , 'x': annotation.location['x'], 'is_annotation': True,
-                        'value': annotation.text, 'annotation_ix_type': annotation.tag_name}
+                val = {"anno_index": j , "x": annotation.location["x"], "is_annotation": True,
+                        "value": annotation.text, "anno_ix_type": annotation.tag_name}
                 
-                val['page_number'], val['y'] = self.get_page_number(page_location, annotation)
+                val["page_number"], val["y"] = self.get_page_number(page_location, annotation)
 
-                for _attr in ['name', 'id', 'contextref', 'decimals', 'format', 'unitref']:
+                for _attr in ["name", "id", "contextref", "decimals", "format", "unitref"]:
                     val[_attr] = annotation.get_attribute(_attr)
-                for _size in ['width', 'height']:
+                for _size in ["width", "height"]:
                     val[_size] = annotation.size[_size]
                 
                 new_dict.update(val)
@@ -381,7 +381,7 @@ class edgar_parser:
                 temp_df = pd.DataFrame(default_dict,index=[0])
                 df = pd.concat([temp_df,df], ignore_index=True)
 
-        df.drop_duplicates(subset = ['value','page_number','annotation_id'], keep="last", inplace=True)
+        df.drop_duplicates(subset = ["text","page_number","anno_id"], keep="last", inplace=True)
         if(save):
             df.to_csv(out_path)
         return df
