@@ -12,13 +12,11 @@ import numpy as np
 
 import EDGAR
 
-
 data_dir = os.path.join('..', 'data')
-api_keys_path = os.path.join('..','api_keys.yaml')
 
-metadata = EDGAR.Metadata(data_dir=data_dir)
-loader = EDGAR.dataloader(data_dir=data_dir, api_keys_path=api_keys_path,metadata=metadata);
-parser = EDGAR.parser(data_dir=data_dir, metadata=metadata)
+metadata = EDGAR.metadata(data_dir=data_dir)
+loader = EDGAR.dataloader(data_dir=data_dir);
+parser = EDGAR.parser(data_dir=data_dir)
 
 # List of companies to process
 tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()
@@ -32,13 +30,16 @@ for tikr in tikrs:
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
         fname = metadata.get_10q_name(tikr, doc)
 
-        features = parser.process_file(tikr, doc, fname) 
+        # Try load cached, otherwise regenerate new file
+        features = parser.featurize_file(tikr, doc, fname) 
     
         found_indices = np.unique([int(i) for i in features['found_index']])
+        # Structure: Text str, Labels dict, labelled bool
         data = {i:{'text':None, 'labels':dict(), 'labelled':False } for i in found_indices}
         
         for i in range(len(features)):
             i = features.iloc[i, :]
+            # Skip documents which are NOT annotated
             if not i['is_annotation']:
                 continue;
             d = data[i['found_index']]
@@ -47,13 +48,18 @@ for tikr in tikrs:
                 d['text'] = i['value']
             d['labels'][i['annotation_index']] = i['name']
         
+        # Add all labelled documents to trainset
         for i in data:
-            d = data[i]
-            if not d['labelled']:
+            #Only add labelled documents to trainset
+            if not data[i]['labelled']:
                 continue; 
+            d = data[i]
+            # Data format: (x,y) where x refers to training features (present for unnannotated docs), and y refers to labels to predict
+            # TODO: Convert to list of [lists of tuples, page number, parent_company_tikr] scheme where each list of tuples consists of all annotated webelements on that page
             trainset.append((d['text'], list(d['labels'].values())))
             
     
+        # Sample CSV with text, tag information
         with open(os.path.join('..','outputs','sample_data.csv'), 'w') as f:
             text, labels = trainset[0]
             f.write(f"{text},{':'.join([str(i) for i in labels])}")

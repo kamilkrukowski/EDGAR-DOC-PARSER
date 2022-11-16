@@ -1,17 +1,15 @@
 import os
 import time
 import sys ; sys.path.append('..')
-from time import time
 
 
 import EDGAR
 
 
 data_dir = os.path.join('..', 'data')
-api_keys_path = os.path.join('..','api_keys.yaml')
 
-metadata = EDGAR.Metadata(data_dir=data_dir)
-loader = EDGAR.dataloader(data_dir=data_dir, api_keys_path=api_keys_path,metadata=metadata);
+metadata = EDGAR.metadata(data_dir=data_dir)
+loader = EDGAR.dataloader(data_dir=data_dir);
 parser = EDGAR.parser(data_dir=data_dir, metadata=metadata)
 
 # List of companies to process
