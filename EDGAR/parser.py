@@ -110,10 +110,26 @@ class edgar_parser:
 
         annotation_dict = dict()
         for i in range(len(found)):
+            in_table = False
+            
             found_annotation = found[i].find_elements(By.TAG_NAME, 'ix:nonnumeric')
             found_annotation += found[i].find_elements(By.TAG_NAME, 'ix:nonfraction')
-            annotation_dict[found[i]] = found_annotation
-
+            
+            current_element = found[i]
+            while not in_table: # loop through ancestors
+                # # check if current is root
+                try:
+                    parent = current_element.parent
+                except AttributeError: # if there is no parent => it is the root
+                    break
+                if current_element.tag_name == 'table':
+                    in_table = True
+                current_element = parent
+            
+            if not in_table:
+                annotation_dict[found[i]] = found_annotation
+            else:
+                annotation_dict[found[i]] = []
         # Executes javascript in Firefox to make pretty borders around detected elements
         if highlight:
             for i in found:
