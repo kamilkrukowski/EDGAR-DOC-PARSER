@@ -10,9 +10,15 @@ jobs:
   build_docs_job:
     runs-on: ubuntu-latest
     container: debian:buster-slim
- 
+
     steps:
- 
+    
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip' # caching pip dependencies
+       
     - name: Prereqs
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -22,6 +28,9 @@ jobs:
         git clone --depth 1 "https://token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .
         apt-get install -y pip
       shell: bash
+  
+    - name: pip-reqs
+    - run: pip install -r requirements.txt 
  
     - name: Execute script to build our documentation and update pages
       env:
