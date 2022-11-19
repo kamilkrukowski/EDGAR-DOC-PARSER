@@ -15,11 +15,13 @@ set -x
 ###################
 # INSTALL DEPENDS #
 ###################
+export SOURCE_DATE_EPOCH ?= $(shell dpkg-parsechangelog -STimestamp)
  
 apt-get update
-apt-get -y install git rsync python3-sphinx-rtd-theme python3-stemmer python3-git python3-pip python3-virtualenv python3-setuptools
+apt-get -y install python3-stemmer python3-git python3-pip python3-virtualenv python3-setuptools
 python3 -m pip install sphinx==5.3.0
 python3 -m pip install pyyaml
+apt-get -y install git rsync python3-sphinx-rtd-theme 
 
  
 #####################
