@@ -57,7 +57,7 @@ for tikr in tikrs:
             
             if d['text'] is None:
                 d['text'] = i['full_text']
-            d['labels'][i['anno_index']] = i['name']
+            d['labels'][i['anno_index']] = i['anno_name']
         
         # Add all labelled documents to trainset
         for i in data:
