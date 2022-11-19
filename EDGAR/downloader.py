@@ -120,9 +120,9 @@ class edgar_downloader:
                 a company identifier to query 
             force: bool
                 if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
-            start_date: , optional
+            start_date: optional
                 The earliest date to look for filings
-            end_date: , optional
+            end_date: optional
                 The latest filing date retrievable
             max_num_filings:
                 The maximum number of documents to retrieve. Retrieves all documents if set to `None`.
@@ -156,7 +156,6 @@ class edgar_downloader:
 
     def get_unpackable_files(self, tikr: str):
         """
-            Utility Function
             Get list of targets for unpack_file func
             
             Parameters
@@ -170,7 +169,6 @@ class edgar_downloader:
     
     def get_submissions(self, tikr):
         """
-            Utility Function
             Get list of submissions under tikr
             
             Parameters
@@ -211,19 +209,22 @@ class edgar_downloader:
             f.write(doc.prettify())
             metadata[sequence]['processed'] = True
 
-    """
-        Processes raw data from one filing at one company;
-            See utility function for getting file names;
-
-        Str: tikr - company ticker associated with unpacking
-
-        Str: filename - filing submission to unpack
-
-        Bool: complete - If False, only unpacks 10-Q, otherwise all documents.
-
-        Bool: force - if True, will unpack and overwrite previously unpacked do
-    """
     def unpack_file(self, tikr, file, complete=True, force=True):
+        """
+            Processes raw data from one filing at one company;
+                See utility function for getting file names;
+
+            Parameters
+            ---------
+            tikr: str
+                company ticker associated with unpacking
+            filename: str
+                filing submission to unpack
+            complete: bool
+                If False, only unpacks 10-Q, otherwise all documents.
+            force: bool
+                if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+        """
 
         # sec-edgar data save location for 10-Q filing ticker
         d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
@@ -277,20 +278,23 @@ class edgar_downloader:
     def _is_fully_unpacked(self, tikr):
         return self.metadata[tikr]['attrs'].get('complete_unpacked', False)
 
-    """
-        Processes all raw data from one company;
-
-        Str: tikr - company ticker associated with unpacking
-
-        Bool: complete - If False, only unpacks 10-Q, otherwise all documents.
-
-        Bool: force - if True will unpack and overwrite previously unpacked doc
-
-        Bool: loading__bar - if True, will time and show progress
-    """
     def unpack_bulk(
             self, tikr, complete=False, force=False,
             loading_bar=False, desc='Inflating HTM'):
+        """
+            Processes all raw data from one company
+            
+            Parameters
+            ---------
+            tikr: str
+                company ticker associated with unpacking
+            complete: bool
+                If False, only unpacks 10-Q, otherwise all documents.
+            force: bool
+                if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+            loading__bar: bool:
+                if True, will time and show progress
+        """
 
         # Early quitting conditions
         if not force:

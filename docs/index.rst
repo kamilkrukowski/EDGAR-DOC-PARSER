@@ -9,6 +9,9 @@ Welcome to pyEDGAR's documentation!
 .. automodule:: EDGAR.downloader
     :members:
 
+.. automodule:: EDGAR.parser
+    :members:
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

@@ -365,6 +365,20 @@ class edgar_parser:
         return df
     
     def featurize_file(self, tikr: str, submission: str, filename: str, force: bool = False):
+        """
+        
+        
+        Parameters
+        ---------
+        tikr: str
+            a company identifier to query 
+        submission: str
+            The filing to access the file from
+        filename: str
+            The name of the file to featurize
+        force: bool
+            if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+        """
         if not force and self.metadata.file_was_processed(tikr, submission, filename):
             return self.load_processed(tikr, submission, filename)
         else:
