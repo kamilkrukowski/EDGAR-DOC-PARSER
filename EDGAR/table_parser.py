@@ -1,10 +1,8 @@
 
-import base64
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import pandas as pd
 import numpy as np
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement 
 
 
