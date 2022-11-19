@@ -9,6 +9,7 @@ import sys ; sys.path.append('..')
 from tqdm.auto import tqdm
 import numpy as np
 import argparse
+import warnings
 
 
 import EDGAR
@@ -31,8 +32,7 @@ tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
 trainset = []
-f = None
-for tikr in tikrs:
+for tikr in tikrs[1:]:
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
  
@@ -41,7 +41,6 @@ for tikr in tikrs:
 
         # Try load cached, otherwise regenerate new file
         features = parser.featurize_file(tikr, doc, fname, force=args.force) 
-        f = features
     
         found_indices = np.unique([int(i) for i in features['found_index']])
         # Structure: Text str, Labels dict, labelled bool
@@ -73,9 +72,12 @@ for tikr in tikrs:
     
         # Sample CSV with text, tag information
         with open(os.path.join('..','outputs','sample_data.csv'), 'w') as f:
-            text, labels = trainset[0]
-            f.write(f"{text},{':'.join([str(i) for i in labels])}")
-            for text, labels in trainset[1:]:
-                f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+            if len(trainset) > 0:
+                text, labels = trainset[0]
+                f.write(f"{text},{':'.join([str(i) for i in labels])}")
+                for text, labels in trainset[1:]:
+                    f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+            else:
+                warnings.warn('No Trainset Samples', RuntimeWarning)
 
     

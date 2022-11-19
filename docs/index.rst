@@ -16,6 +16,8 @@ Welcome to pyEDGAR's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+    setup
+
 
 
 Indices and tables

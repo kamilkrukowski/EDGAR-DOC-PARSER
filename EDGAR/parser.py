@@ -310,6 +310,7 @@ class edgar_parser:
                         "anno_format","anno_ix_type",'annotation_unitref',"anno_decimals",
                         "anno_contextref","page_number","x","y", "height", "width","is_annotated", "in_table"]
         page_location = self.find_page_location()
+        
 
         
         df = pd.DataFrame(columns=COLUMN_NAMES).astype({"in_table":bool,"is_annotated":bool}) 
@@ -320,7 +321,7 @@ class edgar_parser:
             page_num, y = self.get_page_number(page_location, elem)
 
             default_dict.update({"found_index": int(idx),"full_text": elem.text, "is_annotated": False,
-                                "x": elem.location["x"], "y": y, "page_number": page_num,
+                                "x": elem.location["x"], "y": y, "page_number": page_num, "name": elem.get_attribute('name'),
                                 "height": elem.size["height"], "width": elem.size["width"], "in_table": in_table[idx]})
 
             count = 0
@@ -335,7 +336,7 @@ class edgar_parser:
                 
                 val["page_number"], val["y"] = self.get_page_number(page_location, annotation)
 
-                for _attr in ["name", "id", "contextref", "decimals", "format", "unitref"]:
+                for _attr in ["id", "contextref", "decimals", "format", "unitref"]:
                     val[_attr] = annotation.get_attribute(_attr)
                 for _size in ["width", "height"]:
                     val[_size] = annotation.size[_size]

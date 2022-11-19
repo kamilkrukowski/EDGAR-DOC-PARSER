@@ -1,5 +1,11 @@
 # FinDocNLP
 
+## Documentation
+
+    [Documentation]: https://kamilkrukowski.github.io/FinDocNLP/
+
+## Useful information
+
 First set of tickers to investigate in `tickers.txt`
 
 Bulk SEC EDGAR (CIKs)
@@ -26,6 +32,3 @@ mv geckodriver /usr/local/bin/
 cd /usr/local/bin/
 chmod +x geckodriver 
 ```
-### API Information
-Fill out `apikeys.yaml` with relevant fields
-
