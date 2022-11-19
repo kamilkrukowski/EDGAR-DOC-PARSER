@@ -25,9 +25,9 @@ jobs:
       shell: bash
  
     - name: Execute script to build our documentation and update pages
+      with:
+         python-version: 3.10.4
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: "docs/buildDocs.sh"
       shell: bash
-      with:
-         python-version: 3.10.4
