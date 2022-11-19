@@ -1,7 +1,3 @@
-"""
-Downloads 10-Q filings from SEC website
-Extracts 10-Q htm files from these filing txt dumps
-"""
 from secedgar import filings, FilingType
 from bs4 import BeautifulSoup
 
@@ -18,6 +14,9 @@ from .metadata_manager import metadata_manager
 
 
 class edgar_downloader:
+    """
+        Class for querying SEC-EDGAR database for files
+    """
     def __init__(self, data_dir, metadata = None):
 
         self.data_dir = os.path.join(data_dir, '')
@@ -103,13 +102,26 @@ class edgar_downloader:
         self.metadata[tikr]['submissions'][key]['documents'] = \
                 dict(out, **self.metadata[tikr]['submissions'][key]['documents'])
 
-    # Returns True if TIKR had previous bulk download
     def _is_downloaded(self, tikr):
+        """
+            Returns True if TIKR had previous bulk download
+        """
         return self.metadata[tikr]['attrs'].get('downloaded', False)
 
     def query_server(
             self, tikr, start_date=None, end_date=None, max_num_filings=None,
             filing_type=FilingType.FILING_10Q, force=False):
+        """
+            Download SEC filings to a local directory for later parsing, by company TIKR
+            
+            
+            Parameters
+            ---------
+            tikr: str
+                a company identifier to query 
+            force: bool
+                if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+        """
 
         if self._is_downloaded(tikr) and not force:
             print('\talready downloaded')
