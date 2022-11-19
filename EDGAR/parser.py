@@ -256,53 +256,11 @@ class edgar_parser:
 
         return found_table, table_is_numeric
 
-    #legacy?
-    """
-    def load_parsed(self, tikr, submission):
-        path = os.path.join(self.data_dir, 'parsed', tikr, submission.split('.')[0] + '.pkl')
-
-        with open(path, 'rb') as f:
-            return pkl.load(f)
-    """
-
     def get_annotation_info(self, elem: WebElement):
         return {'value': elem.text, 'name': elem.get_attribute('name') , 'id': elem.get_attribute('id')}
 
     def get_element_info(self, element: WebElement)-> list():
         return {"text": element.text,"location": element.location, "size": element.size}
-
-    #legacy?
-    """
-    def parsed_to_data(self, webelements: list, annotations: dict,
-            save: bool = False, tikr: str = None, submission: str = None, keep_unlabeled=False):
-
-        
-        data = []
-        for elem in webelements:
-            tags = annotations[elem];
-
-            if not keep_unlabeled and len(tags) == 0:
-                continue;
-
-            infos = []
-            for tag in tags:
-                infos.append(self.get_annotation_info(tag))
-            data.append([self.get_element_info(elem), infos])
-
-        if save:
-            assert tikr is not None, 'Saving but no tikr provided' ;
-            assert submission is not None, 'Saving but no submission provided' ;
-            parse_dir = os.path.join(self.data_dir, 'parsed')
-            out_path = os.path.join(parse_dir, out_path.split('.')[0] + '.pkl')
-            
-            if not os.path.exists(os.path.dirname(out_path)):
-                os.system(f"mkdir -p {os.path.dirname(out_path)}")
-            
-            with open(out_path, 'wb') as f:
-                pkl.dump(data, f)
-    
-        return data
-    """
 
     def find_page_location(self) -> dict:
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
