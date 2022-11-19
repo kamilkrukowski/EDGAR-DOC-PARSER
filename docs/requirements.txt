@@ -119,7 +119,7 @@ platformdirs==2.5.1
 pluggy==0.13.0
 ply==3.11
 prompt-toolkit==3.0.28
-protobuf==3.12.4
+protobuf==3.18.3
 proxy-tools==0.1.0
 psutil==5.9.0
 ptyprocess==0.7.0
