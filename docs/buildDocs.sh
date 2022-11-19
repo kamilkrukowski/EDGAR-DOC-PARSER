@@ -19,9 +19,10 @@ set -x
 apt-get update
 apt-get -y install python3-stemmer python3-git python3-pip python3-virtualenv python3-setuptools
 python3 -m pip install sphinx==5.3.0
-python3 -m pip install pyyaml
+python3 -m pip install scipy numpy selenium==4.5.0 pyyaml chardet requests lxml pandas
+python3 -m pip install pytorch
+python3 -m pip install secedgar==0.4.0 beautifulsoup4 attrs typing-extensions
 apt-get -y install git rsync python3-sphinx-rtd-theme 
-
  
 #####################
 # DECLARE VARIABLES #
