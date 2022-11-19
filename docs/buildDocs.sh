@@ -15,7 +15,6 @@ set -x
 ###################
 # INSTALL DEPENDS #
 ###################
-export SOURCE_DATE_EPOCH ?= $(shell dpkg-parsechangelog -STimestamp)
  
 apt-get update
 apt-get -y install python3-stemmer python3-git python3-pip python3-virtualenv python3-setuptools
@@ -31,6 +30,7 @@ apt-get -y install git rsync python3-sphinx-rtd-theme
 pwd
 ls -lah
 export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
+export SOURCE_DATE_EPOCH=$(0)
  
 ##############
 # BUILD DOCS #
