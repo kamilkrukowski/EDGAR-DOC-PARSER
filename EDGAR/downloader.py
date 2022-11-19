@@ -109,8 +109,7 @@ class edgar_downloader:
         return self.metadata[tikr]['attrs'].get('downloaded', False)
 
     def query_server(
-            self, tikr, start_date=None, end_date=None, max_num_filings=None,
-            filing_type=FilingType.FILING_10Q, force=False):
+            self, tikr: str, force: bool = False, **kwargs):
         """
             Download SEC filings to a local directory for later parsing, by company TIKR
             
@@ -121,14 +120,20 @@ class edgar_downloader:
                 a company identifier to query 
             force: bool
                 if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+            start_date: , optional
+                The earliest date to look for filings
+            end_date: , optional
+                The latest filing date retrievable
+            max_num_filings:
+                The maximum number of documents to retrieve. Retrieves all documents if set to `None`.
         """
 
         if self._is_downloaded(tikr) and not force:
             print('\talready downloaded')
             return
 
-        elif (start_date is None and end_date is None and
-            max_num_filings is None
+        elif (kwargs.get('start_date', None) is None and kwargs.get('end_date', None) is None and
+            kwargs.get('max_num_filings', None) is None
             ):
 
             self.metadata[tikr]['attrs']['downloaded'] = True
@@ -137,11 +142,11 @@ class edgar_downloader:
         user_agent = "".join([f"{self.metadata.keys['edgar_agent']}", 
                               f": {self.metadata.keys['edgar_email']}"])
         f = filings(cik_lookup=tikr,
-                    filing_type=filing_type,
-                    count=max_num_filings,
+                    filing_type=kwargs.get('filing_type', None),
+                    count=kwargs.get('max_num_filings', None),
                     user_agent=user_agent,
-                    start_date=start_date,
-                    end_date=end_date)
+                    start_date=kwargs.get('start_date', None),
+                    end_date=kwargs.get('end_date', None))
 
         # Beautiful Soup parsing XML as HTML error
         #   (Ignored because we are using iXML HTML markup)
@@ -149,20 +154,30 @@ class edgar_downloader:
         f.save(self.raw_dir)
         warnings.simplefilter('default')
 
-    """
-        Utility Function
-        Get list of targets for unpack_file func
-    """
-    def get_unpackable_files(self, tikr):
+    def get_unpackable_files(self, tikr: str):
+        """
+            Utility Function
+            Get list of targets for unpack_file func
+            
+            Parameters
+            ---------
+            tikr: str
+                a company identifier to query 
+        """
         # sec-edgar data save location for 10-Q filing ticker
         d_dir = os.path.join(self.raw_dir,f'{tikr}', '10-Q')
         return os.listdir(d_dir)
     
-    """
-        Utility Function
-        Get list of submissions under ticker
-    """
     def get_submissions(self, tikr):
+        """
+            Utility Function
+            Get list of submissions under tikr
+            
+            Parameters
+            ---------
+            tikr: str
+                a company identifier to query 
+        """
         # sec-edgar data save location for 10-Q filing ticker
         return [i.split('.txt')[0] for i in self.get_unpackable_files(tikr)]
 
