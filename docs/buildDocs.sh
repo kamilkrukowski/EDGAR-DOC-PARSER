@@ -18,9 +18,6 @@ set -x
  
 apt-get update
 apt-get -y install git rsync python3-sphinx python3-sphinx-rtd-theme
-
-pip install scipy numpy selenium==4.5.0 pyyaml chardet requests lxml pandas
-pip install secedgar==0.4.0 beautifulsoup4 attrs typing-extensions pyyaml
  
 #####################
 # DECLARE VARIABLES #
