@@ -306,8 +306,8 @@ class edgar_parser:
     is_annotated - 1 if the value is annotation, 0 otherwise.
     """
     def get_annotation_features(self, webelements: list, annotations: dict, in_table: np.array, save: bool = False, out_path: str = 'sample.csv'):
-        COLUMN_NAMES = ["label_text","found_index","full_text", "anno_index", "anno_name","anno_id",
-                        "anno_format","anno_ix_type",'annotation_unitref',"anno_decimals",
+        COLUMN_NAMES = ["label_text","found_index","full_text", "anno_index", "anno_name", "anno_id",
+                        "anno_format","anno_ix_type",'annotation_unitref',"anno_decimals", "name",
                         "anno_contextref","page_number","x","y", "height", "width","is_annotated", "in_table"]
         page_location = self.find_page_location()
         
@@ -336,8 +336,8 @@ class edgar_parser:
                 
                 val["page_number"], val["y"] = self.get_page_number(page_location, annotation)
 
-                for _attr in ["id", "contextref", "decimals", "format", "unitref"]:
-                    val[_attr] = annotation.get_attribute(_attr)
+                for _attr in ["name", "id", "contextref", "decimals", "format", "unitref"]:
+                    val[f"anno_{_attr}"] = annotation.get_attribute(_attr)
                 for _size in ["width", "height"]:
                     val[_size] = annotation.size[_size]
                 
