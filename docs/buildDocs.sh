@@ -24,6 +24,7 @@ python3 -m pip install sphinx==5.3.0
 #python3 -m pip install pyyaml python3 -m pip install aiohttp
 #python3 -m pip install secedgar==0.4.0 beautifulsoup4 attrs typing-extensions
 apt-get -y install git rsync python3-sphinx-rtd-theme 
+python3 -m pip install mock
  
 #####################
 # DECLARE VARIABLES #
