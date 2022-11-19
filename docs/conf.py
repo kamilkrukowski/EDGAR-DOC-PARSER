@@ -2,7 +2,7 @@ import os; import sys;
 sys.path.append(os.path.abspath('..'))
 
 import mock
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy', 'torch', 
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy', 'torch', 'pandas', 
                 'yaml', 'secedgar', 'selenium', 'selenium.webdriver.common.by', 'selenium.common.exceptions', 'selenium.webdriver.remote.webelement',
                 'pyyaml', 'torch.utils.data', 'bs4', 'tqdm', 'tqdm.auto', 'selenium.webdriver' , 'selenium.webdriver.remote' ,'torch.utils']
 for mod_name in MOCK_MODULES:
