@@ -19,11 +19,10 @@ set -x
 apt-get update
 apt-get -y install python3-stemmer python3-git python3-pip python3-virtualenv python3-setuptools
 python3 -m pip install sphinx==5.3.0
-python3 -m pip install selenium==4.5.0 pyyaml chardet requests lxml pandas
-python3 -m pip install torch
-python3 -m pip install pyyaml
-python3 -m pip install aiohttp
-python3 -m pip install secedgar==0.4.0 beautifulsoup4 attrs typing-extensions
+#python3 -m pip install selenium==4.5.0 pyyaml chardet requests lxml pandas
+#python3 -m pip install torch
+#python3 -m pip install pyyaml python3 -m pip install aiohttp
+#python3 -m pip install secedgar==0.4.0 beautifulsoup4 attrs typing-extensions
 apt-get -y install git rsync python3-sphinx-rtd-theme 
  
 #####################
@@ -33,7 +32,7 @@ apt-get -y install git rsync python3-sphinx-rtd-theme
 pwd
 ls -lah
 #export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
-export SOURCE_DATE_EPOCH="0000000000"
+export SOURCE_DATE_EPOCH="1672444799"
  
 ##############
 # BUILD DOCS #

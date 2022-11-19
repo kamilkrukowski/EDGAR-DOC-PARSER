@@ -1,6 +1,11 @@
 import os; import sys;
 sys.path.append(os.path.abspath('..'))
 
+import mock
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy', 'torch']
+for mod_name in MOCK_MODULES:
+        sys.modules[mod_name] = mock.Mock()
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
