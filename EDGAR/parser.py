@@ -1,6 +1,6 @@
 """
 Should work on Netflix 2013 10-Q
-
+===================================
 Opens a local 'nflx' 10-Q form (or tries)
 Extracts 'text' elements from HTM tree
 Visualizes elements by red border highlighting in firefox browser
@@ -24,6 +24,10 @@ from .metadata_manager import metadata_manager
 
 
 class edgar_parser:
+    """
+        Main class for extracting information from HTML documents
+    
+    """
 
     def __init__(self, metadata: metadata_manager = None,
                  data_dir: str = 'edgar_downloads',
@@ -90,14 +94,14 @@ class edgar_parser:
     def get_driver_path(self, tikr, submission, fname, partition='processed'):
         return pathlib.Path(os.path.join(self.data_dir, partition, tikr, submission, fname)).absolute().as_uri()
 
-    """
-    Parses some documents 2020+ at least
-
-        driver_path -- path of file to open, or 'NONE' to keep current file
-        highlight -- add red box around detected fields
-        save -- save htm copy (with/without highlighting) to out_path
-    """
     def _parse_annotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = os.path.join('.','sample.htm')):
+        """
+        Parses some documents 2020+ at least
+
+            driver_path -- path of file to open, or 'NONE' to keep current file
+            highlight -- add red box around detected fields
+            save -- save htm copy (with/without highlighting) to out_path
+        """
         
         if driver_path is not None:
             self.driver.get(driver_path)
