@@ -105,28 +105,27 @@ class edgar_parser:
         forbidden = {i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'','**'})
         found = [i for i in found if i.text not in forbidden]
 
+        
+        in_table = np.zeros(len(found), dtype=bool)
+
         annotation_dict = dict()
         for i in range(len(found)):
-            in_table = False
             
             found_annotation = found[i].find_elements(By.TAG_NAME, 'ix:nonnumeric')
             found_annotation += found[i].find_elements(By.TAG_NAME, 'ix:nonfraction')
             
             current_element = found[i]
-            while not in_table: # loop through ancestors
+            while True: # loop through ancestors
                 # # check if current is root
-                try:
-                    parent = current_element.parent
-                except AttributeError: # if there is no parent => it is the root
-                    break
+                parent = self.driver.execute_script("return arguments[0].parentNode", current_element)
+                if parent.tag_name == 'body': # This is the 'root' of an html tree
+                    break;
                 if current_element.tag_name == 'table':
-                    in_table = True
+                    in_table[i] = True
+                    break
                 current_element = parent
             
-            if not in_table:
-                annotation_dict[found[i]] = found_annotation
-            else:
-                annotation_dict[found[i]] = []
+            annotation_dict[found[i]] = found_annotation
         # Executes javascript in Firefox to make pretty borders around detected elements
         if highlight:
             for i in found:
@@ -137,7 +136,7 @@ class edgar_parser:
         if save:
             self._save_driver_source(out_path)
 
-        return found, annotation_dict;
+        return found, annotation_dict, in_table;
 
     """
         Return list of submissions names with annotated 10-Q forms
@@ -304,34 +303,35 @@ class edgar_parser:
     y - y coordinate base on page number
     height - the height of the tag
     width - the width of the tag
-    is_annotation - 1 if the value is annotation, 0 otherwise.
+    is_annotated - 1 if the value is annotation, 0 otherwise.
     """
-    def get_annotation_features(self, webelements: list, annotations: dict,save: bool = False, out_path: str = 'sample.csv'):
-        COLUMN_NAMES = ["text","found_index","full_text", "anno_index", "anno_name","anno_id",
+    def get_annotation_features(self, webelements: list, annotations: dict, in_table: np.array, save: bool = False, out_path: str = 'sample.csv'):
+        COLUMN_NAMES = ["label_text","found_index","full_text", "anno_index", "anno_name","anno_id",
                         "anno_format","anno_ix_type",'annotation_unitref',"anno_decimals",
-                        "anno_contextref","page_number","x","y", "height", "width","is_annotation"]
+                        "anno_contextref","page_number","x","y", "height", "width","is_annotated", "in_table"]
         page_location = self.find_page_location()
-        NUM_COLUMN = len(COLUMN_NAMES)
-       
-        df = pd.DataFrame(columns=COLUMN_NAMES) 
 
-        for i, elem in enumerate(webelements):
+        
+        df = pd.DataFrame(columns=COLUMN_NAMES).astype({"in_table":bool,"is_annotated":bool}) 
+
+        for idx, elem in enumerate(webelements):
             
             default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
 
-            default_dict.update({"text": np.nan, "found_index": int(i),"full_text": elem.text, "is_annotation": False,
-
+            default_dict.update({"found_index": int(idx),"full_text": elem.text, "is_annotated": False,
                                 "x": elem.location["x"], "y": y, "page_number": page_num,
-                                "height": elem.size["height"], "width": elem.size["width"]})
+                                "height": elem.size["height"], "width": elem.size["width"], "in_table": in_table[idx]})
 
             count = 0
+
+            new_df = pd.DataFrame(columns=COLUMN_NAMES).astype({"in_table":bool,"is_annotated":bool}) 
             
             for j, annotation in enumerate(annotations[elem]):
                 new_dict = default_dict.copy()
                 
-                val = {"anno_index": j , "x": annotation.location["x"], "is_annotation": True,
-                        "value": annotation.text, "anno_ix_type": annotation.tag_name}
+                val = {"anno_index": j , "x": annotation.location["x"], "is_annotated": True,
+                        "label_text": annotation.text, "anno_ix_type": annotation.tag_name}
                 
                 val["page_number"], val["y"] = self.get_page_number(page_location, annotation)
 
@@ -341,18 +341,23 @@ class edgar_parser:
                     val[_size] = annotation.size[_size]
                 
                 new_dict.update(val)
-                temp_df = pd.DataFrame(new_dict,index=[0])
-                df = pd.concat([temp_df,df], ignore_index=True)
+                temp_df = pd.DataFrame(new_dict, index=[0]).astype({"in_table":bool, "is_annotated":bool})
+                new_df = pd.concat([temp_df, new_df], ignore_index=True)
                 
                 count += 1
             
+
+            if count == 0:
+                new_df = pd.DataFrame(default_dict, index=[0]).astype({"in_table":bool, "is_annotated":bool})
+            df = pd.concat([new_df,df], ignore_index=True)
+            """
             default_dict = default_dict if count == 0 else None
-        
             if default_dict != None:
                 temp_df = pd.DataFrame(default_dict,index=[0])
                 df = pd.concat([temp_df,df], ignore_index=True)
+            """
 
-        df.drop_duplicates(subset = ["text","page_number","anno_id"], keep="last", inplace=True)
+        #df.drop_duplicates(subset = ["text"], keep="last", inplace=True)
         if(save):
             df.to_csv(out_path)
         return df
@@ -376,8 +381,8 @@ class edgar_parser:
             return self.load_processed(tikr, submission, filename)
         else:
             # TODO make process_file detect and work on unannotated files
-            elems, annotation_dict = self._parse_annotated_text(self.get_driver_path(tikr, submission, filename))
-            features = self.get_annotation_features(elems, annotation_dict)
+            elems, annotation_dict, in_table = self._parse_annotated_text(self.get_driver_path(tikr, submission, filename))
+            features = self.get_annotation_features(elems, annotation_dict, in_table)
             self.save_processed(tikr, submission, filename, elems, annotation_dict, features)
             self.metadata.save_tikr_metadata(tikr)
             return features

@@ -8,9 +8,17 @@ import sys ; sys.path.append('..')
 
 from tqdm.auto import tqdm
 import numpy as np
+import argparse
 
 
 import EDGAR
+
+
+# Command line magic for common use case to regenerate dataset
+#   --force to overwrite outdated local files
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--force', action='store_true')
+args = parser.parse_args()
 
 data_dir = os.path.join('..', 'data')
 
@@ -23,6 +31,7 @@ tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
 trainset = []
+f = None
 for tikr in tikrs:
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
@@ -31,26 +40,30 @@ for tikr in tikrs:
         fname = metadata.get_10q_name(tikr, doc)
 
         # Try load cached, otherwise regenerate new file
-        features = parser.featurize_file(tikr, doc, fname) 
+        features = parser.featurize_file(tikr, doc, fname, force=args.force) 
+        f = features
     
         found_indices = np.unique([int(i) for i in features['found_index']])
         # Structure: Text str, Labels dict, labelled bool
-        data = {i:{'text':None, 'labels':dict(), 'labelled':False } for i in found_indices}
+        data = {i:{'text':None, 'labels':dict(), 'is_annotated':False, 'in_table':False } for i in found_indices}
         
         for i in range(len(features)):
             i = features.iloc[i, :]
-            # Skip documents which are NOT annotated
-            if not i['is_annotation']:
-                continue;
             d = data[i['found_index']]
+            
+            if i['in_table']:
+                d['in_table'] = True
+            if i['is_annotated']:
+                d['is_annotated'] = True
+            
             if d['text'] is None:
-                d['text'] = i['text']
-            d['labels'][i['annotation_index']] = i['name']
+                d['text'] = i['full_text']
+            d['labels'][i['anno_index']] = i['name']
         
         # Add all labelled documents to trainset
         for i in data:
             #Only add labelled documents to trainset
-            if not data[i]['is_annotation']:
+            if not data[i]['is_annotated'] or data[i]['in_table']:
                 continue; 
             d = data[i]
             # Data format: (x,y) where x refers to training features (present for unnannotated docs), and y refers to labels to predict
