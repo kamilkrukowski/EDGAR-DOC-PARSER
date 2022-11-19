@@ -1,10 +1,3 @@
-"""
-Should work on Netflix 2013 10-Q
-===================================
-Opens a local 'nflx' 10-Q form (or tries)
-Extracts 'text' elements from HTM tree
-Visualizes elements by red border highlighting in firefox browser
-"""
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
@@ -376,7 +369,7 @@ class edgar_parser:
             The filing to access the file from
         filename: str
             The name of the file to featurize
-        force: bool
+        force: bool, default=False
             if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
         """
         if not force and self.metadata.file_was_processed(tikr, submission, filename):
