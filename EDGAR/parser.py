@@ -286,6 +286,7 @@ class edgar_parser:
 
     def find_page_location(self) -> dict:
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
+        page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
         # TODO add logic to handle this
         if len(page_breaks) == 0:
             warnings.warn("No page breaks detected in document", RuntimeWarning)
@@ -293,13 +294,13 @@ class edgar_parser:
         page_number = 1
         # get the range of y for page 1
         page_location = {page_number: [0,page_breaks[0].location["y"]]}
-        next_page_start =  page_location[page_number][1] + 2  # plus 2 b/c page break height = 2
+        next_page_start =  page_location[page_number][1] 
         
         # get the range of y for page 2 to  n-1 (n is the last page)
         for hr in page_breaks[1:]:
             page_number += 1
             page_location[page_number]= [next_page_start,hr.location["y"]]
-            next_page_start =  page_location[page_number][1] + 2  # plus 2 b/c page break height = 2
+            next_page_start =  page_location[page_number][1] 
         # get the range of y for last page
         page_number += 1
         page_location[page_number]= [next_page_start,float('inf')]
@@ -311,9 +312,9 @@ class edgar_parser:
 
         element_y = element.location["y"]
         for i in range(1,len(page_location)+1):
-            if( element_y > page_location[i][0] and element_y <page_location[i][1]):
+            if( element_y >= page_location[i][0] and element_y <=page_location[i][1]):
                 return i, element_y - page_location[i][0]
-            
+
         return None, None
     #-----------get attribute-------------------------------------------------#
     """
@@ -336,21 +337,27 @@ class edgar_parser:
     is_annotation - 1 if the value is annotation, 0 otherwise.
     """
     def get_annotation_features(self, webelements: list, annotations: dict,save: bool = False, out_path: str = 'sample.csv'):
-        COLUMN_NAMES = ["text","found_index","full_text", "anno_index", "anno_name","anno_id",
-                        "anno_format","anno_ix_type",'annotation_unitref',"anno_decimals",
+        COLUMN_NAMES = ["anno_text","found_index","page_text", "span_text", "anno_index", "anno_name","anno_id",
+                        "anno_format","anno_ix_type",'anno_unitref',"anno_decimals",
                         "anno_contextref","page_number","x","y", "height", "width","is_annotation"]
-        page_location = self.find_page_location()
+        
         NUM_COLUMN = len(COLUMN_NAMES)
        
         df = pd.DataFrame(columns=COLUMN_NAMES) 
+        text_on_page = self.parse_text_by_page()
+        page_location = self.find_page_location()
 
+        #print(len(page_location),len(text_on_page))
+        number_Null = 0
         for i, elem in enumerate(webelements):
-            
             default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
 
-            default_dict.update({"text": np.nan, "found_index": int(i),"full_text": elem.text, "is_annotation": False,
-
+            if(page_num == None):
+                number_Null += 0
+                continue
+            default_dict.update({"anno_text": np.nan, "found_index": int(i),"span_text": elem.text,
+                                "page_text":text_on_page[page_num]['text'], "is_annotation": 0,
                                 "x": elem.location["x"], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"]})
 
@@ -359,13 +366,13 @@ class edgar_parser:
             for j, annotation in enumerate(annotations[elem]):
                 new_dict = default_dict.copy()
                 
-                val = {"anno_index": j , "x": annotation.location["x"], "is_annotation": True,
-                        "value": annotation.text, "anno_ix_type": annotation.tag_name}
+                val = {"anno_index": j , "x": annotation.location["x"], "is_annotation": 1,
+                        "anno_text": annotation.text, "anno_ix_type": annotation.tag_name}
                 
                 val["page_number"], val["y"] = self.get_page_number(page_location, annotation)
 
                 for _attr in ["name", "id", "contextref", "decimals", "format", "unitref"]:
-                    val[_attr] = annotation.get_attribute(_attr)
+                    val["anno_"+_attr] = annotation.get_attribute(_attr)
                 for _size in ["width", "height"]:
                     val[_size] = annotation.size[_size]
                 
@@ -381,7 +388,9 @@ class edgar_parser:
                 temp_df = pd.DataFrame(default_dict,index=[0])
                 df = pd.concat([temp_df,df], ignore_index=True)
 
-        df.drop_duplicates(subset = ["text","page_number","anno_id"], keep="last", inplace=True)
+        df['is_annotation'] = df['is_annotation'].astype('boolean')
+        df.drop_duplicates(subset = ["anno_text","page_number","anno_id"], keep="last", inplace=True)
+        #print("num. cannot find page number",number_Null)
         if(save):
             df.to_csv(out_path)
         return df
@@ -416,7 +425,7 @@ class edgar_parser:
 
         
         num_page = len(page_breaks) + 1
-        print('total number of page',num_page)
+        #print('total number of page',num_page)
         if(num_page == 1):
             return {}
         text_on_page = {i: {"text": "", "elements": []} for i in range(1,num_page+1)}
