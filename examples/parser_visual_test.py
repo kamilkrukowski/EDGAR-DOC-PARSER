@@ -25,25 +25,18 @@ loader = EDGAR.downloader(data_dir=os.path.join('..','data'));
 loader.metadata.load_tikr_metadata(tikr)
 
 # Get nearest 10Q form path to above date
-dname = loader.get_nearest_date_filename(submission_date, tikr)
-fname = loader.get_10q_name(dname, tikr)
+dname = loader.get_nearest_date_filename(tikr, submission_date)
+fname = loader.metadata.get_10q_name(tikr, dname)
 driver_path = pathlib.Path(os.path.join(loader.proc_dir, tikr, dname, fname)).as_uri()
 
 parser = EDGAR.parser(metadata=loader.metadata, headless=headless)
 
 # Parsing
 data = None
-if not os.path.exists(os.path.join('..', 'edgar_downloads', 'parsed', tikr, f"{fname.split(',')[0]}.pkl")):
-    print('Parsed Data does not exist... creating and caching')
 
-    found, annotation_dict = parser.parse_annotated_text(driver_path, highlight=True, save=False)
-    parser.get_annotation_features(found, annotation_dict,save = True)
-    input("enter to continue")
-
-    data = parser.parsed_to_data(found, annotation_dict, save=True, out_path=os.path.join(str(tikr),str(fname)+"pkl"))
-else:
-    print('Loading cached parsed data')
-    data= parser.load_parsed(tikr, fname)
+found, annotation_dict, in_table = parser._parse_annotated_text(driver_path, highlight=True, save=False)
+parser.get_annotation_features(found, annotation_dict, in_table, save = True)
+#input("enter to continue")
 
 print(f'Saving sample data to \'outputs/sample_data.txt\'')
 if not os.path.exists(os.path.join('..','outputs')):
