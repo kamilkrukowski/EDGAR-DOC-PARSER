@@ -27,7 +27,7 @@ Downloading and extracting archives of 10-Q submissions from the SEC API
     loader.query_server(tikr)
     loader.unpack_bulk(tikr)
 
-Parsing 10-Q submission HTML into featurized Pandas Dataframes
+Parsing 10-Q submission HTML into featurized pandas DataFrames
 
 .. code-block:: python
 
