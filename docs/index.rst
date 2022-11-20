@@ -10,6 +10,7 @@ Welcome to pyEDGAR's documentation!
    :maxdepth: 2
 
    setup
+   core
    Downloading Documents <downloader>
    Parsing Documents <parser>
 
