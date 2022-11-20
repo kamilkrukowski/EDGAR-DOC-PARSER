@@ -377,6 +377,16 @@ class edgar_parser:
             The name of the file to featurize
         force: bool, default=False
             if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+
+        Returns
+        --------
+        DataFrame
+            Each row corresponds to one text field. Rows are not unique, one is generated for each iXBRL annotation on that text field.
+
+            
+        Notes
+        ------
+        Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
         """
         if not force and self.metadata.file_was_processed(tikr, submission, filename):
             return self.load_processed(tikr, submission, filename)
