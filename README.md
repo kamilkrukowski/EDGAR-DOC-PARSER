@@ -2,7 +2,7 @@
 
 ## Documentation
 
-[Documentation](https://kamilkrukowski.github.io/FinDocNLP)
+For more information read our documentation hosted [here.](https://kamilkrukowski.github.io/FinDocNLP)
 
 ## Useful information
 
