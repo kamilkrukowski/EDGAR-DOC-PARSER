@@ -20,6 +20,8 @@ loader = EDGAR.downloader(data_dir=data_dir);
 parser = EDGAR.parser(data_dir=data_dir)
 
 
+
+
 # List of companies to process
 #tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()
 #tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
@@ -32,49 +34,92 @@ trainset = []
 for tikr in tikrs:
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
-
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
-        trainset_page_tikr = []
         fname = metadata.get_10q_name(tikr, doc)
         # Try load cached, otherwise regenerate new file
-        features = parser.process_file(tikr, doc, fname) 
-        print(features[-1]["page_number"])
+        features = parser.featurize_file(tikr, doc, fname,force = True) 
+        features.sort_values(by=['page_number'])
+
+        num_page = features.iloc[0]["page_number"]
+    
 
         found_indices = np.unique([int(i) for i in features['found_index']])
         # Structure: Text str, Labels dict, labelled bool
-        data = {i:{'text':None, 'labels':dict(), 'labelled':False } for i in found_indices}
-        trainset_doc = []
+        data = {i:{'text':None, 'labels':dict(), 'labelled':False, "page_number": 0 } for i in found_indices}
+        
         for i in range(len(features)):
             i = features.iloc[i, :]
-
             # Skip documents which are NOT annotated
             if not i['is_annotation']:
                 continue;
             d = data[i['found_index']]
             d['labelled'] = True
+            d['page_number'] = i["page_number"]
             if d['text'] is None:
-                d['text'] = [i['value'], i["full_text"]]
+                """
+                x is a list with length of 2. Items in the list are:
+                    1. value: the text value of the annotated label (e.g. 10-Q)
+                    2. neighboring text: the text on the given page.
+                y is a list with ['name', 'id', 'contextref', 'decimals', 'format', 'unitref'] tags
+                """
+                d['text'] = i['anno_text']
 
-            d['labels'][i['annotation_index']] = []
+            d['labels'][i['anno_index']] = []
             for _attr in ['name', 'id', 'contextref', 'decimals', 'format', 'unitref']:
-                d['labels'][i['annotation_index']].append(i[_attr])
+                d['labels'][i['anno_index']].append(i["anno_" + _attr])
+
 
         # Add all labelled documents to trainset
+        data_per_page = [ [] for i in range(num_page)]
+        # Add all labelled documents to trainset
         for i in data:
-            d = data[i]
-            if not d['labelled']:
+            #Only add labelled documents to trainset
+            if not data[i]['labelled']:
                 continue; 
-            # Data format: (x,y) where x refers to list of training features (present for unnannotated docs), and y refers to list of labels to predict
-            trainset_page_tikr.append((d['text'], list(d['labels'].values())))
-
-
-
+            d = data[i]
             
+            # Data format: (x,y) where x refers to training features (present for unnannotated docs), and y refers to labels to predict
+            data_per_page[d['page_number']-1].append((d['text'], d['labels'].values()))
 
-        with open(os.path.join('..','outputs','sample_data_nflx.csv'), 'w') as f:
-            text, labels = trainset[0]
-            f.write(f"{text},{':'.join([str(i) for i in labels])}")
-            for text, labels in trainset[1:]:
-                f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+        # TODO: Convert to list of [lists of tuples, page number, document,parent_company_tikr] scheme where each list of tuples consists of all annotated webelements on that page
+        for i , d in enumerate(data_per_page ):
+            # Only add list if the list is not empty
+            if len(d) == 0:
+                continue
+            trainset.append([ d, i+1,doc, tikr  ])
+
+print(trainset[0][0][0])
+
+
+"""
+Training set structure:
+Training set 
+[   
+    [ 
+       list of tuples (x,y) 
+       i.e [
+            (x: anno_text, y:[list of labels]),
+            ...
+            (x: anno_text, y:[list of labels])
+        ],
+        page number,
+        parent company tikr
+
+
+    ],
+    [...],
+    ...
+    ,
+    [...]
+]
+
+"""
+with open(os.path.join('..','outputs','sample_data_nflx.csv'), 'w') as f:
+    f.write(f"Page_number: {trainset[36][1]},document:{trainset[36][2]},Tikr:{trainset[36][3]}\n")
+    data = trainset[36][0]
+    text, labels = data[0]
+    f.write(f"{text},{':'.join([str(i) for i in labels])}")
+    for text, labels in data[1:]:
+        f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
 
         
