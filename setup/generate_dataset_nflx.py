@@ -34,6 +34,7 @@ trainset = []
 for tikr in tikrs:
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
+    #annotated_docs = [annotated_docs[0]]
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
         fname = metadata.get_10q_name(tikr, doc)
         # Try load cached, otherwise regenerate new file
@@ -45,15 +46,19 @@ for tikr in tikrs:
 
         found_indices = np.unique([int(i) for i in features['found_index']])
         # Structure: Text str, Labels dict, labelled bool
-        data = {i:{'text':None, 'labels':dict(), 'labelled':False, "page_number": 0 } for i in found_indices}
+        data = {i:{'text':None, 'labels':dict(), 'is_annotated':False, 'in_table':False, "page_number": 0 } for i in found_indices}
         
         for i in range(len(features)):
             i = features.iloc[i, :]
-            # Skip documents which are NOT annotated
-            if not i['is_annotation']:
-                continue;
             d = data[i['found_index']]
-            d['labelled'] = True
+            # Skip documents which are NOT annotated
+            if i['in_table']:
+                d['in_table'] = True
+            if i['is_annotated']:
+                d['is_annotated'] = True
+
+            
+         
             d['page_number'] = i["page_number"]
             if d['text'] is None:
                 """
@@ -74,7 +79,7 @@ for tikr in tikrs:
         # Add all labelled documents to trainset
         for i in data:
             #Only add labelled documents to trainset
-            if not data[i]['labelled']:
+            if not data[i]['is_annotated'] or data[i]['in_table']:
                 continue; 
             d = data[i]
             
@@ -88,7 +93,7 @@ for tikr in tikrs:
                 continue
             trainset.append([ d, i+1,doc, tikr  ])
 
-print(trainset[0][0][0])
+#print(trainset[0][0][0])
 
 
 """
@@ -114,12 +119,26 @@ Training set
 ]
 
 """
-with open(os.path.join('..','outputs','sample_data_nflx.csv'), 'w') as f:
-    f.write(f"Page_number: {trainset[36][1]},document:{trainset[36][2]},Tikr:{trainset[36][3]}\n")
-    data = trainset[36][0]
-    text, labels = data[0]
-    f.write(f"{text},{':'.join([str(i) for i in labels])}")
-    for text, labels in data[1:]:
-        f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+#print only one trainset
+'''
+   # Sample CSV with text, tag information
+        with open(os.path.join('..','outputs','sample_data.csv'), 'w') as f:
+            if len(trainset) > 0:
+                text, labels = trainset[0]
+                f.write(f"{text},{':'.join([str(i) for i in labels])}")
+                for text, labels in trainset[1:]:
+                    f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+            else:
+                warnings.warn('No Trainset Samples', RuntimeWarning)
+'''
 
+with open(os.path.join('..','outputs','sample_data_nflx.csv'), 'w') as f:
+    for page in trainset: 
+        f.write(f"Page_number: {page[1]},document:{page[2]},Tikr:{page[3]}\n")
+        data = page[0]
+        text, labels = data[0]
+        f.write(f"{text},{':'.join([str(i) for i in labels])}")
+        for text, labels in data[1:]:
+            f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+        f.write(f"\n\n")
         
