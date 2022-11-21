@@ -333,7 +333,7 @@ class edgar_parser:
 
             count = 0
             
-            new_df = pd.DataFrame(columns=COLUMN_NAMES).astype({"in_table":bool,"is_annotated":bool})
+            new_df = pd.DataFrame(columns=COLUMN_NAMES)
             for j, annotation in enumerate(annotations[elem]):
                 new_dict = default_dict.copy()
 
@@ -348,14 +348,14 @@ class edgar_parser:
                     val[_size] = annotation.size[_size]
 
                 new_dict.update(val)
-                temp_df = pd.DataFrame(new_dict, index=[0]).astype({"in_table":bool, "is_annotated":bool})
-                new_df = pd.concat([temp_df, new_df.astype({"in_table":bool, "is_annotated":bool})], ignore_index=True)
+                temp_df = pd.DataFrame(new_dict, index=[0])
+                new_df = pd.concat([temp_df, new_df], ignore_index=True)
 
                 count += 1
 
 
             if count == 0:
-                new_df = pd.DataFrame(default_dict, index=[0]).astype({"in_table":bool, "is_annotated":bool})
+                new_df = pd.DataFrame(default_dict, index=[0])
             df = pd.concat([new_df,df], ignore_index=True)
             """
             default_dict = default_dict if count == 0 else None
