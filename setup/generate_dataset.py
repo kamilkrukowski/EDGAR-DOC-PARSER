@@ -94,6 +94,22 @@ for tikr in tikrs:
                 continue
             trainset.append([ d, i+1,doc, tikr  ])
 
+                
+        with open(os.path.join('..','outputs','sample_data.csv'), 'w') as f:
+
+            for i , d in enumerate(data_per_page ):
+
+                if len(d) == 0:
+                    continue
+                f.write(f"Page_number: {i+1},document:{doc},Tikr:{tikr}\n")
+                text, labels = d[0]
+                f.write(f"{text},{':'.join([str(i) for i in labels])}")
+                for text, labels in d[1:]:
+                    f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+                f.write(f"\n\n")
+
+
+'''
 with open(os.path.join('..','outputs','sample_data.csv'), 'w') as f:
     for page in trainset: 
         f.write(f"Page_number: {page[1]},document:{page[2]},Tikr:{page[3]}\n")
@@ -103,3 +119,5 @@ with open(os.path.join('..','outputs','sample_data.csv'), 'w') as f:
         for text, labels in data[1:]:
             f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
         f.write(f"\n\n")
+
+'''
