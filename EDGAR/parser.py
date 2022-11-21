@@ -329,7 +329,7 @@ class edgar_parser:
             default_dict.update({"anno_text": np.nan, "found_index": int(i),"span_text": elem.text,
                                 "page_text":text_on_page[page_num]['text'], "is_annotated": 0,
                                 "x": elem.location["x"], "y": y, "page_number": page_num,
-                                "height": elem.size["height"], "width": elem.size["width"], "in_table": int(in_table[i]== True)})
+                                "height": elem.size["height"], "width": elem.size["width"], "in_table": int(in_table[i]}))
 
             count = 0
             
