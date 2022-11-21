@@ -306,10 +306,10 @@ class edgar_parser:
     width - the width of the tag
     is_annotated - 1 if the value is annotation, 0 otherwise.
     """
-    def get_annotation_features(self, webelements: list, annotations: dict,save: bool = False, out_path: str = 'sample.csv'):
+    def get_annotation_features(self, webelements: list, annotations: dict,in_table: np.array,save: bool = False, out_path: str = 'sample.csv'):
         COLUMN_NAMES = ["anno_text","found_index","page_text", "span_text", "anno_index", "anno_name","anno_id",
                         "anno_format","anno_ix_type",'anno_unitref',"anno_decimals",
-                        "anno_contextref","page_number","x","y", "height", "width","is_annotation"]
+                        "anno_contextref","page_number","x","y", "height", "width","is_annotated","in_table"]
 
         NUM_COLUMN = len(COLUMN_NAMES)
 
@@ -327,18 +327,17 @@ class edgar_parser:
                 number_Null += 0
                 continue
             default_dict.update({"anno_text": np.nan, "found_index": int(i),"span_text": elem.text,
-                                "page_text":text_on_page[page_num]['text'], "is_annotation": 0,
+                                "page_text":text_on_page[page_num]['text'], "is_annotated": 0,
                                 "x": elem.location["x"], "y": y, "page_number": page_num,
-                                "height": elem.size["height"], "width": elem.size["width"]})
+                                "height": elem.size["height"], "width": elem.size["width"], "in_table": int(in_table[i]== True)})
 
             count = 0
-
+            
             new_df = pd.DataFrame(columns=COLUMN_NAMES).astype({"in_table":bool,"is_annotated":bool})
-
             for j, annotation in enumerate(annotations[elem]):
                 new_dict = default_dict.copy()
 
-                val = {"anno_index": j , "x": annotation.location["x"], "is_annotation": 1,
+                val = {"anno_index": j , "x": annotation.location["x"], "is_annotated": 1,
                         "anno_text": annotation.text, "anno_ix_type": annotation.tag_name}
 
                 val["page_number"], val["y"] = self.get_page_number(page_location, annotation)
@@ -350,7 +349,7 @@ class edgar_parser:
 
                 new_dict.update(val)
                 temp_df = pd.DataFrame(new_dict, index=[0]).astype({"in_table":bool, "is_annotated":bool})
-                new_df = pd.concat([temp_df, new_df], ignore_index=True)
+                new_df = pd.concat([temp_df, new_df.astype({"in_table":bool, "is_annotated":bool})], ignore_index=True)
 
                 count += 1
 
@@ -365,7 +364,7 @@ class edgar_parser:
                 df = pd.concat([temp_df,df], ignore_index=True)
             """
 
-        df['is_annotation'] = df['is_annotation'].astype('boolean')
+        df = df.astype({"in_table":bool,"is_annotated":bool})
         df.drop_duplicates(subset = ["anno_text","page_number","anno_id"], keep="last", inplace=True)
         #print("num. cannot find page number",number_Null)
         if(save):
