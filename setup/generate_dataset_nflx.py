@@ -8,23 +8,24 @@ import sys ; sys.path.append('..')
 
 from tqdm.auto import tqdm
 import numpy as np
+import argparse
+import warnings
 
 
 import EDGAR
 
+
+# Command line magic for common use case to regenerate dataset
+#   --force to overwrite outdated local files
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--force', action='store_true')
+args = parser.parse_args()
 
 data_dir = os.path.join('..', 'data')
 
 metadata = EDGAR.metadata(data_dir=data_dir)
 loader = EDGAR.downloader(data_dir=data_dir);
 parser = EDGAR.parser(data_dir=data_dir)
-
-
-
-
-# List of companies to process
-#tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()
-#tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
 tikrs = ["nflx"]
 
