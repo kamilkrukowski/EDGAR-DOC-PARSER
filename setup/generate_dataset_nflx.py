@@ -75,11 +75,9 @@ for tikr in tikrs:
                 d['labels'][i['anno_index']].append(i["anno_" + _attr])
 
 
-        # Add all labelled documents to trainset
         data_per_page = [ [] for i in range(num_page)]
-        # Add all labelled documents to trainset
         for i in data:
-            #Only add labelled documents to trainset
+            #Only add annotated documents and non table label to trainset
             if not data[i]['is_annotated'] or data[i]['in_table']:
                 continue; 
             d = data[i]
