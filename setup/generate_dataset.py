@@ -39,7 +39,7 @@ for tikr in tikrs:
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
         fname = metadata.get_10q_name(tikr, doc)
         # Try load cached, otherwise regenerate new file
-        features = parser.featurize_file(tikr, doc, fname,force = True) 
+        features = parser.featurize_file(tikr, doc, fname,force = False) 
         features.sort_values(by=['page_number'])
 
         num_page = features.iloc[0]["page_number"]
