@@ -39,7 +39,7 @@ for tikr in tikrs:
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
         fname = metadata.get_10q_name(tikr, doc)
         # Try load cached, otherwise regenerate new file
-        features = parser.featurize_file(tikr, doc, fname,force = True) 
+        features = parser.featurize_file(tikr, doc, fname,force = args.force) 
         features.sort_values(by=['page_number'])
 
         num_page = features.iloc[0]["page_number"]
@@ -85,7 +85,7 @@ for tikr in tikrs:
             # Data format: (x,y) where x refers to training features (present for unnannotated docs), and y refers to labels to predict
             data_per_page[d['page_number']-1].append((d['text'], d['labels'].values()))
 
-        # TODO: Convert to list of [lists of tuples, page number, document,parent_company_tikr] scheme where each list of tuples consists of all annotated webelements on that page
+        # Convert to list of [lists of tuples, page number, document,parent_company_tikr] scheme where each list of tuples consists of all annotated webelements on that page
         for i , d in enumerate(data_per_page ):
             # Only add list if the list is not empty
             if len(d) == 0:
