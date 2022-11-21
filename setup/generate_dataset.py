@@ -39,7 +39,7 @@ for tikr in tikrs:
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
         fname = metadata.get_10q_name(tikr, doc)
         # Try load cached, otherwise regenerate new file
-        features = parser.featurize_file(tikr, doc, fname,force = False) 
+        features = parser.featurize_file(tikr, doc, fname,force = args.force) 
         features.sort_values(by=['page_number'])
 
         num_page = features.iloc[0]["page_number"]
@@ -78,7 +78,7 @@ for tikr in tikrs:
 
         data_per_page = [ [] for i in range(num_page)]
         for i in data:
-            #Only add annotated documents and non table label to trainset
+            # This checks for the number of annotations on a page. Only add a page with labels to the training set.
             if not data[i]['is_annotated'] or data[i]['in_table']:
                 continue; 
             d = data[i]
