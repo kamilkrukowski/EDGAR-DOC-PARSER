@@ -75,11 +75,10 @@ for tikr in tikrs:
                 d['labels'][i['anno_index']].append(i["anno_" + _attr])
 
 
-        # Add all labelled documents to trainset
+
         data_per_page = [ [] for i in range(num_page)]
-        # Add all labelled documents to trainset
         for i in data:
-            #Only add labelled documents to trainset
+            #Only add annotated documents and non table label to trainset
             if not data[i]['is_annotated'] or data[i]['in_table']:
                 continue; 
             d = data[i]
@@ -87,7 +86,8 @@ for tikr in tikrs:
             # Data format: (x,y) where x refers to training features (present for unnannotated docs), and y refers to labels to predict
             data_per_page[d['page_number']-1].append((d['text'], d['labels'].values()))
 
-        # TODO: Convert to list of [lists of tuples, page number, document,parent_company_tikr] scheme where each list of tuples consists of all annotated webelements on that page
+        #Convert to list of [lists of tuples, page number, document,parent_company_tikr] scheme where each list of tuples consists
+        # of all annotated webelements on that page
         for i , d in enumerate(data_per_page ):
             # Only add list if the list is not empty
             if len(d) == 0:
