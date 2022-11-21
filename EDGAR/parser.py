@@ -317,7 +317,6 @@ class edgar_parser:
         text_on_page = self.parse_text_by_page()
         page_location = self.find_page_location()
 
-        #print(len(page_location),len(text_on_page))
         number_Null = 0
         for i, elem in enumerate(webelements):
             default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
@@ -415,7 +414,6 @@ class edgar_parser:
 
 
         num_page = len(page_breaks) + 1
-        #print('total number of page',num_page)
         if(num_page == 1):
             return {}
         text_on_page = {i: {"text": "", "elements": []} for i in range(1,num_page+1)}
