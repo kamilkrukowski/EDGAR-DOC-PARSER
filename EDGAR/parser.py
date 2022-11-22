@@ -307,26 +307,44 @@ class edgar_parser:
     is_annotated - 1 if the value is annotation, 0 otherwise.
     """
     def get_annotation_features(self, webelements: list, annotations: dict,in_table: np.array,save: bool = False, out_path: str = 'sample.csv'):
-        COLUMN_NAMES = ["anno_text","found_index","page_text", "span_text", "anno_index", "anno_name","anno_id",
-                        "anno_format","anno_ix_type",'anno_unitref',"anno_decimals",
-                        "anno_contextref","page_number","x","y", "height", "width","is_annotated","in_table"]
+        """
 
-        NUM_COLUMN = len(COLUMN_NAMES)
 
+        Parameters
+        ---------
+        webelements: list[WebElement]
+            list of span
+        annotations: dict
+            Value is the list of annotation webelement. Key is the span webelement.
+        in_table: list[bool]
+            list of boolean. If (True), then it is table related webelement.
+        save: bool, default=False
+            if (True), then store the Dataframe into a CSV file. 
+        out_path: str, default='sample.csv'
+            if save is True, then store the output into CSV file at out_path.
+
+        Returns
+        --------
+        DataFrame
+            Each row corresponds to one text field. Rows are not unique, one is generated for each iXBRL annotation on that text field.
+
+            
+        Notes
+        ------
+        Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
+        """        
+        COLUMN_NAMES = ["anno_text","found_index", "span_text", "anno_index", "anno_name","anno_id", "anno_format","anno_ix_type",'anno_unitref',"anno_decimals", "anno_contextref","page_number","x","y", "height", "width","is_annotated","in_table"]
         df = pd.DataFrame(columns=COLUMN_NAMES)
-        text_on_page = self.parse_text_by_page()
-        page_location = self.find_page_location()
+        page_location = self.find_page_location() # page number and y range
 
         number_Null = 0
         for i, elem in enumerate(webelements):
             default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
-
             if(page_num == None):
                 number_Null += 0
                 continue
-            default_dict.update({"anno_text": np.nan, "found_index": int(i),"span_text": elem.text,
-                                "page_text":text_on_page[page_num]['text'], "is_annotated": 0,
+            default_dict.update({"anno_text": np.nan, "found_index": int(i),"span_text": elem.text, "is_annotated": 0,
                                 "x": elem.location["x"], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"], "in_table": int(in_table[i])})
 
@@ -418,37 +436,7 @@ class edgar_parser:
         with open(os.path.join(path, 'features.pkl'), 'rb') as f:
             return pkl.load(f)
 
-    def parse_text_by_page(self):
-        page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
-        page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
-
-
-        num_page = len(page_breaks) + 1
-        if(num_page == 1):
-            return {}
-        text_on_page = {i: {"text": "", "elements": []} for i in range(1,num_page+1)}
-        page_number = 1
-        hr_parent = page_breaks[0].find_element(By.XPATH, "./..")
-        sibling = hr_parent.find_elements(By.XPATH, "./*")
-
-        for elem in sibling:
-            ########## highlighting ###################
-            if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
-                self._draw_border(elem, 'purple')
-            elif(page_number % 2 == 0):
-                self._draw_border(elem, 'red')
-            else:
-                self._draw_border(elem, 'blue')
-            ########## highlighting ###################
-
-            if(elem.tag_name == 'hr' and (elem.get_attribute("color") == "#999999" or elem.get_attribute("color") == "")):
-                page_number += 1
-                continue
-            text_on_page[page_number]['text'] += "/n" + elem.text
-            text_on_page[page_number]["elements"].append(elem)
-
-        self._save_driver_source("sample.html")
-        return text_on_page
+   
 
     def __del__(self):
         self.driver.quit();
