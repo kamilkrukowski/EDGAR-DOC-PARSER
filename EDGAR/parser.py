@@ -237,7 +237,6 @@ class edgar_parser:
             # If a table has both non-numeric and non-fraction, the non-fraction takes precedence
 
             # TODO convert to regex on inner text
-<<<<<<< HEAD
 
             try:
                 found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonfraction')
@@ -253,32 +252,22 @@ class edgar_parser:
 
             except NoSuchElementException:
                 pass;
-=======
-            txt = found_table[i].text
-            if find_text_in_element('ix:nonfraction', txt):
-                table_is_numeric[i] = 0
-            elif find_text_in_element('ix:nonnumeric', txt):
-                table_is_numeric[i] = 1
-            
-            
-        if highlight:
-            for i in range(len(found_table)):
-                if table_is_numeric[i] == 0:
->>>>>>> 3a946d8 (Update parser.py)
 
-                    self._draw_border(found_table[i], 'green')
-                elif table_is_numeric[i] == 1:
-                    self._draw_border(found_table[i], 'yellow')
-                else:
-                    self._draw_border(found_table[i], 'pink')
+
+
+        for i in range(len(found_table)):
+            if table_is_numeric[i] == 0:
+
+                self._draw_border(found_table[i], 'green')
+            elif table_is_numeric[i] == 1:
+                self._draw_border(found_table[i], 'yellow')
+            else:
+                self._draw_border(found_table[i], 'pink')
 
         if save:
             self._save_driver_source(out_path)
 
         return found_table, table_is_numeric
-    @staticmethod
-    def find_text_in_element(pattern, text):
-        return bool(re.match('.*'+pattern, text))
 
     def get_annotation_info(self, elem: WebElement):
         return {'value': elem.text, 'name': elem.get_attribute('name') , 'id': elem.get_attribute('id')}
