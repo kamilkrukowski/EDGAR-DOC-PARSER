@@ -42,7 +42,7 @@ for tikr in tikrs:
         features = parser.featurize_file(tikr, doc, fname,force = args.force) 
         features.sort_values(by=['page_number'])
 
-        num_page = features.iloc[0]["page_number"]
+        num_page = max(features.iloc[:]["page_number"])
     
 
         found_indices = np.unique([int(i) for i in features['found_index']])
@@ -91,8 +91,6 @@ for tikr in tikrs:
             if len(d) == 0:
                 continue
             trainset.append([ d, i+1,doc, tikr  ])
-
-#print(trainset[0][0][0])
 
 
 """
