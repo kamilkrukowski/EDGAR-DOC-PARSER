@@ -319,13 +319,13 @@ class edgar_parser:
 
         number_Null = 0
         for i, elem in enumerate(webelements):
-            default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
+            default_dict = {attribute: None for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
 
             if(page_num == None):
                 number_Null += 0
                 continue
-            default_dict.update({"anno_text": np.nan, "found_index": int(i),"span_text": elem.text,
+            default_dict.update({"anno_text": None, "found_index": int(i),"span_text": elem.text,
                                 "page_text":text_on_page[page_num]['text'], "is_annotated": 0,
                                 "x": elem.location["x"], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"], "in_table": int(in_table[i])})

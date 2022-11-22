@@ -19,6 +19,7 @@ import EDGAR
 #   --force to overwrite outdated local files
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--force', action='store_true')
+parser.add_argument('-nflx', '--demo', action='store_true')
 args = parser.parse_args()
 
 data_dir = os.path.join('..', 'data')
@@ -30,11 +31,18 @@ parser = EDGAR.parser(data_dir=data_dir)
 # List of companies to process
 tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
+if args.demo:
+    tikrs = ['nflx']
 
 trainset = []
 for tikr in tikrs:
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
+        
+    fname = 'sample_data'
+    if len(tikrs) == 1:
+        fname = f"{fname}_{tikrs[0]}"
+    fpath = os.path.join('..','outputs',f"{fname}.csv")
  
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
         fname = metadata.get_10q_name(tikr, doc)
@@ -68,25 +76,28 @@ for tikr in tikrs:
                     2. neighboring text: the text on the given page.
                 y is a list with ['name', 'id', 'contextref', 'decimals', 'format', 'unitref'] tags
                 """
-                d['text'] = i['anno_text']
+                d['text'] = i['span_text']
 
-            d['labels'][i['anno_index']] = []
-            for _attr in ['name', 'id', 'contextref', 'decimals', 'format', 'unitref']:
-                d['labels'][i['anno_index']].append(i["anno_" + _attr])
+            if i['anno_index'] is not None:
+                d['labels'][i['anno_index']] = []
+                for _attr in ['name', 'id', 'contextref', 'decimals', 'format', 'unitref']:
+                    d['labels'][i['anno_index']].append(i["anno_" + _attr])
 
 
 
         data_per_page = [ [] for i in range(num_page)]
         for i in data:
             # This checks for the number of annotations on a page. Only add a page with labels to the training set.
-            if not data[i]['is_annotated'] or data[i]['in_table']:
-                continue; 
+            if data[i]['in_table']:
+                continue 
+            if not data[i]['is_annotated']:
+                continue
             d = data[i]
             
             # Data format: (x,y) where x refers to training features (present for unnannotated docs), and y refers to labels to predict
             data_per_page[d['page_number']-1].append((d['text'], d['labels'].values()))
 
-        #Convert to list of [lists of tuples, page number, document,parent_company_tikr] scheme where each list of tuples consists
+        #Convert to list of [lists of tuples, page number, document, parent_company_tikr] scheme where each list of tuples consists
         # of all annotated webelements on that page
         for i , d in enumerate(data_per_page ):
             # Only add list if the list is not empty
@@ -94,18 +105,28 @@ for tikr in tikrs:
                 continue
             trainset.append([ d, i+1,doc, tikr  ])
 
-                
-        with open(os.path.join('..','outputs','sample_data.csv'), 'w') as f:
+        with open(fpath, 'w') as f:
 
             for i , d in enumerate(data_per_page ):
 
                 if len(d) == 0:
                     continue
+            
+                # We allow unannotated elements, but if a page is completely unannotated we drop it from training.
+                empty_page_flag = True
+                for text in d:
+                    if d[text] is not None:
+                        empty_page_flag = False
+                        break;
+                if empty_page_flag:
+                    continue;
+                    
+            
                 f.write(f"Page_number: {i+1},document:{doc},Tikr:{tikr}\n")
                 text, labels = d[0]
-                f.write(f"{text},{':'.join([str(i) for i in labels])}")
+                f.write(f"{text},{':'.join([str(i[0]) for i in labels])}")
                 for text, labels in d[1:]:
-                    f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+                    f.write(f"\n{text},{';'.join([str(i[0]) for i in labels])}")
                 f.write(f"\n\n")
 
 
