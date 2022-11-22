@@ -54,6 +54,7 @@ Parsing 10-Q submission HTML into featurized pandas DataFrames
    core
    Downloading Documents <downloader>
    Parsing Documents <parser>
+   Useful Metadata <metadata_mgr>
 
 
 
