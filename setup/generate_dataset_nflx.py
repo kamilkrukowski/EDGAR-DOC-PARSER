@@ -39,7 +39,7 @@ for tikr in tikrs:
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
         fname = metadata.get_10q_name(tikr, doc)
         # Try load cached, otherwise regenerate new file
-        features = parser.featurize_file(tikr, doc, fname,force = args.force) 
+        features = parser.featurize_file(tikr, doc, fname, force = args.force) 
         features.sort_values(by=['page_number'])
 
         num_page = max(features.iloc[:]["page_number"], default=0)
@@ -92,6 +92,16 @@ for tikr in tikrs:
                 continue
             trainset.append([ d, i+1,doc, tikr  ])
 
+        with open(os.path.join('..','outputs','sample_data_nflx.csv'), 'w') as f:
+            for page in trainset: 
+                f.write(f"Page_number: {page[1]},document:{page[2]},Tikr:{page[3]}\n")
+                data = page[0]
+                text, labels = data[0]
+                f.write(f"{text},{';'.join([str(i[0]) for i in labels])}")
+                for text, labels in data[1:]:
+                    f.write(f"\n{text},{';'.join([str(i[0]) for i in labels])}")
+                f.write(f"\n\n")
+
 
 """
 Training set structure:
@@ -116,26 +126,3 @@ Training set
 ]
 
 """
-#print only one trainset
-'''
-   # Sample CSV with text, tag information
-        with open(os.path.join('..','outputs','sample_data.csv'), 'w') as f:
-            if len(trainset) > 0:
-                text, labels = trainset[0]
-                f.write(f"{text},{':'.join([str(i) for i in labels])}")
-                for text, labels in trainset[1:]:
-                    f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
-            else:
-                warnings.warn('No Trainset Samples', RuntimeWarning)
-'''
-
-with open(os.path.join('..','outputs','sample_data_nflx.csv'), 'w') as f:
-    for page in trainset: 
-        f.write(f"Page_number: {page[1]},document:{page[2]},Tikr:{page[3]}\n")
-        data = page[0]
-        text, labels = data[0]
-        f.write(f"{text},{':'.join([str(i) for i in labels])}")
-        for text, labels in data[1:]:
-            f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
-        f.write(f"\n\n")
-        
