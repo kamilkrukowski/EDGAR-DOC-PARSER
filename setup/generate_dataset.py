@@ -90,7 +90,7 @@ for tikr in tikrs:
             # This checks for the number of annotations on a page. Only add a page with labels to the training set.
             if data[i]['in_table']:
                 continue 
-            if data[i]['is_annotated']:
+            if not data[i]['is_annotated']:
                 continue
             d = data[i]
             
