@@ -111,6 +111,17 @@ for tikr in tikrs:
 
                 if len(d) == 0:
                     continue
+            
+                # We allow unannotated elements, but if a page is completely unannotated we drop it from training.
+                empty_page_flag = True
+                for text in d:
+                    if d[text] is not None:
+                        empty_page_flag = False
+                        break;
+                if empty_page_flag:
+                    continue;
+                    
+            
                 f.write(f"Page_number: {i+1},document:{doc},Tikr:{tikr}\n")
                 text, labels = d[0]
                 f.write(f"{text},{':'.join([str(i[0]) for i in labels])}")
