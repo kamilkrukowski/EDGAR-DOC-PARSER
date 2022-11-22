@@ -42,7 +42,7 @@ for tikr in tikrs:
         features = parser.featurize_file(tikr, doc, fname,force = args.force) 
         features.sort_values(by=['page_number'])
 
-        num_page = max(features.iloc[:]["page_number"])
+        num_page = max(features.iloc[:]["page_number"], default=0)
     
 
         found_indices = np.unique([int(i) for i in features['found_index']])
