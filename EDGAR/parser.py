@@ -319,7 +319,7 @@ class edgar_parser:
         in_table: list[bool]
             list of boolean. If (True), then it is table related webelement.
         save: bool, default=False
-            if (True), then store the Dataframe into a CSV file. 
+            if (True), then store the Dataframe into a CSV file.
         out_path: str, default='sample.csv'
             if save is True, then store the output into CSV file at out_path.
 
@@ -328,18 +328,18 @@ class edgar_parser:
         DataFrame
             Each row corresponds to one text field. Rows are not unique, one is generated for each iXBRL annotation on that text field.
 
-            
+
         Notes
         ------
         Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
-        """        
+        """
         COLUMN_NAMES = ["anno_text","found_index", "span_text", "anno_index", "anno_name","anno_id", "anno_format","anno_ix_type",'anno_unitref',"anno_decimals", "anno_contextref","page_number","x","y", "height", "width","is_annotated","in_table"]
         df = pd.DataFrame(columns=COLUMN_NAMES)
         page_location = self.find_page_location() # page number and y range
 
         number_Null = 0
         for i, elem in enumerate(webelements):
-            default_dict = {attribute: np.nan for attribute in COLUMN_NAMES}
+            default_dict = {attribute: None for attribute in COLUMN_NAMES}
             page_num, y = self.get_page_number(page_location, elem)
             if(page_num == None):
                 number_Null += 0
@@ -349,7 +349,7 @@ class edgar_parser:
                                 "height": elem.size["height"], "width": elem.size["width"], "in_table": int(in_table[i])})
 
             count = 0
-            
+
             new_df = pd.DataFrame(columns=COLUMN_NAMES)
             for j, annotation in enumerate(annotations[elem]):
                 new_dict = default_dict.copy()
@@ -408,7 +408,7 @@ class edgar_parser:
         DataFrame
             Each row corresponds to one text field. Rows are not unique, one is generated for each iXBRL annotation on that text field.
 
-            
+
         Notes
         ------
         Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
@@ -438,7 +438,7 @@ class edgar_parser:
         with open(os.path.join(path, 'features.pkl'), 'rb') as f:
             return pkl.load(f)
 
-   
+
 
     def __del__(self):
         self.driver.quit();
