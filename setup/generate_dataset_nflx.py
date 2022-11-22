@@ -35,7 +35,7 @@ trainset = []
 for tikr in tikrs:
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
-    #annotated_docs = [annotated_docs[0]]
+    annotated_docs = [annotated_docs[0]]
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
         fname = metadata.get_10q_name(tikr, doc)
         # Try load cached, otherwise regenerate new file
@@ -48,7 +48,9 @@ for tikr in tikrs:
         found_indices = np.unique([int(i) for i in features['found_index']])
         # Structure: Text str, Labels dict, labelled bool
         data = {i:{'text':None, 'labels':dict(), 'is_annotated':False, 'in_table':False, "page_number": 0 } for i in found_indices}
-        
+        page_texts = features[features["is_annotated"]== 1][["page_number", "page_text"]]
+        page_texts = page_texts.drop_duplicates(subset = "page_number", keep = "last").set_index("page_number")
+  
         for i in range(len(features)):
             i = features.iloc[i, :]
             d = data[i['found_index']]
@@ -59,7 +61,7 @@ for tikr in tikrs:
                 d['is_annotated'] = True
 
             
-         
+        
             d['page_number'] = i["page_number"]
             if d['text'] is None:
                 """
@@ -85,12 +87,13 @@ for tikr in tikrs:
             # Data format: (x,y) where x refers to training features (present for unnannotated docs), and y refers to labels to predict
             data_per_page[d['page_number']-1].append((d['text'], d['labels'].values()))
 
-        # Convert to list of [lists of tuples, page number, document,parent_company_tikr] scheme where each list of tuples consists of all annotated webelements on that page
+        # Convert to list of [lists of tuples, page number, document,parent_company_tikr,text on that page] scheme where each list of tuples consists of all annotated webelements on that page
         for i , d in enumerate(data_per_page ):
             # Only add list if the list is not empty
+
             if len(d) == 0:
                 continue
-            trainset.append([ d, i+1,doc, tikr  ])
+            trainset.append([ d, i+1,doc, tikr,page_texts.loc[i+1]["page_text"]  ])
 
 
 """
@@ -131,11 +134,11 @@ Training set
 
 with open(os.path.join('..','outputs','sample_data_nflx.csv'), 'w') as f:
     for page in trainset: 
-        f.write(f"Page_number: {page[1]},document:{page[2]},Tikr:{page[3]}\n")
+        f.write(f"Page_number: {page[1]},document:{page[2]},Tikr:{page[3]},Text:{page[4]}\n")
         data = page[0]
         text, labels = data[0]
-        f.write(f"{text},{':'.join([str(i) for i in labels])}")
+        f.write(f"{text},{':'.join([str(i[0]) for i in labels])}")
         for text, labels in data[1:]:
-            f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+            f.write(f"\n{text},{';'.join([str(i[0]) for i in labels])}")
         f.write(f"\n\n")
         
