@@ -103,9 +103,9 @@ for tikr in tikrs:
                     continue
                 f.write(f"Page_number: {i+1},document:{doc},Tikr:{tikr}\n")
                 text, labels = d[0]
-                f.write(f"{text},{':'.join([str(i) for i in labels])}")
+                f.write(f"{text},{':'.join([str(i[0]) for i in labels])}")
                 for text, labels in d[1:]:
-                    f.write(f"\n{text},{';'.join([str(i) for i in labels])}")
+                    f.write(f"\n{text},{';'.join([str(i[0]) for i in labels])}")
                 f.write(f"\n\n")
 
 
