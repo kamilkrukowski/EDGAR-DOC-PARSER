@@ -136,3 +136,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+*.htm
+*.pkl
+*.txt
+*.json
+*.csv
+*.html
+EDGAR/edgar_downloads/.DS_Store
