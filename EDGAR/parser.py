@@ -344,7 +344,7 @@ class edgar_parser:
             if(page_num == None):
                 number_Null += 0
                 continue
-            default_dict.update({"anno_text": np.nan, "found_index": int(i),"span_text": elem.text, "is_annotated": 0,
+            default_dict.update({"anno_text": None, "found_index": int(i),"span_text": elem.text, "is_annotated": 0,
                                 "x": elem.location["x"], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"], "in_table": int(in_table[i])})
 
