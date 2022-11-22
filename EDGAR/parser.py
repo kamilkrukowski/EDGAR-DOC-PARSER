@@ -399,6 +399,8 @@ class edgar_parser:
             return self.load_processed(tikr, submission, filename)
         else:
             # TODO make process_file detect and work on unannotated files
+            if not self._is_10q_annotated(tikr, submission):
+                raise NotImplementedError
             elems, annotation_dict, in_table = self._parse_annotated_text(self.get_driver_path(tikr, submission, filename))
             features = self.get_annotation_features(elems, annotation_dict, in_table)
             self.save_processed(tikr, submission, filename, elems, annotation_dict, features)
