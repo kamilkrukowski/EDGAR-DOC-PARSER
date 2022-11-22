@@ -64,14 +64,43 @@ class metadata_manager(dict):
         if fname not in pdict:
             pdict[fname] = {'attrs': dict(), 'documents': dict()}
     
-    """
-        Returns 10-q filename associated with submission
-    """
-    def get_10q_name(self, tikr, filename):
-        meta = self[tikr]['submissions'][filename]['documents']
+    def get_10q_name(self, tikr, submission):
+        """
+        Parameters
+        ---------
+        tikr: str
+            a company identifier to query
+        submission:
+            the associated company filing for which to find a 10-Q form
+            
+
+        Returns
+        --------
+        filename: str
+            The name of the 10-q file associated with the submission, or None
+        """
+        meta = self[tikr]['submissions'][submission]['documents']
         for file in meta:
             if meta[file]['type'] in ['10-Q', 'FORM 10-Q']:
                 return meta[file]['filename']
+        return None
+
+    def get_submissions(self, tikr):
+        """
+        Parameters
+        ---------
+        tikr: str
+            a company identifier to query
+
+        Returns
+        --------
+        submissions: list
+            a list of string names of filing submissions under the company tikr
+
+        """
+        if 'submissions' in self[tikr]:
+            return [i for i in self[tikr]['submissions']]
+        return None
 
     def find_sequence_of_file(self, tikr: str, submission: str, filename: str):
         level = self[tikr]['submissions'][submission]['documents']
