@@ -6,6 +6,10 @@
 Welcome to pyEDGAR's documentation!
 ===================================
 
+About
+-------------------
+A package for downloading, extracting, parsing, and processing data from SEC-EDGAR, a public online database of all documents filed with the USA's Securities and Exchange Commission.
+
 Core Functionality
 --------------------
 
