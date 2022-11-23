@@ -15,7 +15,7 @@ import warnings
 import EDGAR
 
 
-def generated_dataset(tikr, doc):
+def generated_dataset( tikr: str,  doc: str):
     """
 
 
