@@ -18,7 +18,7 @@ from .metadata_manager import metadata_manager
 
 class edgar_parser:
     """
-    
+
         Main class for extracting information from HTML documents
 
     """
@@ -27,26 +27,26 @@ class edgar_parser:
     def __init__(self, metadata: metadata_manager = None,
                  data_dir: str = 'edgar_downloads',
                  headless: bool = True):
-    """
+        """
 
 
-    Parameters
-    ---------
-    metadata: metadata_manager, default=None
-        a meta_manager that can process all metadata 
-    data_dir: str, default = 'edgar_download'
-        string for data directory
-     headless: bool, default=True
-        If (True), it will launch browser without UI
+        Parameters
+        ---------
+        metadata: metadata_manager, default=None
+            a meta_manager that can process all metadata 
+        data_dir: str, default = 'edgar_download'
+            string for data directory
+         headless: bool, default=True
+            If (True), it will launch browser without UI
 
-    Returns
-    --------
-    edgar_parser
-       
-    Notes
-    ------
-    edgar_parser extracts information from HTML documents
-    """
+        Returns
+        --------
+        edgar_parser
+           
+        Notes
+        ------
+        edgar_parser extracts information from HTML documents
+        """
 
         fireFoxOptions = webdriver.FirefoxOptions()
         if headless:
