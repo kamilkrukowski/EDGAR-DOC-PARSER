@@ -18,10 +18,26 @@ from .metadata_manager import metadata_manager
 
 class edgar_parser:
     """
-        Main class for extracting information from HTML documents
 
+
+    Parameters
+    ---------
+    metadata: metadata_manager, default=None
+        a meta_manager that can process all metadata 
+    data_dir: str, default = 'edgar_download'
+        string for data directory
+     headless: bool, default=True
+        If (True), it will launch browser without UI
+
+    Returns
+    --------
+    edgar_parser
+       
+    Notes
+    ------
+    Main class for extracting information from HTML documents
     """
-
+    
     def __init__(self, metadata: metadata_manager = None,
                  data_dir: str = 'edgar_downloads',
                  headless: bool = True):
