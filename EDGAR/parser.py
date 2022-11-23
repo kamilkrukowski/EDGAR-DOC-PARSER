@@ -353,7 +353,7 @@ class edgar_parser:
             list of span WebElement
         annotations: dict
             Value is the list of annotation webelement. Key is the span webelement.
-        in_table: list[bool]
+        in_table: list[Boolean]
             list of boolean. If (True), then it is table related webelement.
         save: bool, default=False
             if (True), then store the Dataframe into a CSV file.
