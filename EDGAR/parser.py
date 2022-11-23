@@ -269,7 +269,7 @@ class edgar_parser:
 
         Notes
         ------
-        
+
         """
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
         page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
@@ -310,8 +310,6 @@ class edgar_parser:
         integer
             new y-coordinate of the webelement relative to the y-coordinate of the page
             
-
-
         Notes
         ------
         
