@@ -18,6 +18,16 @@ from .metadata_manager import metadata_manager
 
 class edgar_parser:
     """
+    
+        Main class for extracting information from HTML documents
+
+    """
+
+    
+    def __init__(self, metadata: metadata_manager = None,
+                 data_dir: str = 'edgar_downloads',
+                 headless: bool = True):
+    """
 
 
     Parameters
@@ -35,12 +45,8 @@ class edgar_parser:
        
     Notes
     ------
-    Main class for extracting information from HTML documents
+    edgar_parser extracts information from HTML documents
     """
-    
-    def __init__(self, metadata: metadata_manager = None,
-                 data_dir: str = 'edgar_downloads',
-                 headless: bool = True):
 
         fireFoxOptions = webdriver.FirefoxOptions()
         if headless:
