@@ -256,6 +256,9 @@ class edgar_parser:
             self._save_driver_source(out_path)
 
         return found_table, table_is_numeric
+    @staticmethod
+    def find_text_in_element(pattern, text):
+        return bool(re.match('.*'+pattern, text))
 
     def get_annotation_info(self, elem: WebElement):
         return {'value': elem.text, 'name': elem.get_attribute('name') , 'id': elem.get_attribute('id')}
