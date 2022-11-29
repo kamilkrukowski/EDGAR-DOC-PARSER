@@ -223,6 +223,10 @@ class edgar_parser:
         save -- save htm copy (with/without highlighting) to out_path
     """
     def parse_annotated_tables(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = os.path.join('.','sample.htm')):
+        ## test code
+        # from EDGAR import parser
+        # p = parser(data_dir = 'edgar_downloads')
+        # p.parse_annotated_tables('the/path/to/example/html', highlight = True)
 
         # If path is None, stay on current document
         if driver_path is not None:
@@ -236,9 +240,9 @@ class edgar_parser:
             
             # If a table has both non-numeric and non-fraction, the non-fraction takes precedence
             txt = found_table[i].text
-            if find_text_in_element('ix:nonfraction', txt):
+            if self.find_text_in_element('ix:nonfraction', txt):
                 table_is_numeric[i] = 0
-            elif find_text_in_element('ix:nonnumeric', txt):
+            elif self.find_text_in_element('ix:nonnumeric', txt):
                 table_is_numeric[i] = 1
             
             
