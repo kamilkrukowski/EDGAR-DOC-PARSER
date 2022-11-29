@@ -23,7 +23,10 @@ from pytorch_pretrained_bert import BertAdam, BertForSequenceClassification
 
 
 
-# types: BoW, Word2Vec, BERT
+"""
+Class embedder takes in three diffeent types: 
+Word2Vec, BagOfWords, BERT 
+""""
 class embedder:
     def __init__(self, type='BagOfWords', MAX_LEN=100):
         
@@ -40,7 +43,10 @@ class embedder:
             self.model = None
             
     
-    
+    """ 
+    Cleans phrases by removing non-alpha chracters and stopwords
+    Stemmer is optional, stem='Stem' or None
+    """
     def clean_phrase(self, text, stem=None):
         final_string = ""
         text = text.lower()
@@ -62,7 +68,10 @@ class embedder:
         return final_string
 
     
-    # only for Bagofwords
+    """
+    Only for Bag Of Words 
+    Adds words to dictionary
+    """
     def add_dictionary(self, phrase):
         
         for word in phrase.split(' '):
@@ -74,8 +83,12 @@ class embedder:
      
 
 
-
-    
+            
+        
+    """
+    Input: Cleaned phrase (string)
+    Output: embedded phrase (np.array)
+    """
     def embed_phrase(self, phrase):
         if self.type == 'Word2Vec':
             temp = []
