@@ -233,36 +233,24 @@ class edgar_parser:
         table_is_numeric = np.zeros_like(found_table, 'int')# 0: numerical, 1: non-numerical, 2: unannotated
         for i in range(len(found_table)):
             table_is_numeric[i] = 2
-
+            
             # If a table has both non-numeric and non-fraction, the non-fraction takes precedence
-
-            # TODO convert to regex on inner text
-
-            try:
-                found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonfraction')
+            txt = found_table[i].text
+            if find_text_in_element('ix:nonfraction', txt):
                 table_is_numeric[i] = 0
-                continue;
-
-            except NoSuchElementException:
-                pass;
-
-            try:
-                found_numeric = found_table[i].find_element(By.TAG_NAME, 'ix:nonnumeric')
+            elif find_text_in_element('ix:nonnumeric', txt):
                 table_is_numeric[i] = 1
+            
+            
+        if highlight:
+            for i in range(len(found_table)):
+                if table_is_numeric[i] == 0:
 
-            except NoSuchElementException:
-                pass;
-
-
-
-        for i in range(len(found_table)):
-            if table_is_numeric[i] == 0:
-
-                self._draw_border(found_table[i], 'green')
-            elif table_is_numeric[i] == 1:
-                self._draw_border(found_table[i], 'yellow')
-            else:
-                self._draw_border(found_table[i], 'pink')
+                    self._draw_border(found_table[i], 'green')
+                elif table_is_numeric[i] == 1:
+                    self._draw_border(found_table[i], 'yellow')
+                else:
+                    self._draw_border(found_table[i], 'pink')
 
         if save:
             self._save_driver_source(out_path)
