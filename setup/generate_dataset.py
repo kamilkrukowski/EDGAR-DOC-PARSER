@@ -15,7 +15,27 @@ import warnings
 import EDGAR
 
 
-def generated_dataset(tikr, doc):
+def generated_dataset( tikr: str,  doc: str):
+    """
+
+
+    Parameters
+    ---------
+    tikr: str
+        a company identifier to query
+    doc: str
+        The filing to access the file from
+    
+    Returns
+    --------
+    list
+        Each row corresponds to one text field and its labels.
+
+
+    Notes
+    ------
+    We allow unannotated elements, but if a page is completely unannotated we drop it from training.
+    """
     trainset = []
     fname = metadata.get_10q_name(tikr, doc)
     # Try load cached, otherwise regenerate new file
@@ -58,7 +78,7 @@ def generated_dataset(tikr, doc):
 
     data_per_page = [ [] for i in range(num_page)]
     for i in data:
-        # This checks for the number of annotations on a page. Only add a page with labels to the training set.
+        # This checks for the all the element on a page. Only add element that has labels to the training set.
         if data[i]['in_table']:
             continue 
         if not data[i]['is_annotated']:

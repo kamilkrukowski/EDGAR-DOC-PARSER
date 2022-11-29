@@ -18,13 +18,35 @@ from .metadata_manager import metadata_manager
 
 class edgar_parser:
     """
+
         Main class for extracting information from HTML documents
 
     """
 
+    
     def __init__(self, metadata: metadata_manager = None,
                  data_dir: str = 'edgar_downloads',
                  headless: bool = True):
+        """
+
+
+        Parameters
+        ---------
+        metadata: metadata_manager, default=None
+            a meta_manager that can process all metadata 
+        data_dir: str, default = 'edgar_download'
+            string for data directory
+         headless: bool, default=True
+            If (True), it will launch browser without UI
+
+        Returns
+        --------
+        edgar_parser
+           
+        Notes
+        ------
+        edgar_parser extracts information from HTML documents
+        """
 
         fireFoxOptions = webdriver.FirefoxOptions()
         if headless:
@@ -255,6 +277,22 @@ class edgar_parser:
         return {"text": element.text,"location": element.location, "size": element.size}
 
     def find_page_location(self) -> dict:
+        """
+
+
+        Parameters
+        ---------
+
+        Returns
+        --------
+        Dictionary
+            a dictionary based on page number. The value of the dictionary is the y-coordinates of the corresponding page.
+
+
+        Notes
+        ------
+
+        """
         page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
         page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
         # TODO add logic to handle this
@@ -277,6 +315,27 @@ class edgar_parser:
         return page_location
 
     def get_page_number(self, page_location: dict, element: WebElement) -> int:
+        """
+
+
+        Parameters
+        ---------
+        page_location: dict
+            a dictionary based on page number. The value is the y-coordinates of the corresponding page. 
+        element: WebElement
+            a WebElement to query
+
+        Returns
+        --------
+        integer
+            page number
+        integer
+            new y-coordinate of the webelement relative to the y-coordinate of the page
+            
+        Notes
+        ------
+        
+        """
         if page_location is None:
             return None, None
 
@@ -313,10 +372,10 @@ class edgar_parser:
         Parameters
         ---------
         webelements: list[WebElement]
-            list of span
+            list of span WebElement
         annotations: dict
             Value is the list of annotation webelement. Key is the span webelement.
-        in_table: list[bool]
+        in_table: list[Boolean]
             list of boolean. If (True), then it is table related webelement.
         save: bool, default=False
             if (True), then store the Dataframe into a CSV file.
