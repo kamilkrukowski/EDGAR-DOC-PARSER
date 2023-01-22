@@ -15,7 +15,6 @@ import pathlib
 
 from .metadata_manager import metadata_manager
 
-
 class edgar_parser:
     """
 
