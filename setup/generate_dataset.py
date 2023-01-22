@@ -15,7 +15,7 @@ import warnings
 import EDGAR
 
 
-def generated_dataset( tikr: str,  doc: str):
+def generated_dataset( tikr: str,  doc: str, fpath: str):
     """
 
 
@@ -25,6 +25,8 @@ def generated_dataset( tikr: str,  doc: str):
         a company identifier to query
     doc: str
         The filing to access the file from
+    fpath: str
+        The location of the output dataset file
     
     Returns
     --------
@@ -96,6 +98,7 @@ def generated_dataset( tikr: str,  doc: str):
             continue
         trainset.append([ d, i+1,doc, tikr  ])
 
+    
     with open(fpath, 'w') as f:
 
         for i , d in enumerate(data_per_page ):
@@ -149,7 +152,10 @@ for tikr in tikrs:
     fname = 'sample_data'
     if len(tikrs) == 1:
         fname = f"{fname}_{tikrs[0]}"
+
+    if not os.path.exists(os.path.join('..', 'outputs')):
+        os.mkdir(os.path.join('..','outputs'))
     fpath = os.path.join('..','outputs',f"{fname}.csv")
-    #annotated_docs= [annotated_docs[0]]
+    
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
-        trainset += generated_dataset(tikr, doc)
+        trainset += generated_dataset(tikr, doc, fpath = fpath)
