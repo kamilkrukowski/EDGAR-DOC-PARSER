@@ -19,14 +19,13 @@ class edgar_downloader:
     """
     def __init__(self, data_dir, metadata = None):
 
-        self.data_dir = os.path.join(data_dir, '')
-
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
         sys.setrecursionlimit(10000)
 
         # Always gets the path of the current file
-        self.path = pathlib.Path().absolute()
+        self.path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
+        self.data_dir = os.path.join(self.path, data_dir)
         
         if metadata is None:
             self.metadata = metadata_manager(data_dir=data_dir);

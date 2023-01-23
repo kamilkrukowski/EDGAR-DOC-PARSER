@@ -58,7 +58,6 @@ def generated_dataset( tikr: str,  doc: str, fpath: str):
             d['in_table'] = True
         if i['is_annotated']:
             d['is_annotated'] = True
-
         
      
         d['page_number'] = i["page_number"]
@@ -146,6 +145,7 @@ if args.demo:
 
 trainset = []
 for tikr in tikrs:
+    tikr_dataset = []
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
         
@@ -158,4 +158,8 @@ for tikr in tikrs:
     fpath = os.path.join('..','outputs',f"{fname}.csv")
     
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
-        trainset += generated_dataset(tikr, doc, fpath = fpath)
+        tikr_dataset += generated_dataset(tikr, doc, fpath = fpath)
+
+    #metadata.save_tikrdataset(tikr_dataset, tikr);
+    trainset += tikr_dataset
+    
