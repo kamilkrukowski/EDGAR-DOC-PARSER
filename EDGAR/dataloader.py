@@ -174,15 +174,3 @@ class EDGARDataset(Dataset):
                 idx += 1;
             out[idx] = end_token
             return out
-                
-
-
-
-
-if __name__ == '__main__':
-    dataset = EDGARDataset();
-
-    for x, y in dataset:
-        print(f"Data features shape is {x.shape}")
-        print(f"Label shape is {y.shape}")
-        break;
