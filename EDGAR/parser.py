@@ -205,7 +205,7 @@ class edgar_parser:
 
         data = None
         fname = os.path.join(self.data_dir, 'processed', tikr, submission, _file)
-        with open(fname, 'r') as f:
+        with open(fname, 'r', encoding='utf-8') as f:
             data = f.read();
         for tag in annotated_tag_list:
             if re.search(tag, data):
