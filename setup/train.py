@@ -2,6 +2,7 @@ import os
 import sys ; sys.path.append('..')
 import argparse
 import warnings
+import math
 
 
 from tqdm.auto import tqdm
@@ -23,10 +24,12 @@ class BaselineNN(pl.LightningModule):
         self.vocab_size = vocab_size;
         self.output_size = output_size;
 
+        self.EMBED_DIM = 32
+
         self.nn = nn.Sequential(
-            nn.Embedding(vocab_size, 256),
+            nn.Embedding(vocab_size, self.EMBED_DIM),
             nn.Flatten(),
-            nn.Linear(256*max_sentence_len, 64*max_sentence_len),
+            nn.Linear(self.EMBED_DIM*max_sentence_len, 64*max_sentence_len),
             nn.Linear(64*max_sentence_len, 1024),
             nn.Linear(1024, output_size*2)
         )
@@ -44,10 +47,28 @@ class BaselineNN(pl.LightningModule):
     def training_step(self, train_batch, batch_idx):
         x, y, *mask = train_batch;
         z = self.forward(x)
-        print(z.sum())
-        loss = self.loss_fn(y, self.forward(x))
-        return loss.sum();
+        loss = self.loss_fn(self.forward(x), y)
+        loss = loss.sum()
+        return loss;
+    
+    def validation_step(self, val_batch, batch_idx):
+        x, y, *mask = val_batch;
+        z = self.forward(x)
+        loss = self.loss_fn(self.forward(x), y)
 
+        loss=  loss.sum()
+        self.log("va_loss", loss, prog_bar=True)
+        return loss
+
+    def get_metrics(self, batch, idx, prefix=None):
+        return;
+
+# PARAMETERS
+
+BATCH_SIZE = 512
+NUM_WORKERS = 16
+
+# EDGAR opts
 
 data_dir = 'data'
 metadata = EDGAR.metadata(data_dir=data_dir)
@@ -56,15 +77,20 @@ metadata = EDGAR.metadata(data_dir=data_dir)
 tikrs = open(os.path.join(metadata.path, 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
-dataset = EDGAR.dataloader(tikrs=tikrs, debug=True, max_sentence_len=1342)
+dataset = EDGAR.dataloader(tikrs=tikrs, debug=True, max_sentence_len=100)
 
-train, val, test = random_split(dataset, [0.8,0.1,0.1])
+d_len = len(dataset)
+tr_len = math.floor(0.8*d_len)
+va_len = math.floor(0.1*d_len)
+te_len = d_len - tr_len - va_len
 
-train_loader = DataLoader(train, batch_size=64)
-val_loader = DataLoader(val, batch_size=64)
-test_loader = DataLoader(test, batch_size=64)
+train, val, test = random_split(dataset, [tr_len, va_len, te_len])
 
-model = BaselineNN(vocab_size = len(dataset.vocab), max_sentence_len = dataset.max_sentence_len, output_size = len(dataset.labels))
+train_loader = DataLoader(train, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
+val_loader = DataLoader(val, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
+test_loader = DataLoader(test, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS)
+
+model = BaselineNN(vocab_size = len(dataset.vocab)+5, max_sentence_len = dataset.max_sentence_len, output_size = len(dataset.labels)+1)
 
 trainer = pl.Trainer()
 

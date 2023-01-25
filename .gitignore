@@ -6,6 +6,8 @@ data/*
 outputs/*
 
 **/_build
+**/lightning_logs
+**/geckodriver
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

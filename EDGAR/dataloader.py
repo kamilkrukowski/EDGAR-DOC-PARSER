@@ -26,7 +26,6 @@ class EDGARDataset(Dataset):
         self.x = []
         self.y = []
 
-
         if type(tikrs) is str:
             tikrs = [tikrs];
 
@@ -38,6 +37,7 @@ class EDGARDataset(Dataset):
             
                 fname = metadata.get_10q_name(tikr, doc)
                 # Try load cached, otherwise regenerate new file
+                assert self.metadata.file_was_processed(tikr, doc, fname)
                 features = self.parser.featurize_file(tikr, doc, fname,force = kwargs.get('force', False)) 
                 features.sort_values(by=['page_number'],ascending = True, inplace = True)
                 num_page = max(features.iloc[:]["page_number"],default = 0)
@@ -125,7 +125,7 @@ class EDGARDataset(Dataset):
             elems, page_number, doc_id, tikr = page;
             for elem in elems:
                 self.x.append(self.embed(elem[0]))
-                self.y.append(torch.zeros(num_labels+1).long()); #Extra one for unknown label
+                self.y.append(torch.zeros(num_labels+1).float()); #Extra one for unknown label
                 for label in elem[1]:
                     label_idx = self.labels.get(label[0], 0) 
                     self.y[-1][label_idx] = 1

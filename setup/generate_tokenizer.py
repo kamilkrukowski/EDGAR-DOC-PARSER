@@ -12,8 +12,6 @@ import EDGAR
 
 data_dir = 'data'
 metadata = EDGAR.metadata(data_dir=data_dir)
-loader = EDGAR.downloader(data_dir=data_dir);
-parser = EDGAR.parser(data_dir=data_dir)
 
 # List of companies to process
 tikrs = open(os.path.join(metadata.path, 'tickers.txt')).read().strip()
