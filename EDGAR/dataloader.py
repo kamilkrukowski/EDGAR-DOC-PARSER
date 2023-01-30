@@ -3,13 +3,8 @@ import torch
 import numpy as np
 from tqdm.auto import tqdm
 
+import warnings
 
-import pickle as pkl
-import os
-import re
-
-
-from .metadata_manager import metadata_manager
 
 
 """
@@ -25,20 +20,23 @@ class EDGARDataset(Dataset):
         raw_data = []
         self.x = []
         self.y = []
+        self.masks = []
+
 
         if type(tikrs) is str:
             tikrs = [tikrs];
 
         for tikr in tqdm(tikrs, desc=f"Preprocessing Documents", leave=False):
             self.metadata.load_tikr_metadata(tikr)
-            annotated_docs = self.parser.get_annotated_submissions(tikr)
+            annotated_docs = self.parser.get_annotated_submissions(tikr, silent=True)
             
             for doc in annotated_docs:
             
                 fname = metadata.get_10q_name(tikr, doc)
                 # Try load cached, otherwise regenerate new file
                 assert self.metadata.file_was_processed(tikr, doc, fname)
-                features = self.parser.featurize_file(tikr, doc, fname,force = kwargs.get('force', False)) 
+
+                features = self.parser.featurize_file(tikr, doc, fname,force = kwargs.get('force', False), silent=True) 
                 features.sort_values(by=['page_number'],ascending = True, inplace = True)
                 num_page = max(features.iloc[:]["page_number"],default = 0)
 
@@ -98,7 +96,7 @@ class EDGARDataset(Dataset):
 
         # Generate Vocabulary
         self.vocab = set()
-        self.labels = set()
+        self.label_map = set()
         self._len = 0
         for page in raw_data:
             elems, page_number, doc_id, tikr = page;
@@ -109,29 +107,43 @@ class EDGARDataset(Dataset):
                 self.vocab = self.vocab.union(tokens);
                 self._len += 1;
                 for label in elem[1]:
-                    self.labels = self.labels.union({label[0]})
+                    self.label_map = self.label_map.union({label[0]})
         
-        self.labels = {y:i+1 for i,y in enumerate(self.labels)}
+        self.label_map = {y:i+1 for i,y in enumerate(self.label_map)}
         self.first_vocab_token = 5
         self.vocab = {y:i+self.first_vocab_token for i,y in enumerate(self.vocab)}
 
         #Label embedding
-        num_labels = len(self.labels);
+        num_labels = len(self.label_map);
         if kwargs.get('debug', False):
             print(f"Number of labels: {num_labels}")
             print(f"Max sentence length is {self.max_sentence_len}")
+
+        sparse_weight = kwargs.get('sparse_weight', 0.5)
+        non_sparse_weight = 1.0-sparse_weight
          
         for page in raw_data:
             elems, page_number, doc_id, tikr = page;
             for elem in elems:
                 self.x.append(self.embed(elem[0]))
                 self.y.append(torch.zeros(num_labels+1).float()); #Extra one for unknown label
+                
+                self.masks.append(torch.ones(num_labels+1).float())
+                num_labelled = 0;
+                non_sparse_weights = torch.zeros(num_labels+1).float()
+                
                 for label in elem[1]:
-                    label_idx = self.labels.get(label[0], 0) 
+                    label_idx = self.label_map.get(label[0], 0) 
+                    if self.y[-1][label_idx] == 1:
+                        continue;
                     self.y[-1][label_idx] = 1
-        
-        #Categorical Embedding        
-
+                    
+                    non_sparse_weights[label_idx] = 1
+                    self.masks[-1][label_idx] = 0
+                    num_labelled = num_labelled + 1
+                
+                non_sparse_weights = non_sparse_weights * non_sparse_weight / num_labelled
+                self.masks[-1] = self.masks[-1] * sparse_weight / (num_labels + 1 - num_labelled) + non_sparse_weights
 
         
     def __len__(self):
@@ -140,7 +152,8 @@ class EDGARDataset(Dataset):
     def __getitem__(self, idx):
         x = self.x[idx]
         y = self.y[idx]
-        return (x, y)
+        mask = self.masks[idx]
+        return (x, y, mask)
 
     def tokenize(self, sentence):
         punctuation = '.!,;:\'\"()@#$%&/+=-'
