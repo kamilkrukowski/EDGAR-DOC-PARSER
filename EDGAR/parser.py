@@ -46,14 +46,11 @@ class edgar_parser:
         ------
         edgar_parser extracts information from HTML documents
         """
+        self.driver = None
+        self.headless = headless
 
-        fireFoxOptions = webdriver.FirefoxOptions()
-        if headless:
-            fireFoxOptions.add_argument("--headless")
-        self.driver = webdriver.Firefox(options=fireFoxOptions)
-
-
-        self.data_dir = data_dir
+        self.path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
+        self.data_dir = os.path.join(self.path, data_dir)
 
         if metadata is None:
             self.metadata = metadata_manager(data_dir=self.data_dir)
@@ -63,14 +60,24 @@ class edgar_parser:
     # dumps page source of driver at fpath
     def _save_driver_source(self, fpath: str) -> None:
         with open(fpath, 'w') as f:
-            f.write(self.driver.page_source);
+            f.write(self._get_driver().page_source);
+
+    def _get_driver(self):
+        if self.driver != None:
+            return self.driver
+
+        fireFoxOptions = webdriver.FirefoxOptions()
+        if self.headless:
+            fireFoxOptions.add_argument("--headless")
+        self.driver = webdriver.Firefox(options=fireFoxOptions)
+        return self.driver
 
     """
         Javascript Helper Functions executed on Driver
             - border - draws color box around element
     """
     def _draw_border(self, elem, color: str = 'red'):
-        self.driver.execute_script(
+        self._get_driver().execute_script(
             f"arguments[0].setAttribute(arguments[1], arguments[2])",
             elem, "style",
             f"padding: 1px; border: 2px solid {color}; display: inline-block")
@@ -86,9 +93,9 @@ class edgar_parser:
                                 highlight: bool = False, save: bool = False, out_path: str = os.path.join('.','sample.htm')):
 
         if driver_path is not None:
-            self.driver.get(driver_path)
+            self._get_driver().get(driver_path)
 
-        found = self.driver.find_elements(By.TAG_NAME, 'font')
+        found = self._get_driver().find_elements(By.TAG_NAME, 'font')
         # Filter symbols using 'hashmap' set
         forbidden = {i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'','**'})
         found = [i for i in found if i.text not in forbidden]
@@ -118,9 +125,9 @@ class edgar_parser:
         """
 
         if driver_path is not None:
-            self.driver.get(driver_path)
+            self._get_driver().get(driver_path)
 
-        found = self.driver.find_elements(By.TAG_NAME, 'span')
+        found = self._get_driver().find_elements(By.TAG_NAME, 'span')
 
         # Filter symbols using 'hashmap' set
         forbidden = {i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'','**'})
@@ -138,7 +145,7 @@ class edgar_parser:
             current_element = found[i]
             while True: # loop through ancestors
                 # # check if current is root
-                parent = self.driver.execute_script("return arguments[0].parentNode", current_element)
+                parent = self._get_driver().execute_script("return arguments[0].parentNode", current_element)
                 if parent.tag_name == 'body': # This is the 'root' of an html tree
                     break;
                 if current_element.tag_name == 'table':
@@ -162,13 +169,13 @@ class edgar_parser:
     """
         Return list of submissions names with annotated 10-Q forms
     """
-    def get_annotated_submissions(self, tikr):
-        return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i)]
+    def get_annotated_submissions(self, tikr, silent: bool = False):
+        return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent)]
 
     """
         Returns whether given tikr submission has annotated ix elements
     """
-    def _is_10q_annotated(self, tikr, submission) -> bool:
+    def _is_10q_annotated(self, tikr, submission, silent: bool = False) -> bool:
 
         assert tikr in self.metadata;
         assert submission in self.metadata[tikr]['submissions']
@@ -177,9 +184,9 @@ class edgar_parser:
         if is_annotated is not None:
             return is_annotated
         else:
-            return self._gen_10q_annotated_metadata(tikr, submission)
+            return self._gen_10q_annotated_metadata(tikr, submission, silent=silent)
 
-    def _gen_10q_annotated_metadata(self, tikr, submission):
+    def _gen_10q_annotated_metadata(self, tikr, submission, silent: bool = False):
 
         annotated_tag_list = {'ix:nonnumeric','ix:nonfraction'}
 
@@ -191,15 +198,18 @@ class edgar_parser:
 
         # TODO handle ims-document
         if _file is None:
-            warnings.warn("Document Encountered without 10-Q", RuntimeWarning)
-            for file in files:
-                if files[file].get('is_ims-document', False):
-                    self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
-                    warnings.warn("Encountered unlabeled IMS-DOCUMENT", RuntimeWarning)
+            if silent:
+                return False;
+            else:
+                warnings.warn("Document Encountered without 10-Q", RuntimeWarning)
+                for file in files:
+                    if files[file].get('is_ims-document', False):
+                        self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+                        warnings.warn("Encountered unlabeled IMS-DOCUMENT", RuntimeWarning)
+                        return False
+                if len(files) == 0:
+                    warnings.warn("No Files under Document", RuntimeWarning)
                     return False
-            if len(files) == 0:
-                warnings.warn("No Files under Document", RuntimeWarning)
-                return False
 
         assert _file is not None, 'Missing 10-Q'
 
@@ -226,9 +236,9 @@ class edgar_parser:
 
         # If path is None, stay on current document
         if driver_path is not None:
-            self.driver.get(driver_path)
+            self._get_driver().get(driver_path)
 
-        found_table = self.driver.find_elements(By.TAG_NAME, 'table')
+        found_table = self._get_driver().find_elements(By.TAG_NAME, 'table')
 
         table_is_numeric = np.zeros_like(found_table, 'int')# 0: numerical, 1: non-numerical, 2: unannotated
         for i in range(len(found_table)):
@@ -292,7 +302,7 @@ class edgar_parser:
         ------
 
         """
-        page_breaks = self.driver.find_elements(By.TAG_NAME, 'hr')
+        page_breaks = self._get_driver().find_elements(By.TAG_NAME, 'hr')
         page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
         # TODO add logic to handle this
         if len(page_breaks) == 0:
@@ -446,7 +456,7 @@ class edgar_parser:
             df.to_csv(out_path)
         return df
 
-    def featurize_file(self, tikr: str, submission: str, filename: str, force: bool = False):
+    def featurize_file(self, tikr: str, submission: str, filename: str, force: bool = False, silent: bool = False):
         """
 
 
@@ -460,6 +470,8 @@ class edgar_parser:
             The name of the file to featurize
         force: bool, default=False
             if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+        silent: bool default=False
+            if (True), then does not print runtime warnings.
 
         Returns
         --------
@@ -475,7 +487,7 @@ class edgar_parser:
             return self.load_processed(tikr, submission, filename)
         else:
             # TODO make process_file detect and work on unannotated files
-            if not self._is_10q_annotated(tikr, submission):
+            if not self._is_10q_annotated(tikr, submission, silent=silent):
                 raise NotImplementedError
             elems, annotation_dict, in_table = self._parse_annotated_text(self.get_driver_path(tikr, submission, filename))
             features = self.get_annotation_features(elems, annotation_dict, in_table)
@@ -497,6 +509,6 @@ class edgar_parser:
             return pkl.load(f)
 
 
-
     def __del__(self):
-        self.driver.quit();
+        if self.driver != None:
+            self._get_driver().quit();

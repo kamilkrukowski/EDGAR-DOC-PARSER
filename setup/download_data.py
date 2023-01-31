@@ -16,10 +16,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--force', action='store_true')
 args = parser.parse_args()
 
-loader = EDGAR.downloader(data_dir=os.path.join('..','data'));
+loader = EDGAR.downloader(data_dir="data");
 
 # List of companies to process
-tikrs = open(os.path.join(loader.path, os.path.join('..','tickers.txt'))).read().strip()
+tikrs = open(os.path.join(loader.path, 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 
 for tikr in tikrs:

@@ -1,8 +1,10 @@
-
 import os
 import pickle as pkl
 from yaml import load, CLoader as Loader, dump, CDumper as Dumper
 import warnings
+
+
+import numpy as np
 
 
 class metadata_manager(dict):
@@ -10,9 +12,11 @@ class metadata_manager(dict):
         super(metadata_manager, self).__init__(*arg, **kw)
         
         # Always gets the path of the current file
-        self.path = os.path.abspath(os.path.join(__file__, os.pardir))
+        self.path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
+
+        self.data_dir = os.path.join(self.path, data_dir)
         
-        self.meta_dir = os.path.join(self.path, data_dir, 'metadata')
+        self.meta_dir = os.path.join(self.data_dir, 'metadata')
         if not os.path.exists(self.meta_dir):
             os.system('mkdir -p ' + self.meta_dir)
         
@@ -118,3 +122,19 @@ class metadata_manager(dict):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
         return self[tikr]['submissions'][submission]['documents'][sequence].get('features_pregenerated', False)
+
+    def save_tikrdataset(self, tikr_data, tikr: str):
+        self[tikr]['HAS_DATASET'] = True;
+        
+        data_path = os.path.join(self.data_dir, "array_dataset" ,f"{tikr}.pkl")
+        if not os.path.exists(os.path.join(self.data_dir, "array_dataset")):
+            os.mkdir(os.path.join(self.data_dir, "array_dataset"))
+
+        np.save(data_path, tikr_data)
+
+    def load_tikrdataset(self, tikr: str):
+        
+        assert self[tikr]['HAS_DATASET'], "NO DATASET FOR TIKR";
+
+        data_path = os.path.join(self.data_dir, "array_dataset" ,f"{tikr}.pkl")
+        return np.load(data_path)

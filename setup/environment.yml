@@ -1,0 +1,15 @@
+name: edgar2
+channels:
+  - defaults
+dependencies:
+  - selenium=4.5.0
+  - pytorch
+  - numpy
+  - pyyaml
+  - python=3.10
+  - chardet
+  - requests
+  - scipy
+  - pandas
+  - lxml
+prefix: /opt/homebrew/Caskroom/miniconda/base/envs/edgar2

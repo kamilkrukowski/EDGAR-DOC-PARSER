@@ -58,7 +58,6 @@ def generated_dataset( tikr: str,  doc: str, fpath: str):
             d['in_table'] = True
         if i['is_annotated']:
             d['is_annotated'] = True
-
         
      
         d['page_number'] = i["page_number"]
@@ -132,20 +131,21 @@ parser.add_argument('-f', '--force', action='store_true')
 parser.add_argument('-nflx', '--demo', action='store_true')
 args = parser.parse_args()
 
-data_dir = os.path.join('..', 'data')
 
+data_dir = "data"
 metadata = EDGAR.metadata(data_dir=data_dir)
 loader = EDGAR.downloader(data_dir=data_dir);
 parser = EDGAR.parser(data_dir=data_dir)
 
 # List of companies to process
-tikrs = open(os.path.join(loader.path, '..', 'tickers.txt')).read().strip()
+tikrs = open(os.path.join(loader.path, 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 if args.demo:
     tikrs = ['nflx']
 
 trainset = []
 for tikr in tikrs:
+    tikr_dataset = []
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
         
@@ -158,4 +158,8 @@ for tikr in tikrs:
     fpath = os.path.join('..','outputs',f"{fname}.csv")
     
     for doc in tqdm(annotated_docs, desc=f"Processing {tikr}", leave=False):
-        trainset += generated_dataset(tikr, doc, fpath = fpath)
+        tikr_dataset += generated_dataset(tikr, doc, fpath = fpath)
+
+    #metadata.save_tikrdataset(tikr_dataset, tikr);
+    trainset += tikr_dataset
+    
