@@ -1,3 +1,8 @@
+"""
+    This file will downloads and parses financial data from the SEC EDGAR database for a list of companies specified in the "tickers.txt" file. 
+    TThe data is then processed and saved as a tokenizer and raw data file in the current directory.
+"""
+
 import os
 import time
 
@@ -51,6 +56,7 @@ for tikr in tikrs:
     if(args.demo):
         annotated_docs = [annotated_docs[0]]
 
+    # to process the documents and extract relevant information. 
     for doc in annotated_docs:
         fname = metadata.get_10q_name(tikr, doc)
         parser.featurize_file(tikr, doc, fname,force = args.force) 
@@ -58,6 +64,8 @@ for tikr in tikrs:
 
 s = EDGAR.subset(tikrs=tikrs, debug=True)
 
-#### Load the saved tokenizer
-raw_data = s.save_raw_data( fname = "raw_data.npy")
-tokenizer = s.build_tokenizer(save = True)
+#### saves the raw data
+raw_data = s.save_raw_data( fname = "..\\data\\raw_data.npy")
+
+#### generate and save tokenizer
+tokenizer = s.build_tokenizer(save = True,)
