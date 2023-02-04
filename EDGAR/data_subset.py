@@ -212,4 +212,18 @@ class DataSubset():
 
         return tokenizer
 
+    def generate_dataset(self, data = None, tokenizer = None, save = False, fname_x = "x_data", fname_y = "y_data"):
+        if data == None:
+            data = self.raw_data
+
+
+        if save:
+            data_path_x = os.path.join(self.metadata.path, fname_x )
+            np.save(data_path_x, np.array(data[0], dtype=object))
+            data_path_y = os.path.join(self.metadata.path, fname_y )
+            np.save(data_path_y, np.array(data[1], dtype=object))
+        return data[0],  data[1]
+
+
+
 
