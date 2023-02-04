@@ -43,12 +43,13 @@ for tikr in tikrs:
     loader.query_server(tikr, force=True, filing_type=FilingType.FILING_10Q)
     time.sleep(5)
     # Unpack downloaded files into relevant directories
-    loader.unpack_bulk(tikr, loading_bar=True, desc=f"{tikr} :Inflating HTM")
+    loader.unpack_bulk(tikr, loading_bar=True, force = True, desc=f"{tikr} :Inflating HTM")
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
 
     if(args.demo):
         annotated_docs = [annotated_docs[0]]
+        
     for doc in annotated_docs:
         fname = metadata.get_10q_name(tikr, doc)
         parser.featurize_file(tikr, doc, fname,force = True) 
