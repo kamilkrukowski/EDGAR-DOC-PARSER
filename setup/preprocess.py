@@ -5,12 +5,18 @@ import sys;
 sys.path.append('..')
 
 
-
+from tqdm.auto import tqdm
 from secedgar import FilingType
-
-
+import argparse
 import EDGAR
 
+
+
+# Command line magic for common use case to regenerate dataset
+#   --force to overwrite outdated local files
+parser = argparse.ArgumentParser()
+parser.add_argument('-nflx', '--demo', action='store_true')
+args = parser.parse_args()
 
 data_dir = "data"
 loader = EDGAR.downloader(data_dir=data_dir);
@@ -22,29 +28,34 @@ parser = EDGAR.parser(data_dir=data_dir)
 # List of companies to process
 tikrs = open(os.path.join(loader.path, 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
+if args.demo:
+    tikrs = ['nflx']
 
 for tikr in tikrs:
     loader.metadata.load_tikr_metadata(tikr)
 
-# download raw data from SEC EDGAR
+
 to_download = [];
-print(f"Forcing Downloads...")
+
 for tikr in tikrs:
-    to_download.append(tikr)
+    print(f"{tikr} :Downloading")
+    # download raw data from SEC EDGAR
+    loader.query_server(tikr, force=True, filing_type=FilingType.FILING_10Q)
+    time.sleep(5)
+    # Unpack downloaded files into relevant directories
+    loader.unpack_bulk(tikr, loading_bar=True, desc=f"{tikr} :Inflating HTM")
+    metadata.load_tikr_metadata(tikr)
+    annotated_docs = parser.get_annotated_submissions(tikr)
 
-# Unpack downloaded files into relevant directories
-to_unpack = []
-for tikr in tikrs:
-    if not loader._is_10q_unpacked(tikr) or args.force:
-        to_unpack.append(tikr)
+    if(args.demo):
+        annotated_docs = [annotated_docs[0]]
+    for doc in annotated_docs:
+        fname = metadata.get_10q_name(tikr, doc)
+        parser.featurize_file(tikr, doc, fname,force = True) 
 
-if len(to_unpack) != 0:
-    for tikr in to_unpack:
-        loader.unpack_bulk(tikr, loading_bar=True, desc=f"{tikr} :Inflating HTM")
 
-# generate raw data from unpack data
-parser.featurize_file(tikr, doc, fname,force = True) 
 s = EDGAR.subset(tikrs=tikrs, debug=True)
 
 #### Load the saved tokenizer
-tokenizer = s.build_tokenizer()
+raw_data = s.save_raw_data( fname = "raw_data.npy")
+tokenizer = s.build_tokenizer(save = True)
