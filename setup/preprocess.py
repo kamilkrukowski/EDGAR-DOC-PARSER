@@ -15,6 +15,7 @@ import EDGAR
 # Command line magic for common use case to regenerate dataset
 #   --force to overwrite outdated local files
 parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--force', action='store_true')
 parser.add_argument('-nflx', '--demo', action='store_true')
 args = parser.parse_args()
 
@@ -40,19 +41,19 @@ to_download = [];
 for tikr in tikrs:
     print(f"{tikr} :Downloading")
     # download raw data from SEC EDGAR
-    loader.query_server(tikr, force=True, filing_type=FilingType.FILING_10Q)
+    loader.query_server(tikr, force=args.force, filing_type=FilingType.FILING_10Q)
     time.sleep(5)
     # Unpack downloaded files into relevant directories
-    loader.unpack_bulk(tikr, loading_bar=True, force = True, desc=f"{tikr} :Inflating HTM")
+    loader.unpack_bulk(tikr, loading_bar=True, force = args.force, desc=f"{tikr} :Inflating HTM")
     metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
 
     if(args.demo):
         annotated_docs = [annotated_docs[0]]
-        
+
     for doc in annotated_docs:
         fname = metadata.get_10q_name(tikr, doc)
-        parser.featurize_file(tikr, doc, fname,force = True) 
+        parser.featurize_file(tikr, doc, fname,force = args.force) 
 
 
 s = EDGAR.subset(tikrs=tikrs, debug=True)
