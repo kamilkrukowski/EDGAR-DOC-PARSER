@@ -146,9 +146,6 @@ if not os.path.exists(out_dir):
 np.savetxt(os.path.join(out_dir, 'labels.txt'), [key for key in label_map], fmt="%s")
 
 
-#### generate and save tokenizer
-tokenizer = s.build_tokenizer(save = True,)
-
 # Save the trained tokenizer to a file
 tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
 
