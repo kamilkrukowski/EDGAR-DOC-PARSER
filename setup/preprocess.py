@@ -153,10 +153,15 @@ np.savetxt(os.path.join(out_dir, 'all_possible_labels.txt'), [key for key in lab
 label_data = [k[0] for k in itertools.chain.from_iterable([j[1] for j in itertools.chain.from_iterable([i[0] for i in raw_data])])]
 all_labels_count = len(label_data)
 all_labels, counts = np.unique(label_data, return_counts=True)
+reindexing = list(reversed(np.argsort(counts)))
 # Create a dictionary of words and their counts
-label_counts = dict(zip(all_labels, counts))
+label_counts = dict(zip(all_labels[reindexing], counts[reindexing]))
 # Create a list of words that meet the criteria
 selected_labels = [label for label, count in label_counts.items() if count >= MIN_OCCUR_COUNT and count/all_labels_count >= MIN_OCCUR_PERC]
+
+# Remove all company specific systems predicted
+kept_systems = {'dei', 'us-gaap'}
+selected_labels = [i for i in selected_labels if i.split(':')[0] in kept_systems]
 np.savetxt(os.path.join(out_dir, 'labels.txt'), [label for label in selected_labels], fmt="%s")
 
 # Define your text data
