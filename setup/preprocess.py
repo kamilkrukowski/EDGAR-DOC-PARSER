@@ -6,15 +6,17 @@
 import os
 import time
 import itertools
+import argparse
 import sys; 
 sys.path.append('..')
 
 
 from tqdm.auto import tqdm
 from secedgar import FilingType
-import argparse
-import numpy as np
 from transformers import BertTokenizerFast
+import numpy as np
+import torch
+
 
 import EDGAR
 
@@ -54,23 +56,20 @@ def download_tikrs(tikrs):
         for tikr in tikrs:
             if not loader._is_downloaded(tikr):
                 to_download.append(tikr)
-        print(f"Downloaded: {str(list(set(tikrs) - set(to_download)))}")
 
-    if len(to_download) == 0:
-        print('Everything on Ticker List already downloaded.')
-    else:
-        print(f"Downloading... {str(to_download)}")
-        for tikr in to_download:
+    if len(to_download) != 0:
+        for tikr in tqdm(to_download, desc="Downloading", leave=False):
             loader.query_server(tikr, force=args.force, filing_type=FilingType.FILING_10Q)
             time.sleep(5)
 
 download_tikrs(tikrs);
 
-raw_data = [];
+raw_data = list();
+label_map = set();
 for tikr in tikrs:
     # Unpack downloaded files into relevant directories
     loader.unpack_bulk(tikr, loading_bar=True, force = args.force, desc=f"{tikr} :Inflating HTM")
-    annotated_docs = parser.get_annotated_submissions(tikr)
+    annotated_docs = parser.get_annotated_submissions(tikr, silent=True)
 
     if(args.demo):
         annotated_docs = [annotated_docs[0]]
@@ -130,22 +129,76 @@ for tikr in tikrs:
             if len(d) == 0:
                 continue
             raw_data.append([d, i+1, doc, tikr ])
+            for elem in d:
+                for label in elem[1]:
+                    label_map = label_map.union({label[0]})
+        
+label_map = {y:i for i,y in enumerate(label_map)}
+
+#### SETTINGS
+MAX_SENTENCE_LENGTH = 200
+PREPROCESS_PIPE_NAME = 'DEFAULT'
+SPARSE_WEIGHT = 0.5
+MIN_OCCUR_PERC = 0
+MIN_OCCUR_COUNT = 20
 
 
 #### saves the raw data
-vocab_dir = os.path.join(metadata.data_dir, "vocabulary");
-if not os.path.exists(vocab_dir):
-    os.mkdir(vocab_dir)
-#raw_data = s.save_raw_data(fname = os.path.join(vocab_dir, "raw_data.npy"))
+vocab_dir = os.path.join(metadata.data_dir, "dataloader_cache")
+out_dir = os.path.join(vocab_dir, PREPROCESS_PIPE_NAME);
+if not os.path.exists(out_dir):
+    if not os.path.exists(vocab_dir):
+        os.mkdir(vocab_dir)
+    os.mkdir(out_dir);
+np.savetxt(os.path.join(out_dir, 'all_possible_labels.txt'), [key for key in label_map], fmt="%s")
 
+label_data = [k[0] for k in itertools.chain.from_iterable([j[1] for j in itertools.chain.from_iterable([i[0] for i in raw_data])])]
+all_labels_count = len(label_data)
+all_labels, counts = np.unique(label_data, return_counts=True)
+reindexing = list(reversed(np.argsort(counts)))
+# Create a dictionary of words and their counts
+label_counts = dict(zip(all_labels[reindexing], counts[reindexing]))
+# Create a list of words that meet the criteria
+selected_labels = [label for label, count in label_counts.items() if count >= MIN_OCCUR_COUNT and count/all_labels_count >= MIN_OCCUR_PERC]
 
-#### generate and save tokenizer
-tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
+# Remove all company specific systems predicted
+kept_systems = {'dei', 'us-gaap'}
+selected_labels = [i for i in selected_labels if i.split(':')[0] in kept_systems]
+np.savetxt(os.path.join(out_dir, 'labels.txt'), [label for label in selected_labels], fmt="%s")
+        
 
 # Define your text data
 text_data = [i[0] for i in itertools.chain.from_iterable([i[0] for i in raw_data])]
-
+tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
 tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000)
 
-# Save the trained tokenizer to a file
-tokenizer.save_pretrained(os.path.join(vocab_dir, "wordpiece"));
+# Save the trained tokenizer
+tokenizer.save_pretrained(out_dir);
+
+
+# Embed all sentences, create label vectors, create loss weight masks
+inputs = []
+num_labels = len(selected_labels);
+label_map = {y:i+1 for i,y in enumerate(selected_labels)}
+for page in raw_data:
+    elems, page_number, doc_id, tikr = page;
+    for elem in elems:
+        inputs.append(tokenizer(elem[0], return_tensors='pt', truncation=True))
+        inputs[-1]["y"] = torch.zeros(num_labels+1).float(); #Extra one for unknown label
+        
+        inputs[-1]["loss_mask"] = torch.ones(num_labels+1).float()
+        num_labelled = 0;
+        non_sparse_weights = torch.zeros(num_labels+1).float()
+        
+        for label in elem[1]:
+            label_idx = label_map.get(label[0], 0) 
+            if inputs[-1]["loss_mask"][label_idx] == 1:
+                continue;
+            inputs[-1]["loss_mask"][label_idx] = 1
+            
+            non_sparse_weights[label_idx] = 1
+            inputs[-1]["loss_mask"][label_idx] = 0
+            num_labelled = num_labelled + 1
+        
+        non_sparse_weights = non_sparse_weights * (1-SPARSE_WEIGHT) / num_labelled
+        inputs[-1]["loss_mask"] = inputs[-1]["loss_mask"] * SPARSE_WEIGHT / (num_labels + 1 - num_labelled) + non_sparse_weights

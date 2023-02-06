@@ -2,7 +2,6 @@
     Definitions of EDGAR package
 """
 from . import metadata_manager as edgar_metadata
-from . import dataloader as edgar_dataloader
 from . import downloader as edgar_downloader
 from . import preprocesser as edgar_preprocesser
 from . import parser as edgar_parser
@@ -15,7 +14,6 @@ class EDGAR_singleton:
         self.metadata = None
         self.downloader = None
         self.parser = None
-        self.dataloader = None
         self.preprocesser = None
         self.edgar_subset = None
     
@@ -37,15 +35,6 @@ class EDGAR_singleton:
         if self.parser is None or not reuse:
             self.parser = edgar_parser.edgar_parser(*args, **kwargs)
         return self.parser 
-    
-    def _get_dataloader(self,reuse: bool = True, *args, **kwargs):
-        if 'metadata' not in kwargs:
-            kwargs['metadata'] = self._get_metadata(data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
-        if 'parser' not in kwargs:
-            kwargs['parser'] = self._get_parser(data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
-        if self.dataloader is None or not reuse:
-            self.dataloader = edgar_dataloader.EDGARDataset(*args, **kwargs)
-        return self.dataloader
     
     def _get_preprocesser(self,reuse: bool = True, *args, **kwargs):
         if 'metadata' not in kwargs:
@@ -72,5 +61,4 @@ metadata = edgar_global._get_metadata
 downloader = edgar_global._get_downloader
 parser = edgar_global._get_parser
 preprocesser = edgar_global._get_preprocesser
-dataloader = edgar_global._get_dataloader
 subset = edgar_global._get_subset

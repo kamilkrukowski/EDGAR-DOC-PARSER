@@ -192,6 +192,11 @@ class DataSubset():
         valid_words = [word for word, count in word_counts.items() if count >= min_occurence and count/all_words_count >= min_percent]
         return valid_words, word_counts
 
+    def change_digit_to_alphanumeric(self, text):
+        for alph in '0123456789':
+            text = text.replace(alph, f" ["+str(alph)+"/ALPHANUMERIC] ")
+        return text
+
     def build_tokenizer(self, pretrained = None,data = None, vocab_size = 300000,save = False, alphanumeric = True):
 
         if pretrained == None:
@@ -200,10 +205,19 @@ class DataSubset():
             # Create the tokenizer
             tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
 
-            # Define your text data
-            text_data = [text for text, _, _, _, _ in data]
+            
 
-            tokenizer = tokenizer.train_new_from_iterator(text_data,vocab_size)
+            
+            if alphanumeric:
+                # Define your text data
+                text_data = [self.change_digit_to_alphanumeric(text) for text, _, _, _, _ in data]
+                
+                new_special_tokens = ["["+str(alph)+"/ALPHANUMERIC]" for alph in '0123456789']
+                tokenizer = tokenizer.train_new_from_iterator(text_data,vocab_size,new_special_tokens= new_special_tokens)
+            else: 
+                # Define your text data
+                text_data = [text for text, _, _, _, _ in data]
+                tokenizer = tokenizer.train_new_from_iterator(text_data,vocab_size)
         else:
             tokenizer = BertTokenizerFast.from_pretrained(pretrained)
 
