@@ -40,26 +40,28 @@ if args.demo:
 for tikr in tikrs:
     loader.metadata.load_tikr_metadata(tikr)
 
-
-to_download = [];
-if args.force:
-    print(f"Forcing Downloads...")
-    for tikr in tikrs:
-        to_download.append(tikr)
-else:
-    # Download missing files
-    for tikr in tikrs:
-        if not loader._is_downloaded(tikr):
+def download_tikrs(tikrs):
+    to_download = [];
+    if args.force:
+        print(f"Forcing Downloads...")
+        for tikr in tikrs:
             to_download.append(tikr)
-    print(f"Downloaded: {str(list(set(tikrs) - set(to_download)))}")
+    else:
+        # Download missing files
+        for tikr in tikrs:
+            if not loader._is_downloaded(tikr):
+                to_download.append(tikr)
+        print(f"Downloaded: {str(list(set(tikrs) - set(to_download)))}")
 
-if len(to_download) == 0:
-    print('Everything on Ticker List already downloaded.')
-else:
-    print(f"Downloading... {str(to_download)}")
-    for tikr in to_download:
-        loader.query_server(tikr, force=args.force, filing_type=FilingType.FILING_10Q)
-        time.sleep(5)
+    if len(to_download) == 0:
+        print('Everything on Ticker List already downloaded.')
+    else:
+        print(f"Downloading... {str(to_download)}")
+        for tikr in to_download:
+            loader.query_server(tikr, force=args.force, filing_type=FilingType.FILING_10Q)
+            time.sleep(5)
+
+download_tikrs(tikrs);
 
 for tikr in tikrs:
     # Unpack downloaded files into relevant directories
@@ -78,7 +80,10 @@ for tikr in tikrs:
 s = EDGAR.subset(tikrs=tikrs, debug=True)
 
 #### saves the raw data
-#raw_data = s.save_raw_data( fname = "..\\data\\raw_data.npy")
+vocab_dir = os.path.join(metadata.data_dir, "vocabulary");
+if not os.path.exists(vocab_dir):
+    os.mkdir(vocab_dir)
+raw_data = s.save_raw_data(fname = os.path.join(vocab_dir, "raw_data.npy"))
 
 #### generate and save tokenizer
 tokenizer = s.build_tokenizer(save = True,)
