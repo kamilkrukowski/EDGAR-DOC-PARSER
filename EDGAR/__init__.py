@@ -6,6 +6,7 @@ from . import dataloader as edgar_dataloader
 from . import downloader as edgar_downloader
 from . import preprocesser as edgar_preprocesser
 from . import parser as edgar_parser
+from . import data_subset as edgar_subset
 
 
 class EDGAR_singleton:
@@ -16,6 +17,7 @@ class EDGAR_singleton:
         self.parser = None
         self.dataloader = None
         self.preprocesser = None
+        self.edgar_subset = None
     
     def _get_metadata(self,reuse: bool = True, *args, **kwargs):
         if self.metadata is None or not reuse:
@@ -52,7 +54,16 @@ class EDGAR_singleton:
             kwargs['parser'] = self._get_parser(data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
         if self.preprocesser is None or not reuse:
             self.preprocesser = edgar_preprocesser.edgar_preprocesser(*args, **kwargs)
-        return self.preprocesser 
+        return self.preprocesser
+
+    def _get_subset(self,reuse: bool = True, *args, **kwargs):
+        if 'metadata' not in kwargs:
+            kwargs['metadata'] = self._get_metadata(data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
+        if 'parser' not in kwargs:
+            kwargs['parser'] = self._get_parser(data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
+        if self.edgar_subset is None or not reuse:
+            self.edgar_subset = edgar_subset.DataSubset(*args, **kwargs)
+        return self.edgar_subset
     
 
 edgar_global = EDGAR_singleton()
@@ -62,3 +73,4 @@ downloader = edgar_global._get_downloader
 parser = edgar_global._get_parser
 preprocesser = edgar_global._get_preprocesser
 dataloader = edgar_global._get_dataloader
+subset = edgar_global._get_subset
