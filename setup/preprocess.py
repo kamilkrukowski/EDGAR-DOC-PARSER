@@ -15,6 +15,7 @@ from tqdm.auto import tqdm
 from secedgar import FilingType
 from transformers import BertTokenizerFast
 import numpy as np
+import torch
 
 
 import EDGAR
@@ -137,6 +138,7 @@ label_map = {y:i for i,y in enumerate(label_map)}
 #### SETTINGS
 MAX_SENTENCE_LENGTH = 200
 PREPROCESS_PIPE_NAME = 'DEFAULT'
+SPARSE_WEIGHT = 0.5
 MIN_OCCUR_PERC = 0
 MIN_OCCUR_COUNT = 20
 
@@ -163,6 +165,7 @@ selected_labels = [label for label, count in label_counts.items() if count >= MI
 kept_systems = {'dei', 'us-gaap'}
 selected_labels = [i for i in selected_labels if i.split(':')[0] in kept_systems]
 np.savetxt(os.path.join(out_dir, 'labels.txt'), [label for label in selected_labels], fmt="%s")
+        
 
 # Define your text data
 text_data = [i[0] for i in itertools.chain.from_iterable([i[0] for i in raw_data])]
@@ -171,3 +174,31 @@ tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_siz
 
 # Save the trained tokenizer
 tokenizer.save_pretrained(out_dir);
+
+
+# Embed all sentences, create label vectors, create loss weight masks
+inputs = []
+num_labels = len(selected_labels);
+label_map = {y:i+1 for i,y in enumerate(selected_labels)}
+for page in raw_data:
+    elems, page_number, doc_id, tikr = page;
+    for elem in elems:
+        inputs.append(tokenizer(elem[0], return_tensors='pt', truncation=True))
+        inputs[-1]["y"] = torch.zeros(num_labels+1).float(); #Extra one for unknown label
+        
+        inputs[-1]["loss_mask"] = torch.ones(num_labels+1).float()
+        num_labelled = 0;
+        non_sparse_weights = torch.zeros(num_labels+1).float()
+        
+        for label in elem[1]:
+            label_idx = label_map.get(label[0], 0) 
+            if inputs[-1]["loss_mask"][label_idx] == 1:
+                continue;
+            inputs[-1]["loss_mask"][label_idx] = 1
+            
+            non_sparse_weights[label_idx] = 1
+            inputs[-1]["loss_mask"][label_idx] = 0
+            num_labelled = num_labelled + 1
+        
+        non_sparse_weights = non_sparse_weights * (1-SPARSE_WEIGHT) / num_labelled
+        inputs[-1]["loss_mask"] = inputs[-1]["loss_mask"] * SPARSE_WEIGHT / (num_labels + 1 - num_labelled) + non_sparse_weights
