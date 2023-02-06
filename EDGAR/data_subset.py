@@ -85,7 +85,7 @@ class DataSubset():
 
 
     def save_raw_data(self, fname = "raw_data.npy"):
-    	np.save( fname, self.raw_data)
+    	np.save( fname, np.array(self.raw_data,dtype = object))
 
 
     def label_frequency(self,data = None,min_percent = 0.0, min_occurence = 1):
@@ -192,7 +192,8 @@ class DataSubset():
         valid_words = [word for word, count in word_counts.items() if count >= min_occurence and count/all_words_count >= min_percent]
         return valid_words, word_counts
 
-    def build_tokenizer(self, pretrained = None,data = None, vocab_size = 300000,save = False):
+    def build_tokenizer(self, pretrained = None,data = None, vocab_size = 300000,save = False, alphanumeric = True):
+
         if pretrained == None:
             if data == None:
                 data = self.raw_data
