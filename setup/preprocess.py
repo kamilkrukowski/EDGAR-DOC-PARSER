@@ -42,15 +42,28 @@ for tikr in tikrs:
 
 
 to_download = [];
+if args.force:
+    print(f"Forcing Downloads...")
+    for tikr in tikrs:
+        to_download.append(tikr)
+else:
+    # Download missing files
+    for tikr in tikrs:
+        if not loader._is_downloaded(tikr):
+            to_download.append(tikr)
+    print(f"Downloaded: {str(list(set(tikrs) - set(to_download)))}")
+
+if len(to_download) == 0:
+    print('Everything on Ticker List already downloaded.')
+else:
+    print(f"Downloading... {str(to_download)}")
+    for tikr in to_download:
+        loader.query_server(tikr, force=args.force, filing_type=FilingType.FILING_10Q)
+        time.sleep(5)
 
 for tikr in tikrs:
-    print(f"{tikr} :Downloading")
-    # download raw data from SEC EDGAR
-    loader.query_server(tikr, force=args.force, filing_type=FilingType.FILING_10Q)
-    time.sleep(5)
     # Unpack downloaded files into relevant directories
     loader.unpack_bulk(tikr, loading_bar=True, force = args.force, desc=f"{tikr} :Inflating HTM")
-    metadata.load_tikr_metadata(tikr)
     annotated_docs = parser.get_annotated_submissions(tikr)
 
     if(args.demo):
@@ -65,7 +78,7 @@ for tikr in tikrs:
 s = EDGAR.subset(tikrs=tikrs, debug=True)
 
 #### saves the raw data
-raw_data = s.save_raw_data( fname = "..\\data\\raw_data.npy")
+#raw_data = s.save_raw_data( fname = "..\\data\\raw_data.npy")
 
 #### generate and save tokenizer
 tokenizer = s.build_tokenizer(save = True,)
