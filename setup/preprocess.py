@@ -5,7 +5,7 @@
 
 import os
 import time
-import itertools
+
 import sys; 
 sys.path.append('..')
 
@@ -13,9 +13,6 @@ sys.path.append('..')
 from tqdm.auto import tqdm
 from secedgar import FilingType
 import argparse
-import numpy as np
-from transformers import BertTokenizerFast
-
 import EDGAR
 
 
@@ -66,7 +63,6 @@ def download_tikrs(tikrs):
 
 download_tikrs(tikrs);
 
-raw_data = [];
 for tikr in tikrs:
     # Unpack downloaded files into relevant directories
     loader.unpack_bulk(tikr, loading_bar=True, force = args.force, desc=f"{tikr} :Inflating HTM")
@@ -78,74 +74,17 @@ for tikr in tikrs:
     # to process the documents and extract relevant information. 
     for doc in annotated_docs:
         fname = metadata.get_10q_name(tikr, doc)
-        features = parser.featurize_file(tikr, doc, fname,force = args.force, silent=True) 
+        parser.featurize_file(tikr, doc, fname,force = args.force) 
 
-        features.sort_values(by=['page_number'],ascending = True, inplace = True)
-        num_page = max(features.iloc[:]["page_number"],default = 0)
 
-        found_indices = np.unique([int(i) for i in features['found_index']])
-        # Structure: Text str, Labels dict, labelled bool
-        data = {i:{'text':None, 'labels':dict(), 'is_annotated':False, 'in_table':False, "page_number": 0 } for i in found_indices}
-        
-        for i in range(len(features)):
-            i = features.iloc[i, :]
-            d = data[i['found_index']]
-            # Skip documents which are NOT annotated
-            if i['in_table']:
-                d['in_table'] = True
-            if i['is_annotated']:
-                d['is_annotated'] = True
-            
-            d['page_number'] = i["page_number"]
-            if d['text'] is None:
-                """
-                x is a list with length of 2. Items in the list are:
-                    1. value: the text value of the annotated label (e.g. 10-Q)
-                    2. neighboring text: the text on the given page.
-                y is a list with ['name', 'id', 'contextref', 'decimals', 'format', 'unitref'] tags
-                """
-                d['text'] = i['span_text']
-
-            if i['anno_index'] is not None:
-                d['labels'][i['anno_index']] = []
-                for _attr in ['name', 'id', 'contextref', 'decimals', 'format', 'unitref']:
-                    d['labels'][i['anno_index']].append(i["anno_" + _attr])
-
-        data_per_page = [ [] for _ in range(num_page)]
-        for i in data:
-            # This checks for the all the element on a page. Only add element that has labels to the training set.
-            if data[i]['in_table']:
-                continue 
-            if not data[i]['is_annotated']:
-                continue
-            d = data[i]
-            
-            # Data format: (x,y) where x refers to training features (present for unnannotated docs), and y refers to labels to predict
-            data_per_page[d['page_number']-1].append((d['text'], list(d['labels'].values())))
-
-        #Convert to list of [lists of tuples, page number, document, parent_company_tikr] scheme where each list of tuples consists
-        # of all annotated webelements on that page
-        for i , d in enumerate(data_per_page ):
-            # Only add list if the list is not empty
-            if len(d) == 0:
-                continue
-            raw_data.append([d, i+1, doc, tikr ])
-
+s = EDGAR.subset(tikrs=tikrs, debug=True)
 
 #### saves the raw data
 vocab_dir = os.path.join(metadata.data_dir, "vocabulary");
 if not os.path.exists(vocab_dir):
     os.mkdir(vocab_dir)
-#raw_data = s.save_raw_data(fname = os.path.join(vocab_dir, "raw_data.npy"))
+raw_data = s.save_raw_data(fname = os.path.join(vocab_dir, "raw_data.npy"))
 
 
 #### generate and save tokenizer
-tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
-
-# Define your text data
-text_data = [i[0] for i in itertools.chain.from_iterable([i[0] for i in raw_data])]
-
-tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000)
-
-# Save the trained tokenizer to a file
-tokenizer.save_pretrained(os.path.join(vocab_dir, "wordpiece"));
+tokenizer = s.build_tokenizer(save = True,)
