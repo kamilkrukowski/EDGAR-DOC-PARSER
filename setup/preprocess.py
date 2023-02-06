@@ -85,5 +85,6 @@ if not os.path.exists(vocab_dir):
     os.mkdir(vocab_dir)
 raw_data = s.save_raw_data(fname = os.path.join(vocab_dir, "raw_data.npy"))
 
+
 #### generate and save tokenizer
 tokenizer = s.build_tokenizer(save = True,)
