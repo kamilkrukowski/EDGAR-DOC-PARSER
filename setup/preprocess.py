@@ -13,7 +13,10 @@ sys.path.append('..')
 
 from tqdm.auto import tqdm
 from secedgar import FilingType
-from transformers import FastBertTokenizer
+from transformers import BertTokenizerFast
+import numpy as np
+
+
 import EDGAR
 
 
@@ -154,4 +157,4 @@ text_data = [i[0] for i in itertools.chain.from_iterable([i[0] for i in raw_data
 
 tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000)
 # Save the trained tokenizer to a file
-tokenizer.save_pretrained(os.path.join(vocab_dir, "wordpiece"));
+tokenizer.save_pretrained(out_dir);
