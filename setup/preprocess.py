@@ -137,6 +137,8 @@ label_map = {y:i for i,y in enumerate(label_map)}
 #### SETTINGS
 MAX_SENTENCE_LENGTH = 200
 PREPROCESS_PIPE_NAME = 'DEFAULT'
+MIN_OCCUR_PERC = 0
+MIN_OCCUR_COUNT = 20
 
 
 #### saves the raw data
@@ -146,15 +148,21 @@ if not os.path.exists(out_dir):
     if not os.path.exists(vocab_dir):
         os.mkdir(vocab_dir)
     os.mkdir(out_dir);
-np.savetxt(os.path.join(out_dir, 'labels.txt'), [key for key in label_map], fmt="%s")
+np.savetxt(os.path.join(out_dir, 'all_possible_labels.txt'), [key for key in label_map], fmt="%s")
 
-
-# Save the trained tokenizer to a file
-tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
+label_data = [k[0] for k in itertools.chain.from_iterable([j[1] for j in itertools.chain.from_iterable([i[0] for i in raw_data])])]
+all_labels_count = len(label_data)
+all_labels, counts = np.unique(label_data, return_counts=True)
+# Create a dictionary of words and their counts
+label_counts = dict(zip(all_labels, counts))
+# Create a list of words that meet the criteria
+selected_labels = [label for label, count in label_counts.items() if count >= MIN_OCCUR_COUNT and count/all_labels_count >= MIN_OCCUR_PERC]
+np.savetxt(os.path.join(out_dir, 'labels.txt'), [label for label in selected_labels], fmt="%s")
 
 # Define your text data
 text_data = [i[0] for i in itertools.chain.from_iterable([i[0] for i in raw_data])]
-
+tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
 tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000)
-# Save the trained tokenizer to a file
+
+# Save the trained tokenizer
 tokenizer.save_pretrained(out_dir);
