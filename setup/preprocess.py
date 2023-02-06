@@ -5,14 +5,15 @@
 
 import os
 import time
-
+import itertools
+import argparse
 import sys; 
 sys.path.append('..')
 
 
 from tqdm.auto import tqdm
 from secedgar import FilingType
-import argparse
+from transformers import FastBertTokenizer
 import EDGAR
 
 
@@ -149,4 +150,11 @@ np.savetxt(os.path.join(out_dir, 'labels.txt'), [key for key in label_map], fmt=
 tokenizer = s.build_tokenizer(save = True,)
 
 # Save the trained tokenizer to a file
-tokenizer.save_pretrained(os.path.join(out_dir, "wordpiece"));
+tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
+
+# Define your text data
+text_data = [i[0] for i in itertools.chain.from_iterable([i[0] for i in raw_data])]
+
+tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000)
+# Save the trained tokenizer to a file
+tokenizer.save_pretrained(os.path.join(vocab_dir, "wordpiece"));
