@@ -89,6 +89,27 @@ class metadata_manager(dict):
                 return meta[file]['filename']
         return None
 
+    def get_8k_name(self, tikr, submission):
+        """
+        Parameters
+        ---------
+        tikr: str
+            a company identifier to query
+        submission:
+            the associated company filing for which to find a 10-Q form
+            
+
+        Returns
+        --------
+        filename: str
+            The name of the 8-k file associated with the submission, or None
+        """
+        meta = self[tikr]['submissions'][submission]['documents']
+        for file in meta:
+            if meta[file]['type'] in ['8-K', 'FORM 8-K', '8K', 'FORM 8-K']:
+                return meta[file]['filename']
+        return None
+
     def get_submissions(self, tikr):
         """
         Parameters
