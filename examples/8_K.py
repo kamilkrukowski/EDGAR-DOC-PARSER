@@ -19,9 +19,6 @@ import sys ; sys.path.append('..')
 import EDGAR
 
 
-
-
-
 # Command line magic for common use case to regenerate dataset
 #   --force to overwrite outdated local files
 parser = argparse.ArgumentParser()
@@ -61,7 +58,7 @@ else:
 # Unpack downloaded files into relevant directories
 to_unpack = []
 for tikr in tikrs:
-    if not loader._is_10q_unpacked(tikr) or not loader._is_8k_unpacked(tikr) or args.force:
+    if loader._is_8k_unpacked(tikr) or args.force:
         to_unpack.append(tikr)
 
 if len(to_unpack) != 0:

@@ -300,8 +300,8 @@ class edgar_downloader:
         return self.metadata[tikr]['attrs'].get('complete_unpacked', False)
 
     def unpack_bulk(
-            self, tikr, complete=True, document_type='10-Q', force=False,
-            loading_bar=False, desc='Inflating HTM'):
+            self, tikr, complete=True, force=False,
+            loading_bar=False, desc='Inflating HTM', **kwargs):
         """
             Processes all raw data from one company
             
@@ -333,7 +333,7 @@ class edgar_downloader:
         #     d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
 
         # Read each text submission dump for each quarterly filing
-        files = self.get_unpackable_files(tikr, document_type=document_type)
+        files = self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', '10-Q'))
         print("files to unpack", files)
 
         itera = files
@@ -341,7 +341,7 @@ class edgar_downloader:
             itera = tqdm(itera, desc=desc, leave=False)
 
         for file in itera:
-            self.unpack_file(tikr, file, complete=complete, document_type=document_type, force=force)
+            self.unpack_file(tikr, file, complete=complete, document_type=kwargs.get('document_type', '10-Q'), force=force)
  
         # Metadata tags to autoskip this bulk unpack later
         self.metadata[tikr]['attrs']['10q_unpacked'] = True
@@ -352,7 +352,7 @@ class edgar_downloader:
 
     def get_dates(self, tikr, document_type='10-Q'):
         out = dict()
-        for i in self.get_submissions(tikr, document_type=document_type):
+        for i in self.get_submissions(tikr, document_type=get('document_type', '10-Q')):
             date_str = self.metadata[tikr]['submissions'][i]['attrs'].get(
                     'FILED AS OF DATE', None)
             if date_str is None:
@@ -364,14 +364,40 @@ class edgar_downloader:
         Return the filing submission txt closest to provided date
     """
     def get_nearest_date_filename(
-            self, tikr, date, return_date=False, prefer_recent=True, document_type='10-Q'):
+            self, tikr, date, return_date=False, prefer_recent=True, **kwargs):
+        """
+
+
+        Parameters
+        ---------
+        webelements: list[WebElement]
+            list of span WebElement
+        annotations: dict
+            Value is the list of annotation webelement. Key is the span webelement.
+        in_table: list[Boolean]
+            list of boolean. If (True), then it is table related webelement.
+        save: bool, default=False
+            if (True), then store the Dataframe into a CSV file.
+        out_path: str, default='sample.csv'
+            if save is True, then store the output into CSV file at out_path.
+
+        Returns
+        --------
+        DataFrame
+            Each row corresponds to one text field. Rows are not unique, one is generated for each iXBRL annotation on that text field.
+
+
+        Notes
+        ------
+        Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
+        """
         # Provide AAAABBCC format (Year, Month, Day) with 0 padding
         if type(date) is str:
             assert len(date) == 8, 'String format wrong'
             date = datetime.datetime.strptime(date, '%Y%m%d')
         assert type(date) is datetime.datetime, 'Wrong format'
 
-        dates = self.get_dates(tikr, document_type=document_type)
+        dates = self.get_dates(tikr, document_type=kwargs.get('document_type', '10-Q'))
         keys = sorted(list(dates.keys()))
 
         if date in dates:
