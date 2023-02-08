@@ -165,11 +165,13 @@ class edgar_downloader:
 
         """
         # sec-edgar data save location for documents filing ticker
-        if kwargs.get('document_type', '10-Q') == '10-Q':
+        document_type = kwargs.get('document_type', 'all').strip('-').lower()
+        assert document_type in {'all', '10q', '8k')
+        if document_type == '10q':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
-        elif kwargs.get('document_type', '10-Q') == '8-K':
+        elif document_type == '8q':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
-        else:
+        elif document_type == 'all'
             d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
         return os.listdir(d_dir)
     
