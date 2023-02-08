@@ -239,12 +239,15 @@ class edgar_downloader:
         """
 
         # sec-edgar data save location for documents filing ticker
-        if complete == False:
-            if kwargs.get('document_type', '10-Q') =='10-Q':
-                d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
-            elif kwargs.get('document_type', '10-Q') == '8-K':
-                d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
-        else:
+        if complete:
+            kwargs['document_type'] = 'all';
+        document_type = kwargs.get('document_type', 'all').strip('-').lower()
+        assert document_type in {'all', '10q', '8k')
+        if document_type =='10q':
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
+        elif document_type == '8k':
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
+        elif document_type == 'all':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
 
 
@@ -326,7 +329,7 @@ class edgar_downloader:
 
 
         # Read each text submission dump for each quarterly filing
-        files = self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', '10-Q'))
+        files = self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', 'all'))
         print("files to unpack", files)
 
         itera = files
@@ -334,7 +337,7 @@ class edgar_downloader:
             itera = tqdm(itera, desc=desc, leave=False)
 
         for file in itera:
-            self.unpack_file(tikr, file, complete=complete, document_type=kwargs.get('document_type', '10-Q'), force=force)
+            self.unpack_file(tikr, file, complete=complete, document_type=kwargs.get('document_type', 'all'), force=force)
  
         # Metadata tags to autoskip this bulk unpack later
         self.metadata[tikr]['attrs']['10q_unpacked'] = True
@@ -345,7 +348,7 @@ class edgar_downloader:
 
     def get_dates(self, tikr,  **kwargs):
         out = dict()
-        for i in self.get_submissions(tikr, document_type=kwargs.get('document_type', '10-Q')):
+        for i in self.get_submissions(tikr, document_type=kwargs.get('document_type', 'all)):
             date_str = self.metadata[tikr]['submissions'][i]['attrs'].get(
                     'FILED AS OF DATE', None)
             if date_str is None:
@@ -381,7 +384,7 @@ class edgar_downloader:
             date = datetime.datetime.strptime(date, '%Y%m%d')
         assert type(date) is datetime.datetime, 'Wrong format'
 
-        dates = self.get_dates(tikr, document_type=kwargs.get('document_type', '10-Q'))
+        dates = self.get_dates(tikr, document_type=kwargs.get('document_type', 'all'))
         keys = sorted(list(dates.keys()))
 
         if date in dates:
