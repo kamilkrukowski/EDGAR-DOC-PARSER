@@ -106,7 +106,7 @@ class metadata_manager(dict):
         """
         meta = self[tikr]['submissions'][submission]['documents']
         for file in meta:
-            if meta[file]['type'] in ['8-K', 'FORM 8-K', '8K', 'FORM 8-K']:
+            if meta[file]['type'] in ['8-K', 'FORM 8-K', '8K']:
                 return meta[file]['filename']
         return None
 
