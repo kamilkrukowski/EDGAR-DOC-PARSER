@@ -21,12 +21,11 @@ class edgar_downloader:
 
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
-        sys.setrecursionlimit(10000)
+        sys.setrecursionlimit(10000000)
 
         # Always gets the path of the current file
         self.path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
         self.data_dir = os.path.join(self.path, data_dir)
-        
         if metadata is None:
             self.metadata = metadata_manager(data_dir=data_dir);
         else:
@@ -153,7 +152,7 @@ class edgar_downloader:
         f.save(self.raw_dir)
         warnings.simplefilter('default')
 
-    def get_unpackable_files(self, tikr: str):
+    def get_unpackable_files(self, tikr: str, **kwargs):
         """
             Get list of targets for unpack_file func
             
@@ -161,12 +160,22 @@ class edgar_downloader:
             ---------
             tikr: str
                 a company identifier to query 
+            document_type: str
+                document type to unpack (10-Q, 8-K, or all)
+
         """
-        # sec-edgar data save location for 10-Q filing ticker
-        d_dir = os.path.join(self.raw_dir,f'{tikr}', '10-Q')
+        # sec-edgar data save location for documents filing ticker
+        document_type = kwargs.get('document_type', 'all').strip('-').lower()
+        assert document_type in {'all', '10q', '8k')
+        if document_type == '10q':
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
+        elif document_type == '8q':
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
+        elif document_type == 'all'
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
         return os.listdir(d_dir)
     
-    def get_submissions(self, tikr):
+    def get_submissions(self, tikr, **kwargs):
         """
             Get list of submissions under tikr
             
@@ -174,9 +183,11 @@ class edgar_downloader:
             ---------
             tikr: str
                 a company identifier to query 
+            document_type: str
+                document type to unpack (10-Q, 8-K, or all)
         """
-        # sec-edgar data save location for 10-Q filing ticker
-        return [i.split('.txt')[0] for i in self.get_unpackable_files(tikr)]
+        # sec-edgar data save location for filing ticker
+        return [i.split('.txt')[0] for i in self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', '10-Q'))]
 
     """
         Private utility, parses SEC submission dump into components
@@ -198,8 +209,8 @@ class edgar_downloader:
 
         form_type = metadata[sequence]['type']
 
-        # Only Unpack 10-Q HTM if not complete unpacking
-        if not complete and form_type not in {"FORM 10-Q", "10-Q"}:
+        # Only Unpack 10-Q or 8-K HTM if not complete unpacking
+        if not complete and form_type not in {"FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}:
             return
 
         fname = metadata[sequence]['filename']
@@ -208,7 +219,7 @@ class edgar_downloader:
             f.write(doc.prettify())
             metadata[sequence]['processed'] = True
 
-    def unpack_file(self, tikr, file, complete=True, force=True):
+    def unpack_file(self, tikr, file, complete=True, force=True, **kwargs):
         """
             Processes raw data from one filing at one company;
                 See utility function for getting file names;
@@ -221,12 +232,24 @@ class edgar_downloader:
                 filing submission to unpack
             complete: bool
                 If False, only unpacks 10-Q, otherwise all documents.
+            document_type: str
+                document type to unpack (10-Q, 8-K, or all)
             force: bool
                 if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
         """
 
-        # sec-edgar data save location for 10-Q filing ticker
-        d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
+        # sec-edgar data save location for documents filing ticker
+        if complete:
+            kwargs['document_type'] = 'all';
+        document_type = kwargs.get('document_type', 'all').strip('-').lower()
+        assert document_type in {'all', '10q', '8k')
+        if document_type =='10q':
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
+        elif document_type == '8k':
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
+        elif document_type == 'all':
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
+
 
         content = None
         with open(os.path.join(d_dir, file), 'r', encoding='utf-8') as f:
@@ -273,13 +296,16 @@ class edgar_downloader:
 
     def _is_10q_unpacked(self, tikr):
         return self.metadata[tikr]['attrs'].get('10q_unpacked', False)
+
+    def _is_8k_unpacked(self, tikr):
+        return self.metadata[tikr]['attrs'].get('8k_unpacked', False)
     
     def _is_fully_unpacked(self, tikr):
         return self.metadata[tikr]['attrs'].get('complete_unpacked', False)
 
     def unpack_bulk(
-            self, tikr, complete=False, force=False,
-            loading_bar=False, desc='Inflating HTM'):
+            self, tikr, complete=True, force=False,
+            loading_bar=False, desc='Inflating HTM', **kwargs):
         """
             Processes all raw data from one company
             
@@ -288,7 +314,7 @@ class edgar_downloader:
             tikr: str
                 company ticker associated with unpacking
             complete: bool
-                If False, only unpacks 10-Q, otherwise all documents.
+                If False, only unpacks 10-Q or 8-K, otherwise all documents.
             force: bool
                 if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
             loading__bar: bool:
@@ -297,22 +323,21 @@ class edgar_downloader:
 
         # Early quitting conditions
         if not force:
-            if self._is_10q_unpacked(tikr):
+            if self._is_10q_unpacked(tikr) or self._is_8k_unpacked(tikr):
                 if not complete or self._is_fully_unpacked(tikr):
                             return
 
-        # sec-edgar data save location for 10-Q filing ticker
-        d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
 
         # Read each text submission dump for each quarterly filing
-        files = self.get_unpackable_files(tikr)
+        files = self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', 'all'))
+        print("files to unpack", files)
 
         itera = files
         if loading_bar:
             itera = tqdm(itera, desc=desc, leave=False)
 
         for file in itera:
-            self.unpack_file(tikr, file, complete=complete, force=force)
+            self.unpack_file(tikr, file, complete=complete, document_type=kwargs.get('document_type', 'all'), force=force)
  
         # Metadata tags to autoskip this bulk unpack later
         self.metadata[tikr]['attrs']['10q_unpacked'] = True
@@ -321,9 +346,9 @@ class edgar_downloader:
 
         self.metadata.save_tikr_metadata(tikr)
 
-    def get_dates(self, tikr):
+    def get_dates(self, tikr,  **kwargs):
         out = dict()
-        for i in self.get_submissions(tikr):
+        for i in self.get_submissions(tikr, document_type=kwargs.get('document_type', 'all)):
             date_str = self.metadata[tikr]['submissions'][i]['attrs'].get(
                     'FILED AS OF DATE', None)
             if date_str is None:
@@ -335,15 +360,31 @@ class edgar_downloader:
         Return the filing submission txt closest to provided date
     """
     def get_nearest_date_filename(
-            self, tikr, date, return_date=False, prefer_recent=True):
+            self, tikr, date, return_date=False, prefer_recent=True, **kwargs):
 
+        """
+        Gets the nearest date of the filename
+        
+        Parameters
+        ---------
+        tikr: str
+            a company identifier to query 
+        date: str
+            date in format  AAAABBCC format (Year, Month, Day) with 0 padding
+        return_date: bool
+
+        prefer_recent: bool
+        
+        document_type: str
+            document type to unpack (10-Q, 8-K, or all)
+        """
         # Provide AAAABBCC format (Year, Month, Day) with 0 padding
         if type(date) is str:
             assert len(date) == 8, 'String format wrong'
             date = datetime.datetime.strptime(date, '%Y%m%d')
         assert type(date) is datetime.datetime, 'Wrong format'
 
-        dates = self.get_dates(tikr)
+        dates = self.get_dates(tikr, document_type=kwargs.get('document_type', 'all'))
         keys = sorted(list(dates.keys()))
 
         if date in dates:
