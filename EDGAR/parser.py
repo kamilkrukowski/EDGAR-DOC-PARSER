@@ -11,7 +11,7 @@ import os
 import pickle as pkl
 import re
 import pathlib
-
+from html.parser import HTMLParser
 
 from .metadata_manager import metadata_manager
 
@@ -21,7 +21,83 @@ class edgar_parser:
         Main class for extracting information from HTML documents
 
     """
+    
+    
+    class Element:
+        """
+            Resembles some behavior of selenium.webelements
+            
+            Parameters
+            --------------
+            info: a set in structure ((tag, attributes),data, range) that contains information of the element. Attributes is in a format of list of set : `[(attr, value)]`
+            
+            attributes
+            ----------
+            text
+            tag_name
+            
+            method
+            ------
+            get_attribute(attr): attr as a string
+        """
+        def __init__(self, info):
+            self.text = info[1].strip()
+            self.tag_name = info[0][0]
+            self.range = info[2]
+            self.attributes = dict()
+            self.size = {'width': 0, 'height': 0}
+            self.location = {'x': 0, 'y': 0}
+            for attr_pair in info[0][1]:
+                self.attributes[attr_pair[0]] = attr_pair[1]
+            
+        def get_attribute(self, attr):
+            return self.attributes[attr]
+            
 
+    class Span_Parser(HTMLParser):
+        """
+            Class that handles the a string of span element
+            It can also be used on unannotated documents, and only the first output is used. 
+            
+            return
+            -------
+            root_element: the out most element's tag, attr, and text
+            found_annotation: a list of annotated documents
+        """
+        def __init__(self):
+            super(edgar_parser.Span_Parser, self).__init__()
+            self.tags_opened = []
+            self.found_annotation = [] #((tag, attr), data)
+            self.count = 0 # sanity check, should be len(span_txt)+1
+            self.span_txt = ''
+
+        def handle_starttag(self, tag, attrs):
+            attrs = tuple(attrs)
+            if not self.tags_opened: # the first tag
+                if self.count != 0:
+                    raise Exception("multiple root elements")
+                self.root_tag = (tag, attrs)
+            self.tags_opened += [(tag, attrs)]
+
+
+        def handle_endtag(self, tag):
+            self.tags_opened = self.tags_opened[:-1]
+            if not self.tags_opened: # no more tags opened. 
+                self.count += 1
+
+        def handle_data(self, data):
+            self.span_txt += data.replace('\n', '').strip() + ' '
+            if len(self.tags_opened) == 1:# # the out most tag
+                self.count += 1
+            if self.tags_opened[-1][0] in annot_tag: # in annotation element
+                self.found_annotation += [(self.tags_opened[-1], data.replace('\n', '').strip() + ' ')]
+                
+        # wrap things up into an element, and a list of elements of annotation elements
+        def wrapper(self):
+            root_element = (self.root_tag, self.span_txt)
+            return root_element, self.found_annotation            
+
+    
     
     def __init__(self, metadata: metadata_manager = None,
                  data_dir: str = 'edgar_downloads',
@@ -56,56 +132,121 @@ class edgar_parser:
             self.metadata = metadata_manager(data_dir=self.data_dir)
         else:
             self.metadata = metadata
+            
+        self._annotation_preparation()
 
-    # dumps page source of driver at fpath
-    def _save_driver_source(self, fpath: str) -> None:
-        with open(fpath, 'w') as f:
-            f.write(self._get_driver().page_source);
+    
+    
+    # generate search keys from tag name
+    def _annotation_preparation(self):
+        # the list of known tags
+        global annot_tag
+        annot_tag = ['ix:nonnumeric', 'ix:nonfraction']
+        global unannot_tag
+        unannot_tag = ['font']
+        
+        annot_search_pattern = []
+        unannot_search_pattern = []
+        for tag in annot_tag:
+            key = [0,1]
+            key[0] = '<' + tag
+            key[1] = '</' + tag+'>'
+            annot_search_pattern += [key]
+        for tag in unannot_tag:
+            key[0] = '<' + tag
+            key[1] = '</' + tag+'>'
+            unannot_search_pattern += [key]
+        self.span_search_key = ['<span', '</span>']
+        self.table_search_key = ['<table', '</table>']
+        self.annot_search_pattern = annot_search_pattern
+        self.unannot_search_pattern = unannot_search_pattern  
+        
+    """
+        helper function that finds element with given tags 
+        
+        Parameters
+        ---------
+        pattern -- a list of two strings, corresponding to start and end of an element, ex. '['<span', '</span>']'. The tags to be find and extract
+        txt -- the string taht containing some html code
 
-    def _get_driver(self):
-        if self.driver != None:
-            return self.driver
+        Returns
+        --------
+        A list of set of two numbers, representing the begining and end positon of an element. 
+    """
+    @staticmethod
+    def find_all_pattern(pattern, txt):
+        starts = list(re.finditer(pattern[0], txt))
+        ends = list(re.finditer(pattern[1], txt))
+        tag_finds = sorted(starts + ends, key = lambda x: x.span()[0])
 
-        fireFoxOptions = webdriver.FirefoxOptions()
-        if self.headless:
-            fireFoxOptions.add_argument("--headless")
-        self.driver = webdriver.Firefox(options=fireFoxOptions)
-        return self.driver
+        result = []
+        unmatched_start = []
+        for mo in tag_finds:
+            if mo.group()[1] != '/': # begin
+                unmatched_start += [mo]
+            else:
+                result += [(unmatched_start[-1], mo)]
+                unmatched_start = unmatched_start[:-1]
+
+        result1 = [(i[0].span()[0], i[1].span()[1]) for i in result]
+        return result1
+    
 
     """
-        Javascript Helper Functions executed on Driver
-            - border - draws color box around element
+    check whether strings in child_span is in any of the parent_span
+        Parameters
+        ---------
+        child_span, parent_span: a list of spans
+
+        Returns
+        --------
+        a list of boolean values
     """
-    def _draw_border(self, elem, color: str = 'red'):
-        self._get_driver().execute_script(
-            f"arguments[0].setAttribute(arguments[1], arguments[2])",
-            elem, "style",
-            f"padding: 1px; border: 2px solid {color}; display: inline-block")
+    @staticmethod
+    def labels_in_table(child_span, parent_span):
+        
+        # print('child_span:', child_span)
+        
+        child_in_parent = np.zeros(len(child_span))
+        l_p = 0
+        t_p = 0
+        label_len = len(child_span)
+        table_len = len(parent_span)
+        while l_p < label_len and t_p < table_len:
+            # check if it is in a table
+            if child_span[l_p][0] < parent_span[t_p][0]: #not in table yet
+                l_p += 1
+            elif child_span[l_p][0] < parent_span[t_p][1]: # in tabel
+                child_in_parent[l_p] = 1
+                l_p += 1
+            else:
+                t_p += 1
+        return child_in_parent
+        
 
     """
     Parses some documents (2001-2013) at least
 
-        driver_path -- path of file to open, or 'NONE' to keep current file
+        driver_path -- path of file to open 
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
     """
-    def _parse_unannotated_text(self, driver_path: str,
+    def _parse_unannotated_text(self, driver_path: str ,
                                 highlight: bool = False, save: bool = False, out_path: str = os.path.join('.','sample.htm')):
-
-        if driver_path is not None:
-            self._get_driver().get(driver_path)
-
-        found = self._get_driver().find_elements(By.TAG_NAME, 'font')
+        
+        with open(driver_path, encoding='utf-8') as file:
+            f = file.read()
+        found_range = []
+        found_range += self.find_all_pattern(self.unannot_search_pattern[0], f) 
+        found = []
+        for pair in found_range:
+            elem_parser = self.Span_Parser()
+            elem_parser.feed(f[pair[0]:pair[1]])
+            root, waste = elem_parser.wrapper()
+            found += [self.Element(root+(pair,))]
         # Filter symbols using 'hashmap' set
         forbidden = {i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'','**'})
         found = [i for i in found if i.text not in forbidden]
-
-        # Executes javascript in Firefox to make pretty borders around detected elements
-        if highlight:
-            for i in found:
-                self._draw_border(i, 'red');
-        if save:
-            self._save_driver_source(out_path)
 
         return found;
 
@@ -113,58 +254,49 @@ class edgar_parser:
         Get a driver filename uri path from data identifiers
     """
     def get_driver_path(self, tikr, submission, fname, partition='processed'):
-        return pathlib.Path(os.path.join(self.data_dir, partition, tikr, submission, fname)).absolute().as_uri()
+        # return pathlib.Path(os.path.join(self.data_dir, partition, tikr, submission, fname)).absolute().as_uri()
+        return pathlib.Path(os.path.join(self.data_dir, partition, tikr, submission, fname)).absolute()
 
     def _parse_annotated_text(self, driver_path: str, highlight: bool = False, save: bool = False, out_path: str = os.path.join('.','sample.htm')):
         """
         Parses some documents 2020+ at least
 
-            driver_path -- path of file to open, or 'NONE' to keep current file
+            driver_path -- path of file to open as a file path format
             highlight -- add red box around detected fields
             save -- save htm copy (with/without highlighting) to out_path
         """
-
-        if driver_path is not None:
-            self._get_driver().get(driver_path)
-
-        found = self._get_driver().find_elements(By.TAG_NAME, 'span')
-
-        # Filter symbols using 'hashmap' set
-        forbidden = {i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'','**'})
-        found = [i for i in found if i.text not in forbidden]
-
-
-        in_table = np.zeros(len(found), dtype=bool)
-
+        
+        with open(driver_path, encoding='utf-8') as file:
+            f = file.read()
+        found_range = []
+        found_range += self.find_all_pattern(self.span_search_key, f) 
+        found = []
         annotation_dict = dict()
-        for i in range(len(found)):
-
-            found_annotation = found[i].find_elements(By.TAG_NAME, 'ix:nonnumeric')
-            found_annotation += found[i].find_elements(By.TAG_NAME, 'ix:nonfraction')
-
-            current_element = found[i]
-            while True: # loop through ancestors
-                # # check if current is root
-                parent = self._get_driver().execute_script("return arguments[0].parentNode", current_element)
-                if parent.tag_name == 'body': # This is the 'root' of an html tree
-                    break;
-                if current_element.tag_name == 'table':
-                    in_table[i] = True
-                    break
-                current_element = parent
-
-            annotation_dict[found[i]] = found_annotation
-        # Executes javascript in Firefox to make pretty borders around detected elements
-        if highlight:
-            for i in found:
-                self._draw_border(i, 'red');
-                for j in annotation_dict[i]:
-                    self._draw_border(j, 'blue')
-
-        if save:
-            self._save_driver_source(out_path)
-
-        return found, annotation_dict, in_table;
+        for pair in found_range:
+            elem_parser = self.Span_Parser()
+            elem_parser.feed(f[pair[0]:pair[1]])
+            root, annotation_found = elem_parser.wrapper()
+            root_element = self.Element(root+(pair,))
+            found += [root_element]
+            annotation_element_found = [self.Element(i+('',)) for i in annotation_found]
+            annotation_dict[root_element] = annotation_element_found
+        forbidden = {i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'','**'})
+        
+        # print('f: \n', len(f))
+        # print('found before forbidden: ', found)
+        
+        
+        found = [i for i in found if i.text not in forbidden]
+        annotation_dict2 = dict()
+        for i in found:
+            annotation_dict2[i] = annotation_dict[i]
+            
+            
+        # print('found: ', found)
+        
+        table_range = self.find_all_pattern(self.table_search_key, f)
+        in_table = self.labels_in_table([i.range for i in found], table_range)
+        return found, annotation_dict, in_table
 
     """
         Return list of submissions names with annotated 10-Q forms
@@ -302,26 +434,27 @@ class edgar_parser:
         ------
 
         """
-        page_breaks = self._get_driver().find_elements(By.TAG_NAME, 'hr')
-        page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
-        # TODO add logic to handle this
-        if len(page_breaks) == 0:
-            warnings.warn("No page breaks detected in document", RuntimeWarning)
-            return None
-        page_number = 1
-        # get the range of y for page 1
-        page_location = {page_number: [0,page_breaks[0].location["y"]]}
-        next_page_start =  page_location[page_number][1]
+#         page_breaks = self._get_driver().find_elements(By.TAG_NAME, 'hr')
+#         page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
+#         # TODO add logic to handle this
+#         if len(page_breaks) == 0:
+#             warnings.warn("No page breaks detected in document", RuntimeWarning)
+#             return None
+#         page_number = 1
+#         # get the range of y for page 1
+#         page_location = {page_number: [0,page_breaks[0].location["y"]]}
+#         next_page_start =  page_location[page_number][1]
 
-        # get the range of y for page 2 to  n-1 (n is the last page)
-        for hr in page_breaks[1:]:
-            page_number += 1
-            page_location[page_number]= [next_page_start,hr.location["y"]]
-            next_page_start =  page_location[page_number][1]
-        # get the range of y for last page
-        page_number += 1
-        page_location[page_number]= [next_page_start,float('inf')]
-        return page_location
+#         # get the range of y for page 2 to  n-1 (n is the last page)
+#         for hr in page_breaks[1:]:
+#             page_number += 1
+#             page_location[page_number]= [next_page_start,hr.location["y"]]
+#             next_page_start =  page_location[page_number][1]
+#         # get the range of y for last page
+#         page_number += 1
+#         page_location[page_number]= [next_page_start,float('inf')]
+#         return page_location
+        return None
 
     def get_page_number(self, page_location: dict, element: WebElement) -> int:
         """
@@ -512,3 +645,4 @@ class edgar_parser:
     def __del__(self):
         if self.driver != None:
             self._get_driver().quit();
+            
