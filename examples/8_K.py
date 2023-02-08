@@ -72,17 +72,16 @@ if len(to_unpack) != 0:
         print(f"Unpacked: {str(list(set(tikrs) - set(to_unpack)))}")
     print(f"Unpacking... {str(to_unpack)}")
     for tikr in to_unpack:
-        loader.unpack_bulk(tikr, complete=False, loading_bar=True, desc=f"{tikr} :Inflating HTM", document_type='8-K')
+        loader.unpack_bulk(tikr, complete=False, force=True, loading_bar=True, desc=f"{tikr} :Inflating HTM", document_type='8-K')
 else:
     print('All downloaded 8-K files already unpacked')
 
 # Set up
 loader = EDGAR.downloader(data_dir=os.path.join('..','data'));
 loader.metadata.load_tikr_metadata(tikr)
-# Get nearest 10Q form path to above date
+# Get nearest 8K form path to above date
 dname = loader.get_nearest_date_filename(tikr, submission_date, document_type='8-K')
 fname = loader.metadata.get_8k_name(tikr, dname)
-# fname = loader.metadata.get_10q_name(tikr, dname)
 
 driver_path = pathlib.Path(os.path.join(loader.proc_dir, tikr, dname, fname)).as_uri()
 

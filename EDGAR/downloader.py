@@ -26,7 +26,6 @@ class edgar_downloader:
         # Always gets the path of the current file
         self.path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
         self.data_dir = os.path.join(self.path, data_dir)
-        
         if metadata is None:
             self.metadata = metadata_manager(data_dir=data_dir);
         else:
@@ -153,7 +152,7 @@ class edgar_downloader:
         f.save(self.raw_dir)
         warnings.simplefilter('default')
 
-    def get_unpackable_files(self, tikr: str, document_type= '10-Q'):
+    def get_unpackable_files(self, tikr: str, **kwargs):
         """
             Get list of targets for unpack_file func
             
@@ -166,15 +165,15 @@ class edgar_downloader:
 
         """
         # sec-edgar data save location for documents filing ticker
-        if document_type == '10-Q':
+        if kwargs.get('document_type', '10-Q') == '10-Q':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
-        elif document_type == '8-K':
+        elif kwargs.get('document_type', '10-Q') == '8-K':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
         else:
             d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
         return os.listdir(d_dir)
     
-    def get_submissions(self, tikr, document_type='10-Q'):
+    def get_submissions(self, tikr, **kwargs):
         """
             Get list of submissions under tikr
             
@@ -185,8 +184,8 @@ class edgar_downloader:
             document_type: str
                 document type to unpack (10-Q, 8-K, or all)
         """
-        # sec-edgar data save location for 10-Q filing ticker
-        return [i.split('.txt')[0] for i in self.get_unpackable_files(tikr, document_type=document_type)]
+        # sec-edgar data save location for filing ticker
+        return [i.split('.txt')[0] for i in self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', '10-Q'))]
 
     """
         Private utility, parses SEC submission dump into components
@@ -208,7 +207,7 @@ class edgar_downloader:
 
         form_type = metadata[sequence]['type']
 
-        # Only Unpack 10-Q HTM if not complete unpacking
+        # Only Unpack 10-Q or 8-K HTM if not complete unpacking
         if not complete and form_type not in {"FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}:
             return
 
@@ -218,7 +217,7 @@ class edgar_downloader:
             f.write(doc.prettify())
             metadata[sequence]['processed'] = True
 
-    def unpack_file(self, tikr, file, complete=True, document_type='10-Q', force=True):
+    def unpack_file(self, tikr, file, complete=True, force=True, **kwargs):
         """
             Processes raw data from one filing at one company;
                 See utility function for getting file names;
@@ -239,9 +238,9 @@ class edgar_downloader:
 
         # sec-edgar data save location for documents filing ticker
         if complete == False:
-            if document_type =='10-Q':
+            if kwargs.get('document_type', '10-Q') =='10-Q':
                 d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
-            elif document_type == '8-K':
+            elif kwargs.get('document_type', '10-Q') == '8-K':
                 d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
         else:
             d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
@@ -310,7 +309,7 @@ class edgar_downloader:
             tikr: str
                 company ticker associated with unpacking
             complete: bool
-                If False, only unpacks 10-Q, otherwise all documents.
+                If False, only unpacks 10-Q or 8-K, otherwise all documents.
             force: bool
                 if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
             loading__bar: bool:
@@ -323,14 +322,6 @@ class edgar_downloader:
                 if not complete or self._is_fully_unpacked(tikr):
                             return
 
-        # sec-edgar data save location for 10-Q filing ticker
-        # if complete == False:
-        #     if document_type == '10-Q':
-        #         d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
-        #     elif document_type == '8-K':
-        #         d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
-        # else:
-        #     d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
 
         # Read each text submission dump for each quarterly filing
         files = self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', '10-Q'))
@@ -350,9 +341,9 @@ class edgar_downloader:
 
         self.metadata.save_tikr_metadata(tikr)
 
-    def get_dates(self, tikr, document_type='10-Q'):
+    def get_dates(self, tikr,  **kwargs):
         out = dict()
-        for i in self.get_submissions(tikr, document_type=get('document_type', '10-Q')):
+        for i in self.get_submissions(tikr, document_type=kwargs.get('document_type', '10-Q')):
             date_str = self.metadata[tikr]['submissions'][i]['attrs'].get(
                     'FILED AS OF DATE', None)
             if date_str is None:
@@ -365,31 +356,22 @@ class edgar_downloader:
     """
     def get_nearest_date_filename(
             self, tikr, date, return_date=False, prefer_recent=True, **kwargs):
+
         """
-
-
+        Gets the nearest date of the filename
+        
         Parameters
         ---------
-        webelements: list[WebElement]
-            list of span WebElement
-        annotations: dict
-            Value is the list of annotation webelement. Key is the span webelement.
-        in_table: list[Boolean]
-            list of boolean. If (True), then it is table related webelement.
-        save: bool, default=False
-            if (True), then store the Dataframe into a CSV file.
-        out_path: str, default='sample.csv'
-            if save is True, then store the output into CSV file at out_path.
+        tikr: str
+            a company identifier to query 
+        date: str
+            date in format  AAAABBCC format (Year, Month, Day) with 0 padding
+        return_date: bool
 
-        Returns
-        --------
-        DataFrame
-            Each row corresponds to one text field. Rows are not unique, one is generated for each iXBRL annotation on that text field.
-
-
-        Notes
-        ------
-        Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
+        prefer_recent: bool
+        
+        document_type: str
+            document type to unpack (10-Q, 8-K, or all)
         """
         # Provide AAAABBCC format (Year, Month, Day) with 0 padding
         if type(date) is str:
