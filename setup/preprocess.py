@@ -62,13 +62,18 @@ def download_tikrs(tikrs):
             loader.query_server(tikr, force=args.force, filing_type=FilingType.FILING_10Q)
             time.sleep(5)
 
+def change_digit_to_alphanumeric( text):
+        for alph in '0123456789':
+            text = text.replace(alph, f"[ALPHANUMERIC]")
+        return text
+
 download_tikrs(tikrs);
 
 raw_data = list();
 label_map = set();
 for tikr in tikrs:
     # Unpack downloaded files into relevant directories
-    loader.unpack_bulk(tikr, loading_bar=True, force = args.force, desc=f"{tikr} :Inflating HTM")
+    loader.unpack_bulk(tikr, loading_bar=True, force = args.force, complete = False , document_type = "10-Q", desc=f"{tikr} :Inflating HTM")
     annotated_docs = parser.get_annotated_submissions(tikr, silent=True)
 
     if(args.demo):
@@ -168,9 +173,11 @@ np.savetxt(os.path.join(out_dir, 'labels.txt'), [label for label in selected_lab
         
 
 # Define your text data
-text_data = [i[0] for i in itertools.chain.from_iterable([i[0] for i in raw_data])]
+text_data = [change_digit_to_alphanumeric(i[0]) for i in itertools.chain.from_iterable([i[0] for i in raw_data])]
 tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
-tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000)
+#Define new special token for digit 
+new_special_tokens = ["[ALPHANUMERIC]"]
+tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000,new_special_tokens = new_special_tokens )
 
 # Save the trained tokenizer
 tokenizer.save_pretrained(out_dir);
