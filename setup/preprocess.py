@@ -64,7 +64,7 @@ def download_tikrs(tikrs):
 
 def change_digit_to_alphanumeric(text):
         for alph in '0123456789':
-            text = text.replace(alph, f"[ALPHANUMERIC]")
+            text = text.replace(alph, f"[ALPHANUMERIC] ")
         return text
 
 download_tikrs(tikrs);
