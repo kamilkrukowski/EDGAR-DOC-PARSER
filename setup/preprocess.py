@@ -64,7 +64,7 @@ def download_tikrs(tikrs):
 
 def change_digit_to_alphanumeric( text):
         for alph in '0123456789':
-            text = text.replace(alph, f" ["+str(alph)+"/ALPHANUMERIC] ")
+            text = text.replace(alph, f"[ALPHANUMERIC]")
         return text
 
 download_tikrs(tikrs);
@@ -176,7 +176,7 @@ np.savetxt(os.path.join(out_dir, 'labels.txt'), [label for label in selected_lab
 text_data = [change_digit_to_alphanumeric(i[0]) for i in itertools.chain.from_iterable([i[0] for i in raw_data])]
 tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
 #Define new special token for digit 
-new_special_tokens = ["["+str(alph)+"/ALPHANUMERIC]" for alph in '0123456789']
+new_special_tokens = ["[ALPHANUMERIC]"]
 tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000,new_special_tokens = new_special_tokens )
 
 # Save the trained tokenizer
