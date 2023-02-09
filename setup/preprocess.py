@@ -73,7 +73,7 @@ raw_data = list();
 label_map = set();
 for tikr in tikrs:
     # Unpack downloaded files into relevant directories
-    loader.unpack_bulk(tikr, loading_bar=True, force = args.force, desc=f"{tikr} :Inflating HTM")
+    loader.unpack_bulk(tikr, loading_bar=True, force = args.force, complete = False , document_type = "10-Q", desc=f"{tikr} :Inflating HTM")
     annotated_docs = parser.get_annotated_submissions(tikr, silent=True)
 
     if(args.demo):
