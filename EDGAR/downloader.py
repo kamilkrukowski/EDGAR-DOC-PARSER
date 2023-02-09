@@ -165,13 +165,13 @@ class edgar_downloader:
 
         """
         # sec-edgar data save location for documents filing ticker
-        document_type = kwargs.get('document_type', 'all').strip('-').lower()
-        assert document_type in {'all', '10q', '8k')
+        document_type = kwargs.get('document_type', 'all').replace('-',"").lower()
+        assert document_type in {'all', '10q', '8k'}
         if document_type == '10q':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
         elif document_type == '8q':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
-        elif document_type == 'all'
+        elif document_type == 'all':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
         return os.listdir(d_dir)
     
@@ -241,8 +241,8 @@ class edgar_downloader:
         # sec-edgar data save location for documents filing ticker
         if complete:
             kwargs['document_type'] = 'all';
-        document_type = kwargs.get('document_type', 'all').strip('-').lower()
-        assert document_type in {'all', '10q', '8k')
+        document_type = kwargs.get('document_type', 'all').replace('-', "").lower()
+        assert document_type in {'all', '10q', '8k'}
         if document_type =='10q':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
         elif document_type == '8k':
@@ -348,7 +348,7 @@ class edgar_downloader:
 
     def get_dates(self, tikr,  **kwargs):
         out = dict()
-        for i in self.get_submissions(tikr, document_type=kwargs.get('document_type', 'all)):
+        for i in self.get_submissions(tikr, document_type=kwargs.get('document_type', 'all')):
             date_str = self.metadata[tikr]['submissions'][i]['attrs'].get(
                     'FILED AS OF DATE', None)
             if date_str is None:
