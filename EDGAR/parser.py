@@ -51,7 +51,10 @@ class edgar_parser:
                 self.attributes[attr_pair[0]] = attr_pair[1]
             
         def get_attribute(self, attr):
-            return self.attributes[attr]
+            if attr in self.attributes:
+                return self.attributes[attr]
+            else:
+                return None
             
 
     class Span_Parser(HTMLParser):
