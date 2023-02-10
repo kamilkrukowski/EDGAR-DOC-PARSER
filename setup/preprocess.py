@@ -163,7 +163,7 @@ all_labels, counts = np.unique(label_data, return_counts=True)
 reindexing = list(reversed(np.argsort(counts)))
 # Create a dictionary of words and their counts
 label_counts = dict(zip(all_labels[reindexing], counts[reindexing]))
-# Create a list of words that meet the criteria
+        # Create a list of words that meet the criteria
 selected_labels = [label for label, count in label_counts.items() if count >= MIN_OCCUR_COUNT and count/all_labels_count >= MIN_OCCUR_PERC]
 
 # Remove all company specific systems predicted
