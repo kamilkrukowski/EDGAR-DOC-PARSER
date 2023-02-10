@@ -62,9 +62,9 @@ def download_tikrs(tikrs):
             loader.query_server(tikr, force=args.force, filing_type=FilingType.FILING_10Q)
             time.sleep(5)
 
-def change_digit_to_alphanumeric( text):
+def change_digit_to_alphanumeric(text):
         for alph in '0123456789':
-            text = text.replace(alph, f"[ALPHANUMERIC]")
+            text = text.replace(alph, f" [ALPHANUMERIC] ")
         return text
 
 download_tikrs(tikrs);
@@ -163,7 +163,7 @@ all_labels, counts = np.unique(label_data, return_counts=True)
 reindexing = list(reversed(np.argsort(counts)))
 # Create a dictionary of words and their counts
 label_counts = dict(zip(all_labels[reindexing], counts[reindexing]))
-# Create a list of words that meet the criteria
+        # Create a list of words that meet the criteria
 selected_labels = [label for label, count in label_counts.items() if count >= MIN_OCCUR_COUNT and count/all_labels_count >= MIN_OCCUR_PERC]
 
 # Remove all company specific systems predicted
@@ -177,6 +177,7 @@ text_data = [change_digit_to_alphanumeric(i[0]) for i in itertools.chain.from_it
 tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
 #Define new special token for digit 
 new_special_tokens = ["[ALPHANUMERIC]"]
+
 tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000,new_special_tokens = new_special_tokens )
 
 # Save the trained tokenizer
