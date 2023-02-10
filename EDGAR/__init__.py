@@ -33,8 +33,6 @@ class EDGAR_singleton:
         return self.parser 
 
 
-    
-
 edgar_global = EDGAR_singleton()
 
 metadata = edgar_global._get_metadata
