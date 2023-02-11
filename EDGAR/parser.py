@@ -56,7 +56,6 @@ class edgar_parser:
             else:
                 return None
             
-
     class Span_Parser(HTMLParser):
         """
             Class that handles the a string of span element
@@ -98,9 +97,8 @@ class edgar_parser:
         # wrap things up into an element, and a list of elements of annotation elements
         def wrapper(self):
             root_element = (self.root_tag, self.span_txt)
-            return root_element, self.found_annotation            
-
-    
+            return root_element, self.found_annotation  
+            
     
     def __init__(self, metadata: metadata_manager = None,
                  data_dir: str = 'edgar_downloads',
@@ -483,13 +481,8 @@ class edgar_parser:
         """
         if page_location is None:
             return None, None
+    
 
-        element_y = element.location["y"]
-        for i in range(1,len(page_location)+1):
-            if( element_y >= page_location[i][0] and element_y <=page_location[i][1]):
-                return i, element_y - page_location[i][0]
-
-        return None, None
     #-----------get attribute-------------------------------------------------#
     """
     text - the text value of the annotated label (e.g. 10-Q)
@@ -538,17 +531,15 @@ class edgar_parser:
         Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
         """
         COLUMN_NAMES = ["anno_text","found_index", "span_text", "anno_index", "anno_name","anno_id", "anno_format","anno_ix_type",'anno_unitref',"anno_decimals", "anno_contextref","page_number","x","y", "height", "width","is_annotated","in_table"]
+        page_location = None # page number and y range
         df = pd.DataFrame(columns=COLUMN_NAMES)
-        page_location = self.find_page_location() # page number and y range
-
-        number_Null = 0
+        
         for i, elem in enumerate(webelements):
+
             default_dict = {attribute: None for attribute in COLUMN_NAMES}
-            page_num, y = self.get_page_number(page_location, elem)
-            if(page_num == None):
-                number_Null += 0
-                continue
-            default_dict.update({"anno_text": None, "found_index": int(i),"span_text": elem.text, "is_annotated": 0,
+            page_num, y = None, None 
+
+            default_dict.update({"anno_text": None, "found_index": int(i), "span_text": elem.text, "is_annotated": 0,
                                 "x": elem.location["x"], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"], "in_table": int(in_table[i])})
 
@@ -561,9 +552,9 @@ class edgar_parser:
                 val = {"anno_index": j , "x": annotation.location["x"], "is_annotated": 1,
                         "anno_text": annotation.text, "anno_ix_type": annotation.tag_name}
 
-                val["page_number"], val["y"] = self.get_page_number(page_location, annotation)
+                val["page_number"], val["y"] = None, None
 
-                for _attr in ["name", "id", "contextref", "decimals", "format", "unitref"]:
+                for _attr in ["name", "id", "contextref"] :
                     val[f"anno_{_attr}"] = annotation.get_attribute(_attr)
                 for _size in ["width", "height"]:
                     val[_size] = annotation.size[_size]
@@ -586,8 +577,8 @@ class edgar_parser:
             """
 
         df = df.astype({"in_table":bool,"is_annotated":bool})
-        df.drop_duplicates(subset = ["anno_text","page_number","anno_id"], keep="last", inplace=True)
-        #print("num. cannot find page number",number_Null)
+        df.drop_duplicates(subset = ["anno_text","anno_id"], keep="last", inplace=True)
+
         if(save):
             df.to_csv(out_path)
         return df
