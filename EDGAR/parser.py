@@ -51,7 +51,10 @@ class edgar_parser:
                 self.attributes[attr_pair[0]] = attr_pair[1]
             
         def get_attribute(self, attr):
-            return self.attributes[attr]
+            if attr in self.attributes:
+                return self.attributes[attr]
+            else:
+                return None
             
 
     class Span_Parser(HTMLParser):
@@ -417,76 +420,7 @@ class edgar_parser:
     def get_element_info(self, element: WebElement)-> list():
         return {"text": element.text,"location": element.location, "size": element.size}
 
-    def find_page_location(self) -> dict:
-        """
 
-
-        Parameters
-        ---------
-
-        Returns
-        --------
-        Dictionary
-            a dictionary based on page number. The value of the dictionary is the y-coordinates of the corresponding page.
-
-
-        Notes
-        ------
-
-        """
-#         page_breaks = self._get_driver().find_elements(By.TAG_NAME, 'hr')
-#         page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
-#         # TODO add logic to handle this
-#         if len(page_breaks) == 0:
-#             warnings.warn("No page breaks detected in document", RuntimeWarning)
-#             return None
-#         page_number = 1
-#         # get the range of y for page 1
-#         page_location = {page_number: [0,page_breaks[0].location["y"]]}
-#         next_page_start =  page_location[page_number][1]
-
-#         # get the range of y for page 2 to  n-1 (n is the last page)
-#         for hr in page_breaks[1:]:
-#             page_number += 1
-#             page_location[page_number]= [next_page_start,hr.location["y"]]
-#             next_page_start =  page_location[page_number][1]
-#         # get the range of y for last page
-#         page_number += 1
-#         page_location[page_number]= [next_page_start,float('inf')]
-#         return page_location
-        return None
-
-    def get_page_number(self, page_location: dict, element: WebElement) -> int:
-        """
-
-
-        Parameters
-        ---------
-        page_location: dict
-            a dictionary based on page number. The value is the y-coordinates of the corresponding page. 
-        element: WebElement
-            a WebElement to query
-
-        Returns
-        --------
-        integer
-            page number
-        integer
-            new y-coordinate of the webelement relative to the y-coordinate of the page
-            
-        Notes
-        ------
-        
-        """
-        if page_location is None:
-            return None, None
-
-        element_y = element.location["y"]
-        for i in range(1,len(page_location)+1):
-            if( element_y >= page_location[i][0] and element_y <=page_location[i][1]):
-                return i, element_y - page_location[i][0]
-
-        return None, None
     #-----------get attribute-------------------------------------------------#
     """
     text - the text value of the annotated label (e.g. 10-Q)
@@ -535,17 +469,15 @@ class edgar_parser:
         Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
         """
         COLUMN_NAMES = ["anno_text","found_index", "span_text", "anno_index", "anno_name","anno_id", "anno_format","anno_ix_type",'anno_unitref',"anno_decimals", "anno_contextref","page_number","x","y", "height", "width","is_annotated","in_table"]
+        page_location = None # page number and y range
         df = pd.DataFrame(columns=COLUMN_NAMES)
-        page_location = self.find_page_location() # page number and y range
-
-        number_Null = 0
+        
         for i, elem in enumerate(webelements):
+
             default_dict = {attribute: None for attribute in COLUMN_NAMES}
-            page_num, y = self.get_page_number(page_location, elem)
-            if(page_num == None):
-                number_Null += 0
-                continue
-            default_dict.update({"anno_text": None, "found_index": int(i),"span_text": elem.text, "is_annotated": 0,
+            page_num, y = None, None 
+
+            default_dict.update({"anno_text": None, "found_index": int(i), "span_text": elem.text, "is_annotated": 0,
                                 "x": elem.location["x"], "y": y, "page_number": page_num,
                                 "height": elem.size["height"], "width": elem.size["width"], "in_table": int(in_table[i])})
 
@@ -558,9 +490,9 @@ class edgar_parser:
                 val = {"anno_index": j , "x": annotation.location["x"], "is_annotated": 1,
                         "anno_text": annotation.text, "anno_ix_type": annotation.tag_name}
 
-                val["page_number"], val["y"] = self.get_page_number(page_location, annotation)
+                val["page_number"], val["y"] = None, None
 
-                for _attr in ["name", "id", "contextref", "decimals", "format", "unitref"]:
+                for _attr in ["name", "id", "contextref"] :
                     val[f"anno_{_attr}"] = annotation.get_attribute(_attr)
                 for _size in ["width", "height"]:
                     val[_size] = annotation.size[_size]
@@ -583,8 +515,8 @@ class edgar_parser:
             """
 
         df = df.astype({"in_table":bool,"is_annotated":bool})
-        df.drop_duplicates(subset = ["anno_text","page_number","anno_id"], keep="last", inplace=True)
-        #print("num. cannot find page number",number_Null)
+        df.drop_duplicates(subset = ["anno_text","anno_id"], keep="last", inplace=True)
+
         if(save):
             df.to_csv(out_path)
         return df
