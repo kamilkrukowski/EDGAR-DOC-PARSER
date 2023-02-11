@@ -56,7 +56,6 @@ class edgar_parser:
             else:
                 return None
             
-
     class Span_Parser(HTMLParser):
         """
             Class that handles the a string of span element
@@ -98,9 +97,8 @@ class edgar_parser:
         # wrap things up into an element, and a list of elements of annotation elements
         def wrapper(self):
             root_element = (self.root_tag, self.span_txt)
-            return root_element, self.found_annotation            
-
-    
+            return root_element, self.found_annotation  
+            
     
     def __init__(self, metadata: metadata_manager = None,
                  data_dir: str = 'edgar_downloads',
@@ -420,6 +418,70 @@ class edgar_parser:
     def get_element_info(self, element: WebElement)-> list():
         return {"text": element.text,"location": element.location, "size": element.size}
 
+    def find_page_location(self) -> dict:
+        """
+
+
+        Parameters
+        ---------
+
+        Returns
+        --------
+        Dictionary
+            a dictionary based on page number. The value of the dictionary is the y-coordinates of the corresponding page.
+
+
+        Notes
+        ------
+
+        """
+#         page_breaks = self._get_driver().find_elements(By.TAG_NAME, 'hr')
+#         page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
+#         # TODO add logic to handle this
+#         if len(page_breaks) == 0:
+#             warnings.warn("No page breaks detected in document", RuntimeWarning)
+#             return None
+#         page_number = 1
+#         # get the range of y for page 1
+#         page_location = {page_number: [0,page_breaks[0].location["y"]]}
+#         next_page_start =  page_location[page_number][1]
+
+#         # get the range of y for page 2 to  n-1 (n is the last page)
+#         for hr in page_breaks[1:]:
+#             page_number += 1
+#             page_location[page_number]= [next_page_start,hr.location["y"]]
+#             next_page_start =  page_location[page_number][1]
+#         # get the range of y for last page
+#         page_number += 1
+#         page_location[page_number]= [next_page_start,float('inf')]
+#         return page_location
+        return None
+
+    def get_page_number(self, page_location: dict, element: WebElement) -> int:
+        """
+
+
+        Parameters
+        ---------
+        page_location: dict
+            a dictionary based on page number. The value is the y-coordinates of the corresponding page. 
+        element: WebElement
+            a WebElement to query
+
+        Returns
+        --------
+        integer
+            page number
+        integer
+            new y-coordinate of the webelement relative to the y-coordinate of the page
+            
+        Notes
+        ------
+        
+        """
+        if page_location is None:
+            return None, None
+    
 
     #-----------get attribute-------------------------------------------------#
     """
