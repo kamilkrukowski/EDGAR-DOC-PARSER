@@ -1,6 +1,8 @@
 """
     Definitions of EDGAR package
 """
+import warnings
+
 from . import metadata_manager as edgar_metadata
 from . import downloader as edgar_downloader
 from . import parser as edgar_parser
@@ -18,6 +20,8 @@ class EDGAR_singleton:
         if self.metadata is None or not reuse:
             self.metadata = edgar_metadata.metadata_manager(*args, **kwargs)
             self.metadatas[self.metadata.data_dir] = self.metadata
+            if len(self.metadatas) > 1:
+                warnings.warn("multiple data directories passed during initialization", RuntimeWarning)
         return self.metadatas[kwargs['data_dir']]
     
     def _get_downloader(self,reuse: bool = True, *args, **kwargs):
