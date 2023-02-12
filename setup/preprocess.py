@@ -34,10 +34,10 @@ loader = EDGAR.downloader(data_dir=data_dir);
 metadata = EDGAR.metadata(data_dir=data_dir)
 parser = EDGAR.parser(data_dir=data_dir)
 
-
+curr_dir = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
 
 # List of companies to process
-tikrs = open(os.path.join(loader.path, 'tickers.txt')).read().strip()
+tikrs = open(os.path.join(curr_dir, 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 if args.demo:
     tikrs = ['nflx']
