@@ -24,8 +24,7 @@ class edgar_downloader:
         sys.setrecursionlimit(10000000)
 
         # Always gets the path of the current file
-        self.path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-        self.data_dir = os.path.join(self.path, data_dir)
+        self.data_dir = data_dir
         if metadata is None:
             self.metadata = metadata_manager(data_dir=data_dir);
         else:

@@ -8,7 +8,6 @@ import time
 import itertools
 import argparse
 import sys; 
-sys.path.append('..')
 
 
 from tqdm.auto import tqdm
@@ -29,10 +28,13 @@ parser.add_argument('-f', '--force', action='store_true')
 parser.add_argument('-nflx', '--demo', action='store_true')
 args = parser.parse_args()
 
-data_dir = "data"
+this_path = os.path.abspath(__file__)
+data_dir = os.path.join(this_path, "..", "data")
 loader = EDGAR.downloader(data_dir=data_dir);
 metadata = EDGAR.metadata(data_dir=data_dir)
 parser = EDGAR.parser(data_dir=data_dir)
+
+print(metadata.data_dir)
 
 curr_dir = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
 
