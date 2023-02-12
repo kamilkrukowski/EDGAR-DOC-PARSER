@@ -9,14 +9,16 @@ from . import parser as edgar_parser
 class EDGAR_singleton:
     
     def __init__(self):
-        self.metadata = None
+        self.metadatas = {}
         self.downloader = None
         self.parser = None
+
     
     def _get_metadata(self,reuse: bool = True, *args, **kwargs):
         if self.metadata is None or not reuse:
             self.metadata = edgar_metadata.metadata_manager(*args, **kwargs)
-        return self.metadata
+            self.metadatas[self.metadata.data_dir] = self.metadata
+        return self.metadatas[kwargs['data_dir']]
     
     def _get_downloader(self,reuse: bool = True, *args, **kwargs):
         if 'metadata' not in kwargs:
