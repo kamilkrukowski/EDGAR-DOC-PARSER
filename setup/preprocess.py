@@ -34,8 +34,6 @@ loader = EDGAR.downloader(data_dir=data_dir);
 metadata = EDGAR.metadata(data_dir=data_dir)
 parser = EDGAR.parser(data_dir=data_dir)
 
-print(metadata.data_dir)
-
 curr_dir = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
 
 # List of companies to process
