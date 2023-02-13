@@ -30,7 +30,7 @@ parser.add_argument('-nflx', '--demo', action='store_true')
 args = parser.parse_args()
 
 this_path = os.path.abspath(__file__)
-data_dir = os.path.abspath(os.path.join(this_path, os.pardir, os.pardir, "data"))
+data_dir = os.path.join(os.pardir, 'data')
 
 metadata = EDGAR.metadata(data_dir=data_dir)
 loader = EDGAR.downloader(data_dir=data_dir);
