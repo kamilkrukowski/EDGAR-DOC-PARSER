@@ -22,7 +22,7 @@ class EDGAR_singleton:
         self.metadatas = None
         self.downloader = None
         self.parser = None
- 
+
     def _get_metadata(self,reuse: bool = True, *args, **kwargs):
         kwargs['data_dir'] = _relative_to_abs_path(kwargs.get('data_dir', 'EDGAR_data'))                                            
 
