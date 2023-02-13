@@ -100,8 +100,8 @@ class edgar_parser:
             return root_element, self.found_annotation  
             
     
-    def __init__(self, metadata: metadata_manager = None,
-                 data_dir: str = 'edgar_downloads',
+    def __init__(self, metadata: metadata_manager,
+                 data_dir: str,
                  headless: bool = True):
         """
 
@@ -126,7 +126,7 @@ class edgar_parser:
         self.driver = None
         self.headless = headless
 
-        self.data_dir = self.data_dir
+        self.data_dir = data_dir
 
         if metadata is None:
             self.metadata = metadata_manager(data_dir=self.data_dir)
