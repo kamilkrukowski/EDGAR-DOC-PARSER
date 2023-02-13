@@ -7,8 +7,6 @@ import os
 import time
 import itertools
 import argparse
-import sys; 
-sys.path.append('../src/')
 
 
 from tqdm.auto import tqdm
