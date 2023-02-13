@@ -1,5 +1,7 @@
 import os
 import math
+import sys
+sys.path.append('../src')
 
 
 import torch
@@ -11,45 +13,39 @@ import numpy as np
 from transformers import BertTokenizerFast, Trainer
 from tqdm.auto import tqdm
 
+
+import EDGAR
+
 class NLPTrainer(Trainer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    self.loss_fn = 
     def compute_loss(self, model, inputs):
         mask = inputs.get('loss_mask');
         x = inputs.get('input_ids');
         y = inputs.get('y');
         y_hat = self.model(x);
-        custom_loss = self.loss_fn(y, y_hat)
+        custom_loss = F.binary_cross_entropy(y, y_hat, reduction=None);
+        custom_loss = custom_loss * mask
+        custom_loss = custom_loss.sum();
         return custom_loss
 
 class EDGARDataset(Dataset):
-    def __init__(self, setting_dir_name, metadata, parser, **kwargs):
+    def __init__(self, setting_dir_name, **kwargs):
         super(Dataset).__init__()
 
-        data_dir
-
-        self.x = []
-        self.y = []
-        self.masks = []
-
-        if type(tikrs) is str:
-            tikrs = [tikrs];
-        
         prep_dir = os.path.join(data_dir, "dataloader_cache", setting_dir_name)
         label_fpath = os.path.join(prep_dir, 'labels.txt')
-        label_list = np.loadtxt(label_fpath)
+        label_list = np.loadtxt(label_fpath, dtype=str)
         
         self.label_map = {y:i+1 for i,y in enumerate(label_list)}
 
         self.tokenizer = BertTokenizerFast.from_pretrained(prep_dir)
 
-        sparse_weight = kwargs.get('sparse_weight', 0.5)
-        non_sparse_weight = 1.0-sparse_weight
+        self.inputs = 
         
     def __len__(self):
-        return self._len
+        return len(self.inputs);
 
     def __getitem__(self, idx):
         x = self.x[idx]
@@ -96,15 +92,17 @@ NUM_WORKERS = 2
 
 # EDGAR opts
 
-data_dir = 'data'
+data_dir = os.path.join('..','data')
+setting_dir_name = 'DEFAULT'
 metadata = EDGAR.metadata(data_dir=data_dir)
+print(metadata.data_dir)
 
 # List of companies to process
-tikrs = open(os.path.join(metadata.path, 'tickers.txt')).read().strip()
+tikrs = open(os.path.join('..', 'tickers.txt')).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 tikrs = ['nflx']
 
-dataset = EDGARDataset(tikrs=tikrs, debug=True, max_sentence_len=100, sparse_weight=0.1)
+dataset = EDGARDataset(setting_dir_name)
 label_map = dataset.label_map;
 
 d_len = len(dataset)
