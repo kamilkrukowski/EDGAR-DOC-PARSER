@@ -1,0 +1,29 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "EDGAR_Document_Parser"
+version = "0.0.3"
+authors = [
+  { name="Nachuan Zhao", email="Nachuan.Zhao@tufts.edu" },
+  { name="Yiting Li", email="Yiting.Li@tufts.edu" },
+  { name="Kamil Krukowski", email="Kamil.Krukowski@tufts.edu" },
+  { name="Kelsey Yew", email="Kelsey.Yew@tufts.edu" },
+  
+]
+description = "We aim to democratize access to SEC data through a novel python package pipeline. The pipeline will extract, load, and parse valuable information in the EDGAR database. This will allow downstream NLP tasks to gather meaningful insights."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/kamilkrukowski/FinDocNLP"
+"Bug Tracker" = "https://github.com/kamilkrukowski/FinDocNLP/issues"

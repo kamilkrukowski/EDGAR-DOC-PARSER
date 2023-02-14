@@ -12,16 +12,14 @@ class metadata_manager(dict):
         super(metadata_manager, self).__init__(*arg, **kw)
         
         # Always gets the path of the current file
-        self.path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-
-        self.data_dir = os.path.join(self.path, data_dir)
+        self.data_dir = data_dir 
         
         self.meta_dir = os.path.join(self.data_dir, 'metadata')
         if not os.path.exists(self.meta_dir):
             os.system('mkdir -p ' + self.meta_dir)
         
         # Used by dataloader for API
-        self.keys_path = os.path.join(self.path, data_dir, 'metadata', '.keys.yaml')
+        self.keys_path = os.path.join(self.data_dir, 'metadata', '.keys.yaml')
         self.keys = None
         
     def load_keys(self):

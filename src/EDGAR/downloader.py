@@ -17,19 +17,19 @@ class edgar_downloader:
     """
         Class for querying SEC-EDGAR database for files
     """
-    def __init__(self, data_dir, metadata = None):
+    def __init__(self, data_dir, metadata):
 
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
         sys.setrecursionlimit(10000000)
 
         # Always gets the path of the current file
-        self.path = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
-        self.data_dir = os.path.join(self.path, data_dir)
-        if metadata is None:
-            self.metadata = metadata_manager(data_dir=data_dir);
-        else:
-            self.metadata = metadata
+        self.data_dir = data_dir
+        # Download and processed directories
+        self.raw_dir = os.path.join(self.data_dir, 'raw')
+        self.proc_dir = os.path.join(self.data_dir, 'processed')
+
+        self.metadata = metadata
 
         # Loads keys
         self.metadata.load_keys();
@@ -53,9 +53,6 @@ class edgar_downloader:
         assert 'edgar_email' in self.metadata.keys, 'Set personal email'
         assert 'edgar_agent' in self.metadata.keys, 'Set personal name'
 
-        # Download and processed directories
-        self.raw_dir = os.path.join(self.path, self.data_dir, 'raw')
-        self.proc_dir = os.path.join(self.path, self.data_dir, 'processed')
 
     def _gen_tikr_metadata(self, tikr, documents, key):
         out = dict()
