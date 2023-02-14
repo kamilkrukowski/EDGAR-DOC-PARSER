@@ -7,6 +7,7 @@ import os
 import time
 import itertools
 import argparse
+import math
 
 
 from tqdm.auto import tqdm
@@ -20,7 +21,7 @@ import sys;
 sys.path.append('../src')
 import EDGAR
 
-MODEL_CONFIG_NAME = 'bert-base-uncased'
+MODEL_CONFIG_NAME = 'distilbert-base-uncased'
 VOCAB_SIZE = 14000
 
 # Command line magic for common use case to regenerate dataset
@@ -216,13 +217,19 @@ for document in raw_data:
         if num_labelled != 1:
             inputs.pop();
 
-keys = 'input_ids', 'x', 'y', 'loss_mask'
-out = [[i['x'].replace('\t', '    '), i['y_str']] for i in inputs]
-np.savetxt(os.path.join(out_dir, 'inputs.csv'), out, fmt='%s', delimiter='\t')
-b = np.loadtxt(os.path.join(out_dir, 'inputs.csv'), delimiter='\t', dtype=str)
+out = [[i['x'].replace('\t', '    '), label_map.get(i['y_str'], 0)] for i in inputs]
+np.random.shuffle(out);
+print(f"There are {len(out)} samples");
 
-import datasets
-e = os.path.join(out_dir, 'inputs.csv')
-features = datasets.Features({"x":datasets.Value(dtype='string'), "y": datasets.Value(dtype='string')})
-d = datasets.load_dataset('csv', data_files=e, column_names=list(features.keys()), features=features,
-        delimiter='\t', download_mode=datasets.DownloadMode.FORCE_REDOWNLOAD)
+d_len = len(out)
+tr_len = math.floor(0.8*d_len)
+va_len = math.floor(0.1*d_len)
+te_len = d_len - tr_len - va_len
+
+train_inputs = out[             :tr_len       ]
+val_inputs   = out[tr_len       :tr_len+va_len]
+test_inputs  = out[tr_len+va_len:             ]
+
+np.savetxt(os.path.join(out_dir, 'train_inputs.csv'), train_inputs, fmt='%s', delimiter='\t')
+np.savetxt(os.path.join(out_dir, 'val_inputs.csv'), val_inputs, fmt='%s', delimiter='\t')
+np.savetxt(os.path.join(out_dir, 'test_inputs.csv'), test_inputs, fmt='%s', delimiter='\t')
