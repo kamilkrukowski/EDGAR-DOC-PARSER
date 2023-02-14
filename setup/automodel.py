@@ -94,7 +94,7 @@ model = transformers.AutoModelForSequenceClassification.from_pretrained(
 # SET UP TRAINING PARAMETERS
 training_args = transformers.TrainingArguments(
     output_dir="test_trainer", evaluation_strategy="steps",
-    eval_steps=1, save_steps=10, logging_steps=10,
+    eval_steps=10, save_steps=10, logging_steps=10,
     per_device_train_batch_size=32,
     per_device_eval_batch_size=32)
 accuracy = evaluate.load("accuracy")

@@ -218,6 +218,10 @@ for document in raw_data:
             inputs.pop();
 
 out = [[i['x'].replace('\t', '    '), label_map.get(i['y_str'], 0)] for i in inputs]
+
+# Need to remove some UNK label tokens to prevent them dominating dataset
+out = [i for i in out if (i[1] != 0 or np.random.rand() < 0.016)]
+
 np.random.shuffle(out);
 print(f"There are {len(out)} samples");
 
