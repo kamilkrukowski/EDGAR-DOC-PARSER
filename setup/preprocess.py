@@ -11,14 +11,17 @@ import argparse
 
 from tqdm.auto import tqdm
 from secedgar import FilingType
-from transformers import BertTokenizerFast
+from transformers import BertTokenizerFast, AutoConfig
 import numpy as np
 import torch
 
 
+import sys;
+sys.path.append('../src')
 import EDGAR
 
-
+MODEL_CONFIG_NAME = 'bert-base-uncased'
+VOCAB_SIZE = 14000
 
 # Command line magic for common use case to regenerate dataset
 #   --force to overwrite outdated local files
@@ -34,10 +37,9 @@ metadata = EDGAR.metadata(data_dir=data_dir)
 loader = EDGAR.downloader(data_dir=data_dir);
 parser = EDGAR.parser(data_dir=data_dir)
 
-curr_dir = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
 
 # List of companies to process
-tikrs = open(os.path.join(curr_dir, 'tickers.txt')).read().strip()
+tikrs = open(os.path.abspath(os.path.join(__file__, os.pardir, os.pardir, 'tickers.txt'))).read().strip()
 tikrs = [i.split(',')[0].lower() for i in tikrs.split('\n')]
 if args.demo:
     tikrs = ['nflx']
@@ -169,11 +171,11 @@ np.savetxt(os.path.join(out_dir, 'labels.txt'), [label for label in selected_lab
 
 # Define your text data
 text_data = [change_digit_to_alphanumeric(i[0]) for i in itertools.chain.from_iterable([i[0] for i in raw_data])]
-tokenizer = BertTokenizerFast.from_pretrained('bert-large-cased')
+tokenizer = BertTokenizerFast.from_pretrained(MODEL_CONFIG_NAME)
 #Define new special token for digit 
 new_special_tokens = ["[ALPHANUMERIC]"]
 
-tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=10000,new_special_tokens = new_special_tokens )
+tokenizer = tokenizer.train_new_from_iterator(text_iterator=text_data, vocab_size=VOCAB_SIZE, new_special_tokens = new_special_tokens )
 
 # Save the trained tokenizer
 tokenizer.save_pretrained(out_dir);
@@ -188,12 +190,14 @@ for document in raw_data:
     elems, doc_id, tikr = document;
     for elem in elems:
         inputs.append(tokenizer(elem[0], return_tensors='pt', truncation=True))
+        inputs[-1]["x"] = elem[0]
         inputs[-1]["y"] = torch.zeros(num_labels+1).float(); #Extra one for unknown label
         num_labelled = 0;
         pos_weights = torch.zeros(num_labels+1).float()
         neg_weights = torch.ones(num_labels+1).float()
         
         for label in elem[1]:
+            inputs[-1]["y_str"] = label[0]
             label_idx = label_map.get(label[0], 0)
             if pos_weights[label_idx] == 1:
                 continue;
@@ -202,8 +206,23 @@ for document in raw_data:
             inputs[-1]["y"][label_idx] = 1
             
             num_labelled = num_labelled + 1
+            inputs[-1]["y_count"] = inputs[-1].get("y_count", 0) + 1
         
         pos_weights = pos_weights * (1-SPARSE_WEIGHT) / num_labelled
         neg_weights = neg_weights * (SPARSE_WEIGHT) / (num_labels + 1 - num_labelled)
         inputs[-1]["loss_mask"] = pos_weights + neg_weights
+    
+        # We only do single class classification
+        if num_labelled != 1:
+            inputs.pop();
 
+keys = 'input_ids', 'x', 'y', 'loss_mask'
+out = [[i['x'].replace('\t', '    '), i['y_str']] for i in inputs]
+np.savetxt(os.path.join(out_dir, 'inputs.csv'), out, fmt='%s', delimiter='\t')
+b = np.loadtxt(os.path.join(out_dir, 'inputs.csv'), delimiter='\t', dtype=str)
+
+import datasets
+e = os.path.join(out_dir, 'inputs.csv')
+features = datasets.Features({"x":datasets.Value(dtype='string'), "y": datasets.Value(dtype='string')})
+d = datasets.load_dataset('csv', data_files=e, column_names=list(features.keys()), features=features,
+        delimiter='\t', download_mode=datasets.DownloadMode.FORCE_REDOWNLOAD)
