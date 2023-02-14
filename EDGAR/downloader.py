@@ -7,6 +7,7 @@ import pathlib
 import warnings
 import datetime
 import sys
+import shutil
 from tqdm.auto import tqdm 
 
 
@@ -169,10 +170,11 @@ class edgar_downloader:
         assert document_type in {'all', '10q', '8k'}
         if document_type == '10q':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
-        elif document_type == '8q':
+        elif document_type == '8k':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
-        elif document_type == 'all':
-            d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
+        else:
+             d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
+       
         return os.listdir(d_dir)
     
     def get_submissions(self, tikr, **kwargs):
@@ -193,7 +195,7 @@ class edgar_downloader:
         Private utility, parses SEC submission dump into components
     """
     def __unpack_doc__(
-            self, doc, metadata, out_path, complete=True, force=True):
+            self, doc, metadata, out_path, force=True):
 
         seq = doc.find('sequence')
         i = 20
@@ -209,9 +211,9 @@ class edgar_downloader:
 
         form_type = metadata[sequence]['type']
 
-        # Only Unpack 10-Q or 8-K HTM if not complete unpacking
-        if not complete and form_type not in {"FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}:
-            return
+        # # Only Unpack 10-Q or 8-K HTM if not complete unpacking
+        # if not complete and form_type not in {"FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}:
+        #     return
 
         fname = metadata[sequence]['filename']
 
@@ -219,7 +221,7 @@ class edgar_downloader:
             f.write(doc.prettify())
             metadata[sequence]['processed'] = True
 
-    def unpack_file(self, tikr, file, complete=True, force=True, **kwargs):
+    def unpack_file(self, tikr, file, force=True, **kwargs):
         """
             Processes raw data from one filing at one company;
                 See utility function for getting file names;
@@ -239,8 +241,8 @@ class edgar_downloader:
         """
 
         # sec-edgar data save location for documents filing ticker
-        if complete:
-            kwargs['document_type'] = 'all';
+        # if complete:
+        #     kwargs['document_type'] = 'all';
         document_type = kwargs.get('document_type', 'all').replace('-', "").lower()
         assert document_type in {'all', '10q', '8k'}
         if document_type =='10q':
@@ -249,6 +251,7 @@ class edgar_downloader:
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
         elif document_type == 'all':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
+
 
 
         content = None
@@ -291,7 +294,7 @@ class edgar_downloader:
 
         for doc in documents:
             self.__unpack_doc__(
-                doc, metadata, out_path, complete=complete, force=force)
+                doc, metadata, out_path, force=force)
         self.metadata.save_tikr_metadata(tikr)
 
     def _is_10q_unpacked(self, tikr):
@@ -301,10 +304,10 @@ class edgar_downloader:
         return self.metadata[tikr]['attrs'].get('8k_unpacked', False)
     
     def _is_fully_unpacked(self, tikr):
-        return self.metadata[tikr]['attrs'].get('complete_unpacked', False)
+        return self.metadata[tikr]['attrs'].get('all_unpacked', False)
 
     def unpack_bulk(
-            self, tikr, complete=True, force=False,
+            self, tikr, force=False,
             loading_bar=False, desc='Inflating HTM', **kwargs):
         """
             Processes all raw data from one company
@@ -324,25 +327,45 @@ class edgar_downloader:
         # Early quitting conditions
         if not force:
             if self._is_10q_unpacked(tikr) or self._is_8k_unpacked(tikr):
-                if not complete or self._is_fully_unpacked(tikr):
+                if self._is_fully_unpacked(tikr):
                             return
 
 
         # Read each text submission dump for each quarterly filing
-        files = self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', 'all'))
-        print("files to unpack", files)
+        if kwargs.get('document_type', 'all') == 'all':
+            files_8k = self.get_unpackable_files(tikr, document_type='8-K')
+            files_10q = self.get_unpackable_files(tikr, document_type='10-Q')
 
-        itera = files
-        if loading_bar:
-            itera = tqdm(itera, desc=desc, leave=False)
+            itera1 = files_8k
+            itera2 = files_10q
 
-        for file in itera:
-            self.unpack_file(tikr, file, complete=complete, document_type=kwargs.get('document_type', 'all'), force=force)
+            if loading_bar:
+                itera1 = tqdm(itera1, desc=desc, leave=False)
+            for file in itera1:
+                self.unpack_file(tikr, file, document_type='8-K', force=force)
+            if loading_bar:
+                itera2 = tqdm(itera2, desc=desc, leave=False)
+            for file in itera2:
+                self.unpack_file(tikr, file, document_type='10-Q', force=force)
+
+        else:
+            files = self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', '10-Q'))
+            print("files to unpack", files)
+
+            itera = files
+            if loading_bar:
+                itera = tqdm(itera, desc=desc, leave=False)
+
+            for file in itera:
+                self.unpack_file(tikr, file, document_type=kwargs.get('document_type', 'all'), force=force)
  
         # Metadata tags to autoskip this bulk unpack later
-        self.metadata[tikr]['attrs']['10q_unpacked'] = True
-        if complete:
-            self.metadata[tikr]['attrs']['complete_unpacked'] = True
+        if kwargs.get('document_type', 'all') == '10-Q':
+            self.metadata[tikr]['attrs']['10q_unpacked'] = True
+        elif kwargs.get('document_type', 'all') == '8-K':
+            self.metadata[tikr]['attrs']['8k_unpacked'] = True
+        else:
+            self.metadata[tikr]['attrs']['all_unpacked'] = True
 
         self.metadata.save_tikr_metadata(tikr)
 
