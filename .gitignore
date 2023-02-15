@@ -4,6 +4,7 @@ api_keys.yaml
 data/*
 **/geckodriver.log
 outputs/*
+**/test_trainer
 
 **/_build
 **/lightning_logs
