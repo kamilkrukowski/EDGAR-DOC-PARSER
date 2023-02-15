@@ -235,11 +235,15 @@ class edgar_downloader:
 
         # Only Unpack 10-Q or 8-K HTM if not complete unpacking
 <<<<<<< HEAD
+<<<<<<< HEAD
         if form_type not in {"FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}:
 =======
         if not complete and form_type not in {
                 "FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}:
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+        if form_type not in {"FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}:
+>>>>>>> 2572f1c (updates to downloader)
             return
 
         fname = metadata[sequence]['filename']
@@ -269,6 +273,7 @@ class edgar_downloader:
 
         # sec-edgar data save location for documents filing ticker
 <<<<<<< HEAD
+<<<<<<< HEAD
         document_type = kwargs.get('document_type', '10-Q').replace('-', "").lower()
         assert document_type in {'10q', '8k'}
         if document_type =='10q':
@@ -288,6 +293,14 @@ class edgar_downloader:
         elif document_type == 'all':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', 'all-documents')
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+        document_type = kwargs.get('document_type', '10-Q').replace('-', "").lower()
+        assert document_type in {'10q', '8k'}
+        if document_type =='10q':
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
+        elif document_type == '8k':
+            d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
+>>>>>>> 2572f1c (updates to downloader)
 
         content = None
         with open(os.path.join(d_dir, file), 'r', encoding='utf-8') as f:
@@ -367,6 +380,7 @@ class edgar_downloader:
         if not force:
             if self._is_10q_unpacked(tikr) or self._is_8k_unpacked(tikr):
 <<<<<<< HEAD
+<<<<<<< HEAD
                 if self._is_fully_unpacked(tikr):
                             return
 
@@ -402,27 +416,44 @@ class edgar_downloader:
 =======
                 if not complete or self._is_fully_unpacked(tikr):
                     return
+=======
+                if self._is_fully_unpacked(tikr):
+                            return
+>>>>>>> 2572f1c (updates to downloader)
 
-        # Read each text submission dump for each quarterly filing
-        files = self.get_unpackable_files(
-            tikr, document_type=kwargs.get('document_type', 'all'))
-        print("files to unpack", files)
 
-        itera = files
-        if loading_bar:
-            itera = tqdm(itera, desc=desc, leave=False)
-
-        for file in itera:
-            self.unpack_file(
-                tikr,
-                file,
-                complete=complete,
-                document_type=kwargs.get(
-                    'document_type',
-                    'all'),
-                force=force)
-
+<<<<<<< HEAD
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+        # Read each text submission dump for each quarterly filing
+        if kwargs.get('document_type', 'all') == 'all':
+            files_8k = self.get_unpackable_files(tikr, document_type='8-K')
+            files_10q = self.get_unpackable_files(tikr, document_type='10-Q')
+
+            itera1 = files_8k
+            itera2 = files_10q
+
+            if loading_bar:
+                itera1 = tqdm(itera1, desc=desc, leave=False)
+            for file in itera1:
+                self.unpack_file(tikr, file, document_type='8-K', force=force)
+            if loading_bar:
+                itera2 = tqdm(itera2, desc=desc, leave=False)
+            for file in itera2:
+                self.unpack_file(tikr, file, document_type='10-Q', force=force)
+
+        else:
+            files = self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', '10-Q'))
+            print("files to unpack", files)
+
+            itera = files
+            if loading_bar:
+                itera = tqdm(itera, desc=desc, leave=False)
+
+            for file in itera:
+                self.unpack_file(tikr, file, document_type=kwargs.get('document_type', 'all'), force=force)
+ 
+>>>>>>> 2572f1c (updates to downloader)
         # Metadata tags to autoskip this bulk unpack later
         if kwargs.get('document_type', 'all') == '10-Q':
             self.metadata[tikr]['attrs']['10q_unpacked'] = True
