@@ -1,8 +1,10 @@
-# FinDocNLP
+# EDGAR-DOC-PARSER
 
 ## Documentation
 
-For more information read our documentation hosted [here.](https://kamilkrukowski.github.io/FinDocNLP)
+For more information read our documentation hosted [here.](https://kamilkrukowski.github.io/EDGAR-DOC-PARSER)
+
+We have a Test Server PyPi Page hosted [here.](https://test.pypi.org/project/EDGAR-Document-Parser/)
 
 ## Useful information
 
