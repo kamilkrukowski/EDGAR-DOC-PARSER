@@ -8,6 +8,8 @@ import warnings
 import datetime
 import sys
 from tqdm.auto import tqdm
+from time import sleep
+
 
 
 from .metadata_manager import metadata_manager
@@ -124,7 +126,10 @@ class edgar_downloader:
                 The latest filing date retrievable
             max_num_filings:
                 The maximum number of documents to retrieve. Retrieves all documents if set to `None`.
+            delay_time:
+                The time (in seconds) delayed at the beginning of this function. 
         """
+        sleep(kwargs.get('delay_time', 1))
 
         if self._is_downloaded(tikr) and not force:
             print('\talready downloaded')

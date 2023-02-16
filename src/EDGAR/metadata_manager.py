@@ -2,6 +2,8 @@ import os
 import pickle as pkl
 from yaml import load, CLoader as Loader, dump, CDumper as Dumper
 import warnings
+import urllib.request
+import json
 
 
 import numpy as np
@@ -146,8 +148,8 @@ class metadata_manager(dict):
     def file_was_processed(self, tikr: str, submission: str, filename: str):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
-        return self[tikr]['submissions'][submission]['documents'][sequence].get(
-            'features_pregenerated', False)
+        doc = self[tikr]['submissions'][submission]['documents'][sequence]
+        return doc.get('features_pregenerated', False)
 
     def save_tikrdataset(self, tikr_data, tikr: str):
         self[tikr]['HAS_DATASET'] = True
@@ -164,3 +166,24 @@ class metadata_manager(dict):
 
         data_path = os.path.join(self.data_dir, "array_dataset", f"{tikr}.pkl")
         return np.load(data_path)
+
+    def get_tikr_list(self):
+        """
+        Download tikr list if not exist to the data folder.
+            Parse into list of tickers
+
+        Returns
+        --------
+        tikr : list
+            a list of string tickers
+
+        """
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
+        tikr_fpath = os.path.join(self.data_dir, "company_tickers.json")
+        if not os.path.isfile(tikr_fpath):
+            urllib.request.urlretrieve(
+                "https://www.sec.gov/files/company_tickers.json", tikr_fpath)
+        with open(tikr_fpath) as json_file:
+            data = json.load(json_file)
+        return [data[i]['ticker'] for i in data]
