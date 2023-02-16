@@ -9,9 +9,14 @@ import datetime
 import sys
 from tqdm.auto import tqdm
 <<<<<<< HEAD
+<<<<<<< HEAD
 from time import sleep
 =======
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+from time import sleep
+
+>>>>>>> bba3ad0 (issue #116)
 
 
 

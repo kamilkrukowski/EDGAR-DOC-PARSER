@@ -33,11 +33,7 @@ class metadata_manager(dict):
         self.keys = load(open(self.keys_path, 'r'), Loader=Loader)
 
     def save_keys(self):
-<<<<<<< HEAD
         
-=======
-
->>>>>>> 01fa547 (autopep8 aggressive src)
         dump(self.keys, open(self.keys_path, 'w'), Dumper=Dumper)
 
     def load_tikr_metadata(self, tikr):
@@ -157,11 +153,7 @@ class metadata_manager(dict):
             val: bool):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
-<<<<<<< HEAD
         self._get_submission(tikr, submission)['documents'][sequence][
-=======
-        self[tikr]['submissions'][submission]['documents'][sequence][
->>>>>>> c6bbdd9 (Aggressive autopep8)
             'features_pregenerated'] = val
 
     def file_was_processed(self, tikr: str, submission: str, filename: str):
@@ -210,4 +202,27 @@ class metadata_manager(dict):
 
         data_path = os.path.join(self.data_dir, "array_dataset", f"{tikr}.pkl")
         return np.load(data_path)
+<<<<<<< HEAD
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+    
+    @staticmethod
+    def tikr_list():
+        """
+        Download tikr list if not exist to the data folder. Parse into list of tickers
+
+        Returns
+        --------
+        tikr : list
+            a list of string tickers
+            
+        """
+        if not os.path.exists('data'):
+            os.makedirs('data')
+        if not os.path.isfile('tikr.json'):
+            urllib.request.urlretrieve("https://www.sec.gov/files/company_tickers.json", os.path.join('data','tikr.json'))
+        with open('tikr.json') as json_file:
+            data = json.load(json_file)
+        return [data[i]['ticker'] for i in data]
+        
+>>>>>>> bba3ad0 (issue #116)
