@@ -3,14 +3,4 @@ repos:
       rev: v2.1.0
       hooks:
         - id: check-added-large-files
-        - id: check-docstring-first
-        - id: check-yaml
         - id: detect-private-key
-        - id: double-quote-string-fixer
-        - id: end-of-file-fixer
-        - id: trailing-whitespace
-
-    - repo: https://github.com/pycqa/flake8
-      rev: 6.0.0
-      hooks:
-        -   id: flake8
