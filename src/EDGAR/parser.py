@@ -392,12 +392,17 @@ class edgar_parser:
         assert submission in self.metadata[tikr]['submissions']
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         is_annotated = self.metadata[tikr]['submissions'][submission][
             'attrs'].get('is_10q_annotated', None)
 =======
         is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get(
             'is_10q_annotated', None)
 >>>>>>> 03dda06 (autopep8 aggressive src)
+=======
+        is_annotated = self.metadata[tikr]['submissions'][submission][
+            'attrs'].get('is_10q_annotated', None)
+>>>>>>> a222992 (Aggressive autopep8)
         if is_annotated is not None:
             return is_annotated
         else:
@@ -514,11 +519,16 @@ class edgar_parser:
                 for file in files:
                     if files[file].get('is_ims-document', False):
 <<<<<<< HEAD
+<<<<<<< HEAD
                         self.metadata[tikr]['submissions'][submission][
                             'attrs']['is_10q_annotated'] = False
 =======
                         self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
 >>>>>>> 03dda06 (autopep8 aggressive src)
+=======
+                        self.metadata[tikr]['submissions'][submission][
+                            'attrs']['is_10q_annotated'] = False
+>>>>>>> a222992 (Aggressive autopep8)
                         warnings.warn(
                             "Encountered unlabeled IMS-DOCUMENT",
                             RuntimeWarning)
