@@ -543,6 +543,7 @@ class edgar_parser:
         fname = os.path.join(self.data_dir, 'processed',
                              tikr, submission, _file)
 <<<<<<< HEAD
+<<<<<<< HEAD
         with open(fname, 'r', encoding = 'utf-8') as f:
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -550,6 +551,7 @@ class edgar_parser:
 =======
         with open(fname, 'r') as f:
 >>>>>>> 03dda06 (autopep8 aggressive src)
+<<<<<<< HEAD
 >>>>>>> 77ebce8 (autopep8 aggressive src)
             data = f.read()
         for tag in annotated_tag_list:
@@ -611,6 +613,11 @@ class edgar_parser:
         with open(fname, 'r') as f:
 =======
 >>>>>>> 76fe6ed (clean raw data)
+=======
+=======
+        with open(fname, 'r', encoding = 'utf-8') as f:
+>>>>>>> 58467d2 (clean raw data)
+>>>>>>> 02a2527 (clean raw data)
             data = f.read()
         for tag in annotated_tag_list:
             if re.search(tag, data):
@@ -981,6 +988,7 @@ class edgar_parser:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             silent: bool = False,
             **kwargs):
 =======
@@ -991,12 +999,21 @@ class edgar_parser:
             **kwargs):
 >>>>>>> 76fe6ed (clean raw data)
 =======
+=======
+>>>>>>> 02a2527 (clean raw data)
             silent: bool = False,
             **kwargs):
 =======
             silent: bool = False):
 >>>>>>> 03dda06 (autopep8 aggressive src)
+<<<<<<< HEAD
 >>>>>>> 77ebce8 (autopep8 aggressive src)
+=======
+=======
+            silent: bool = False,
+            **kwargs):
+>>>>>>> 58467d2 (clean raw data)
+>>>>>>> 02a2527 (clean raw data)
         """
 
 
