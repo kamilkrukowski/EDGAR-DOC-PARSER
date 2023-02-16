@@ -386,7 +386,7 @@ class edgar_parser:
         data = None
         fname = os.path.join(self.data_dir, 'processed',
                              tikr, submission, _file)
-        with open(fname, 'r') as f:
+        with open(fname, 'r', encoding = 'utf-8') as f:
             data = f.read()
         for tag in annotated_tag_list:
             if re.search(tag, data):
@@ -682,7 +682,8 @@ class edgar_parser:
             submission: str,
             filename: str,
             force: bool = False,
-            silent: bool = False):
+            silent: bool = False,
+            **kwargs):
         """
 
 
@@ -700,6 +701,8 @@ class edgar_parser:
                     and abort server query.
         silent: bool default=False
             if (True), then does not print runtime warnings.
+        clean_raw: bool
+                default to be False. If true, the raw data will be cleaned after parsed. 
 
         Returns
         --------
@@ -727,6 +730,8 @@ class edgar_parser:
             self.save_processed(tikr, submission, filename,
                                 elems, annotation_dict, features)
             self.metadata.save_tikr_metadata(tikr)
+            if kwargs.get('clean_raw', False):
+                os.remove(self.get_driver_path(tikr, submission, filename))
             return features
 
     def save_processed(
