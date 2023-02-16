@@ -340,17 +340,21 @@ class edgar_parser:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
 =======
         return [i for i in self.metadata[tikr]['submissions']
                 if self._is_10q_annotated(tikr, i, silent=silent)]
 >>>>>>> 01fa547 (autopep8 aggressive src)
 =======
+=======
+>>>>>>> 77ebce8 (autopep8 aggressive src)
         return [i for i in self.metadata[tikr]['submissions']
                 if self._is_10q_annotated(tikr, i, silent=silent)]
 =======
         return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
 >>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
+<<<<<<< HEAD
 >>>>>>> 4ba9685 (download and parse 8-k and 10-q or all)
 =======
         return [i for i in self.metadata[tikr]['submissions']
@@ -363,6 +367,15 @@ class edgar_parser:
         return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
 >>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
 >>>>>>> 9b40315 (download and parse 8-k and 10-q or all)
+=======
+=======
+        return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
+=======
+        return [i for i in self.metadata[tikr]['submissions']
+                if self._is_10q_annotated(tikr, i, silent=silent)]
+>>>>>>> 01fa547 (autopep8 aggressive src)
+>>>>>>> 03dda06 (autopep8 aggressive src)
+>>>>>>> 77ebce8 (autopep8 aggressive src)
 
     """
         Returns whether given tikr submission has annotated ix elements
@@ -378,14 +391,20 @@ class edgar_parser:
         assert tikr in self.metadata
         assert submission in self.metadata[tikr]['submissions']
 
+<<<<<<< HEAD
         is_annotated = self.metadata[tikr]['submissions'][submission][
             'attrs'].get('is_10q_annotated', None)
+=======
+        is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get(
+            'is_10q_annotated', None)
+>>>>>>> 03dda06 (autopep8 aggressive src)
         if is_annotated is not None:
             return is_annotated
         else:
             return self._gen_10q_annotated_metadata(
                 tikr, submission, silent=silent)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     def _is_8k_annotated(self, tikr, submission, silent: bool = False) -> bool:
@@ -447,9 +466,13 @@ class edgar_parser:
                 tikr, submission, silent=silent)
 
 <<<<<<< HEAD
+=======
+>>>>>>> 77ebce8 (autopep8 aggressive src)
     def _gen_10q_annotated_metadata(
             self, tikr, submission, silent: bool = False):
 =======
+=======
+>>>>>>> 03dda06 (autopep8 aggressive src)
     def _is_8k_annotated(self, tikr, submission, silent: bool = False) -> bool:
 
         assert tikr in self.metadata;
@@ -462,7 +485,14 @@ class edgar_parser:
             return self._gen_8k_annotated_metadata(tikr, submission, silent=silent)
 
     def _gen_10q_annotated_metadata(self, tikr, submission, silent: bool = False):
+<<<<<<< HEAD
 >>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
+=======
+=======
+    def _gen_10q_annotated_metadata(
+            self, tikr, submission, silent: bool = False):
+>>>>>>> 01fa547 (autopep8 aggressive src)
+>>>>>>> 03dda06 (autopep8 aggressive src)
 
 >>>>>>> 01fa547 (autopep8 aggressive src)
         annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
@@ -483,8 +513,12 @@ class edgar_parser:
                     "Document Encountered without 10-Q", RuntimeWarning)
                 for file in files:
                     if files[file].get('is_ims-document', False):
+<<<<<<< HEAD
                         self.metadata[tikr]['submissions'][submission][
                             'attrs']['is_10q_annotated'] = False
+=======
+                        self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+>>>>>>> 03dda06 (autopep8 aggressive src)
                         warnings.warn(
                             "Encountered unlabeled IMS-DOCUMENT",
                             RuntimeWarning)
@@ -498,8 +532,15 @@ class edgar_parser:
         data = None
         fname = os.path.join(self.data_dir, 'processed',
                              tikr, submission, _file)
+<<<<<<< HEAD
         with open(fname, 'r', encoding = 'utf-8') as f:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+        with open(fname, 'r') as f:
+>>>>>>> 03dda06 (autopep8 aggressive src)
+>>>>>>> 77ebce8 (autopep8 aggressive src)
             data = f.read()
         for tag in annotated_tag_list:
             if re.search(tag, data):
@@ -510,6 +551,7 @@ class edgar_parser:
             'is_10q_annotated'] = False
         return False
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -588,6 +630,10 @@ class edgar_parser:
 >>>>>>> 01fa547 (autopep8 aggressive src)
 =======
 =======
+>>>>>>> 77ebce8 (autopep8 aggressive src)
+=======
+=======
+>>>>>>> 03dda06 (autopep8 aggressive src)
     def _gen_8k_annotated_metadata(self, tikr, submission, silent: bool = False):
 
         annotated_tag_list = {'ix:nonnumeric','ix:nonfraction'}
@@ -627,8 +673,16 @@ class edgar_parser:
         return False
 
 
+<<<<<<< HEAD
 >>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
+<<<<<<< HEAD
 >>>>>>> 9b40315 (download and parse 8-k and 10-q or all)
+=======
+=======
+=======
+>>>>>>> 01fa547 (autopep8 aggressive src)
+>>>>>>> 03dda06 (autopep8 aggressive src)
+>>>>>>> 77ebce8 (autopep8 aggressive src)
     """
     Parses some documents 2020+ at least
 
@@ -916,6 +970,7 @@ class edgar_parser:
             force: bool = False,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             silent: bool = False,
             **kwargs):
 =======
@@ -925,6 +980,13 @@ class edgar_parser:
             silent: bool = False,
             **kwargs):
 >>>>>>> 76fe6ed (clean raw data)
+=======
+            silent: bool = False,
+            **kwargs):
+=======
+            silent: bool = False):
+>>>>>>> 03dda06 (autopep8 aggressive src)
+>>>>>>> 77ebce8 (autopep8 aggressive src)
         """
 
 

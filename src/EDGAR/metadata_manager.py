@@ -33,7 +33,6 @@ class metadata_manager(dict):
         self.keys = load(open(self.keys_path, 'r'), Loader=Loader)
 
     def save_keys(self):
-        
         dump(self.keys, open(self.keys_path, 'w'), Dumper=Dumper)
 
     def load_tikr_metadata(self, tikr):
