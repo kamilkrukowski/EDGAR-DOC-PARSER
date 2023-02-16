@@ -10,41 +10,41 @@ import numpy as np
 class metadata_manager(dict):
     def __init__(self, data_dir='data', *arg, **kw):
         super(metadata_manager, self).__init__(*arg, **kw)
-        
+
         # Always gets the path of the current file
-        self.data_dir = data_dir 
-        
+        self.data_dir = data_dir
+
         self.meta_dir = os.path.join(self.data_dir, 'metadata')
         if not os.path.exists(self.meta_dir):
             os.system('mkdir -p ' + self.meta_dir)
-        
+
         # Used by dataloader for API
         self.keys_path = os.path.join(self.data_dir, 'metadata', '.keys.yaml')
         self.keys = None
-        
+
     def load_keys(self):
 
         if not os.path.exists(self.keys_path):
             warnings.warn("No .keys.yaml located", RuntimeWarning)
             self.keys = dict()
-            return;
+            return
         self.keys = load(open(self.keys_path, 'r'), Loader=Loader)
-    
+
     def save_keys(self):
-        
-        dump(self.keys, open(self.keys_path, 'w'), Dumper=Dumper) 
-    
+
+        dump(self.keys, open(self.keys_path, 'w'), Dumper=Dumper)
+
     def load_tikr_metadata(self, tikr):
 
         data_path = os.path.join(self.meta_dir, f"{tikr}.pkl")
 
         if os.path.exists(data_path):
-        
+
             with open(data_path, 'rb') as f:
                 self[tikr] = pkl.load(f)
             return True
 
-        self.initialize_tikr_metadata(tikr);
+        self.initialize_tikr_metadata(tikr)
 
         return False
 
@@ -60,12 +60,12 @@ class metadata_manager(dict):
     def initialize_tikr_metadata(self, tikr):
         if tikr not in self:
             self[tikr] = {'attrs': dict(), 'submissions': dict()}
-                
+
     def initialize_submission_metadata(self, tikr, fname):
         pdict = self[tikr]['submissions']
         if fname not in pdict:
             pdict[fname] = {'attrs': dict(), 'documents': dict()}
-    
+
     def get_10q_name(self, tikr, submission):
         """
         Parameters
@@ -74,7 +74,7 @@ class metadata_manager(dict):
             a company identifier to query
         submission:
             the associated company filing for which to find a 10-Q form
-            
+
 
         Returns
         --------
@@ -95,7 +95,7 @@ class metadata_manager(dict):
             a company identifier to query
         submission:
             the associated company filing for which to find a 10-Q form
-            
+
 
         Returns
         --------
@@ -131,8 +131,13 @@ class metadata_manager(dict):
             if level[sequence]['filename'] == filename:
                 return sequence
         return None
-            
-    def file_set_processed(self, tikr: str, submission: str, filename: str, val: bool):
+
+    def file_set_processed(
+            self,
+            tikr: str,
+            submission: str,
+            filename: str,
+            val: bool):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
         self[tikr]['submissions'][submission]['documents'][sequence]['features_pregenerated'] = val
@@ -140,20 +145,21 @@ class metadata_manager(dict):
     def file_was_processed(self, tikr: str, submission: str, filename: str):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
-        return self[tikr]['submissions'][submission]['documents'][sequence].get('features_pregenerated', False)
+        return self[tikr]['submissions'][submission]['documents'][sequence].get(
+            'features_pregenerated', False)
 
     def save_tikrdataset(self, tikr_data, tikr: str):
-        self[tikr]['HAS_DATASET'] = True;
-        
-        data_path = os.path.join(self.data_dir, "array_dataset" ,f"{tikr}.pkl")
+        self[tikr]['HAS_DATASET'] = True
+
+        data_path = os.path.join(self.data_dir, "array_dataset", f"{tikr}.pkl")
         if not os.path.exists(os.path.join(self.data_dir, "array_dataset")):
             os.mkdir(os.path.join(self.data_dir, "array_dataset"))
 
         np.save(data_path, tikr_data)
 
     def load_tikrdataset(self, tikr: str):
-        
-        assert self[tikr]['HAS_DATASET'], "NO DATASET FOR TIKR";
 
-        data_path = os.path.join(self.data_dir, "array_dataset" ,f"{tikr}.pkl")
+        assert self[tikr]['HAS_DATASET'], "NO DATASET FOR TIKR"
+
+        data_path = os.path.join(self.data_dir, "array_dataset", f"{tikr}.pkl")
         return np.load(data_path)

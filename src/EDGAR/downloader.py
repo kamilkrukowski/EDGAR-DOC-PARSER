@@ -7,7 +7,7 @@ import pathlib
 import warnings
 import datetime
 import sys
-from tqdm.auto import tqdm 
+from tqdm.auto import tqdm
 
 
 from metadata_manager import metadata_manager
@@ -17,6 +17,7 @@ class edgar_downloader:
     """
         Class for querying SEC-EDGAR database for files
     """
+
     def __init__(self, data_dir, metadata):
 
         # our HTML files are so big and nested that the standard
@@ -32,27 +33,30 @@ class edgar_downloader:
         self.metadata = metadata
 
         # Loads keys
-        self.metadata.load_keys();
+        self.metadata.load_keys()
 
         if 'edgar_email' not in self.metadata.keys or 'edgar_agent' not in self.metadata.keys:
-            print(f"No API Header detected.\nThe SEC requires all EDGAR API users to identify themselves\n\n")
+            print(
+                f"No API Header detected.\nThe SEC requires all EDGAR API users to identify themselves\n\n")
             if 'edgar_agent' not in self.metadata.keys:
-               print("The SEC requires a legal name of the user and any organizational affiliation")
-               answer = 'n'
-               while (answer[0] != 'y' or len(answer) > 4):
+                print(
+                    "The SEC requires a legal name of the user and any organizational affiliation")
+                answer = 'n'
+                while (answer[0] != 'y' or len(answer) > 4):
                     self.metadata.keys['edgar_agent'] = input("User(s): ")
-                    answer = input(f"Input User(s) \'{self.metadata.keys['edgar_agent']}\'\n Is this correct? (y/n)")
+                    answer = input(
+                        f"Input User(s) \'{self.metadata.keys['edgar_agent']}\'\n Is this correct? (y/n)")
             if 'edgar_email' not in self.metadata.keys:
-               print("The SEC requires a contact email for the API user")
-               answer = 'n'
-               while (answer[0] != 'y' or len(answer) > 4):
+                print("The SEC requires a contact email for the API user")
+                answer = 'n'
+                while (answer[0] != 'y' or len(answer) > 4):
                     self.metadata.keys['edgar_email'] = input("Email: ")
-                    answer = input(f"Input Email \'{self.metadata.keys['edgar_email']}\'\n Is this correct? (y/n)")
+                    answer = input(
+                        f"Input Email \'{self.metadata.keys['edgar_email']}\'\n Is this correct? (y/n)")
             self.metadata.save_keys()
 
         assert 'edgar_email' in self.metadata.keys, 'Set personal email'
         assert 'edgar_agent' in self.metadata.keys, 'Set personal name'
-
 
     def _gen_tikr_metadata(self, tikr, documents, key):
         out = dict()
@@ -67,18 +71,17 @@ class edgar_downloader:
             seq = seq.text[:i].split('\n')[0]
             out[seq] = dict()
 
-
             for nextElem in ['type', 'filename', 'description']:
                 doc2 = doc.find(nextElem)
-                
-                #Sentinel for missing fields in early 2000s
+
+                # Sentinel for missing fields in early 2000s
                 if doc2 is None:
                     if nextElem == 'filename':
                         out[seq][nextElem] = f"{seq}.htm"
                     else:
                         out[seq][nextElem] = ''
                     continue
-                
+
                 i = 20
                 while ('\n') not in doc2.text[:i]:
                     i += 20
@@ -89,13 +92,13 @@ class edgar_downloader:
         # Extend existing tikr metadata with new results,
         #   or start with empty dict and add new results
         self.metadata.initialize_tikr_metadata(tikr)
-        
+
         # Extending documents in existing submission or start new one
         self.metadata.initialize_submission_metadata(tikr, key)
-        
+
         # Add documents to submission of tikr
         self.metadata[tikr]['submissions'][key]['documents'] = \
-                dict(out, **self.metadata[tikr]['submissions'][key]['documents'])
+            dict(out, **self.metadata[tikr]['submissions'][key]['documents'])
 
     def _is_downloaded(self, tikr):
         """
@@ -107,12 +110,12 @@ class edgar_downloader:
             self, tikr: str, force: bool = False, **kwargs):
         """
             Download SEC filings to a local directory for later parsing, by company TIKR
-            
-            
+
+
             Parameters
             ---------
             tikr: str
-                a company identifier to query 
+                a company identifier to query
             force: bool
                 if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
             start_date: optional
@@ -128,13 +131,13 @@ class edgar_downloader:
             return
 
         elif (kwargs.get('start_date', None) is None and kwargs.get('end_date', None) is None and
-            kwargs.get('max_num_filings', None) is None
-            ):
+              kwargs.get('max_num_filings', None) is None
+              ):
 
             self.metadata[tikr]['attrs']['downloaded'] = True
             self.metadata.save_tikr_metadata(tikr)
 
-        user_agent = "".join([f"{self.metadata.keys['edgar_agent']}", 
+        user_agent = "".join([f"{self.metadata.keys['edgar_agent']}",
                               f": {self.metadata.keys['edgar_email']}"])
 
         document_type = kwargs.get('document_type', '10-Q').replace('-',"").lower()
@@ -162,41 +165,44 @@ class edgar_downloader:
     def get_unpackable_files(self, tikr: str, **kwargs):
         """
             Get list of targets for unpack_file func
-            
+
             Parameters
             ---------
             tikr: str
-                a company identifier to query 
+                a company identifier to query
             document_type: str
                 document type to unpack (10-Q, 8-K)
 
         """
         # sec-edgar data save location for documents filing ticker
-        document_type = kwargs.get('document_type', '10-Q').replace('-',"").lower()
-        assert document_type in {'10q', '8k'}
+        document_type = kwargs.get(
+            'document_type', 'all').replace('-', "").lower()
+        assert document_type in {'all', '10q', '8k'}
         if document_type == '10q':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
         elif document_type == '8k':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
         return os.listdir(d_dir)
-    
+
     def get_submissions(self, tikr, **kwargs):
         """
             Get list of submissions under tikr
-            
+
             Parameters
             ---------
             tikr: str
-                a company identifier to query 
+                a company identifier to query
             document_type: str
                 document type to unpack (10-Q, 8-K, or all)
         """
         # sec-edgar data save location for filing ticker
-        return [i.split('.txt')[0] for i in self.get_unpackable_files(tikr, document_type=kwargs.get('document_type', '10-Q'))]
+        return [i.split('.txt')[0] for i in self.get_unpackable_files(
+            tikr, document_type=kwargs.get('document_type', '10-Q'))]
 
     """
         Private utility, parses SEC submission dump into components
     """
+
     def __unpack_doc__(
             self, doc, metadata, out_path, force=True):
 
@@ -249,7 +255,6 @@ class edgar_downloader:
         elif document_type == '8k':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
 
-
         content = None
         with open(os.path.join(d_dir, file), 'r', encoding='utf-8') as f:
             content = f.read().strip()
@@ -260,7 +265,8 @@ class edgar_downloader:
         if p is None:
             p = d.find('ims-document')
             if p is not None:
-                warnings.warn("IMS-DOCUMENT skipped during loading", RuntimeWarning)
+                warnings.warn(
+                    "IMS-DOCUMENT skipped during loading", RuntimeWarning)
                 fname = file.split('.txt')[0]
                 if fname not in self.metadata[tikr]['submissions']:
                     self.metadata.initialize_submission_metadata(tikr, fname)
@@ -297,7 +303,7 @@ class edgar_downloader:
 
     def _is_8k_unpacked(self, tikr):
         return self.metadata[tikr]['attrs'].get('8k_unpacked', False)
-    
+
     def _is_fully_unpacked(self, tikr):
         return self.metadata[tikr]['attrs'].get('complete_unpacked', False)
 
@@ -306,7 +312,7 @@ class edgar_downloader:
             loading_bar=False, desc='Inflating HTM', **kwargs):
         """
             Processes all raw data from one company
-            
+
             Parameters
             ---------
             tikr: str
@@ -362,11 +368,13 @@ class edgar_downloader:
 
         self.metadata.save_tikr_metadata(tikr)
 
-    def get_dates(self, tikr,  **kwargs):
+    def get_dates(self, tikr, **kwargs):
         out = dict()
-        for i in self.get_submissions(tikr, document_type=kwargs.get('document_type', 'all')):
+        for i in self.get_submissions(
+            tikr, document_type=kwargs.get(
+                'document_type', 'all')):
             date_str = self.metadata[tikr]['submissions'][i]['attrs'].get(
-                    'FILED AS OF DATE', None)
+                'FILED AS OF DATE', None)
             if date_str is None:
                 print('broken')
             out[datetime.datetime.strptime(date_str, '%Y%m%d')] = i
@@ -375,33 +383,33 @@ class edgar_downloader:
     """
         Return the filing submission txt closest to provided date
     """
+
     def get_nearest_date_filename(
             self, tikr, date, return_date=False, prefer_recent=True, **kwargs):
-
         """
         Gets the nearest date of the filename
-        
+
         Parameters
         ---------
         tikr: str
-            a company identifier to query 
+            a company identifier to query
         date: str
             date in format  AAAABBCC format (Year, Month, Day) with 0 padding
         return_date: bool
 
         prefer_recent: bool
-        
+
         document_type: str
             document type to unpack (10-Q, 8-K, or all)
         """
         # Provide AAAABBCC format (Year, Month, Day) with 0 padding
-        if type(date) is str:
+        if isinstance(date, str):
             assert len(date) == 8, 'String format wrong'
             date = datetime.datetime.strptime(date, '%Y%m%d')
-        assert type(date) is datetime.datetime, 'Wrong format'
+        assert isinstance(date, datetime.datetime), 'Wrong format'
 
-    
-        dates = self.get_dates(tikr, document_type=kwargs.get('document_type', 'all'))
+        dates = self.get_dates(
+            tikr, document_type=kwargs.get('document_type', 'all'))
         keys = sorted(list(dates.keys()))
 
         if date in dates:
