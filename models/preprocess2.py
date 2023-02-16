@@ -3,6 +3,8 @@
     TThe data is then processed and saved as a tokenizer and raw data file in the current directory.
 """
 
+import sys
+sys.path.append(os.path.join('..', 'EDGAR'))
 import EDGAR
 import torch
 import numpy as np
@@ -13,8 +15,6 @@ import os
 import time
 import itertools
 import argparse
-import sys
-sys.path.append(os.path.join('..', 'EDGAR'))
 
 
 # Command line magic for common use case to regenerate dataset
