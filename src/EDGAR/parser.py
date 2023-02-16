@@ -339,6 +339,7 @@ class edgar_parser:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
 =======
         return [i for i in self.metadata[tikr]['submissions']
@@ -355,6 +356,13 @@ class edgar_parser:
         return [i for i in self.metadata[tikr]['submissions']
                 if self._is_10q_annotated(tikr, i, silent=silent)]
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+        return [i for i in self.metadata[tikr]['submissions']
+                if self._is_10q_annotated(tikr, i, silent=silent)]
+=======
+        return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
+>>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
+>>>>>>> 9b40315 (download and parse 8-k and 10-q or all)
 
     """
         Returns whether given tikr submission has annotated ix elements
@@ -438,8 +446,23 @@ class edgar_parser:
             return self._gen_10q_annotated_metadata(
                 tikr, submission, silent=silent)
 
+<<<<<<< HEAD
     def _gen_10q_annotated_metadata(
             self, tikr, submission, silent: bool = False):
+=======
+    def _is_8k_annotated(self, tikr, submission, silent: bool = False) -> bool:
+
+        assert tikr in self.metadata;
+        assert submission in self.metadata[tikr]['submissions']
+
+        is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get('is_8k_annotated', None)
+        if is_annotated is not None:
+            return is_annotated
+        else:
+            return self._gen_8k_annotated_metadata(tikr, submission, silent=silent)
+
+    def _gen_10q_annotated_metadata(self, tikr, submission, silent: bool = False):
+>>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
 
 >>>>>>> 01fa547 (autopep8 aggressive src)
         annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
@@ -553,6 +576,7 @@ class edgar_parser:
         return False
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 =======
@@ -562,6 +586,49 @@ class edgar_parser:
 >>>>>>> 4ba9685 (download and parse 8-k and 10-q or all)
 =======
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+=======
+    def _gen_8k_annotated_metadata(self, tikr, submission, silent: bool = False):
+
+        annotated_tag_list = {'ix:nonnumeric','ix:nonfraction'}
+
+        _file = None
+        files = self.metadata[tikr]['submissions'][submission]['documents']
+        for file in files:
+            if files[file]['type'] == '8-K':
+                _file = files[file]['filename']
+
+        # TODO handle ims-document
+        if _file is None:
+            if silent:
+                return False;
+            else:
+                warnings.warn("Document Encountered without 8-K", RuntimeWarning)
+                for file in files:
+                    if files[file].get('is_ims-document', False):
+                        self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = False
+                        warnings.warn("Encountered unlabeled IMS-DOCUMENT", RuntimeWarning)
+                        return False
+                if len(files) == 0:
+                    warnings.warn("No Files under Document", RuntimeWarning)
+                    return False
+
+        assert _file is not None, 'Missing 8-K'
+
+        data = None
+        fname = os.path.join(self.data_dir, 'processed', tikr, submission, _file)
+        with open(fname, 'r') as f:
+            data = f.read();
+        for tag in annotated_tag_list:
+            if re.search(tag, data):
+                self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = True
+                return True
+        self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = False
+        return False
+
+
+>>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
+>>>>>>> 9b40315 (download and parse 8-k and 10-q or all)
     """
     Parses some documents 2020+ at least
 

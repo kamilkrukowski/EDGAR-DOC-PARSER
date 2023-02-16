@@ -338,8 +338,12 @@ class edgar_downloader:
         metadata = self.metadata[tikr]['submissions'][fsub]['documents']
 
         # Processed data directory path
+<<<<<<< HEAD
         out_path = os.path.join(
             self.data_dir, 'processed',
+=======
+        out_path = os.path.join(self.data_dir, 'processed',
+>>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
             tikr, file.split('.txt')[0])
         if not os.path.exists(out_path):
             os.system('mkdir -p ' + out_path)
