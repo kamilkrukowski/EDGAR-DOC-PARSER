@@ -250,6 +250,8 @@ class edgar_downloader:
                 document type to unpack (10-Q, 8-K, or all)
             force: bool
                 if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+            clean_raw: bool
+                default to be true. If true, the raw data will be cleaned after parsed. 
         """
 
         # sec-edgar data save location for documents filing ticker
@@ -263,6 +265,8 @@ class edgar_downloader:
         content = None
         with open(os.path.join(d_dir, file), 'r', encoding='utf-8') as f:
             content = f.read().strip()
+        if kwargs.get('clean_raw', True):
+            os.remove(os.path.join(d_dir, file))
 
         d = BeautifulSoup(content, features='lxml').body
 
@@ -294,7 +298,8 @@ class edgar_downloader:
         metadata = self.metadata[tikr]['submissions'][fsub]['documents']
 
         # Processed data directory path
-        out_path = os.path.join(self.data_dir, 'processed',
+        out_path = os.path.join(
+            self.data_dir, 'processed',
             tikr, file.split('.txt')[0])
         if not os.path.exists(out_path):
             os.system('mkdir -p ' + out_path)
@@ -327,6 +332,8 @@ class edgar_downloader:
                 if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
             loading__bar: bool:
                 if True, will time and show progress
+            document_type:
+            
         """
 
         # Early quitting conditions
