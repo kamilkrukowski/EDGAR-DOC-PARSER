@@ -328,11 +328,19 @@ class edgar_parser:
 
     def get_annotated_submissions(self, tikr, silent: bool = False):
 <<<<<<< HEAD
+<<<<<<< HEAD
         return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
 =======
         return [i for i in self.metadata[tikr]['submissions']
                 if self._is_10q_annotated(tikr, i, silent=silent)]
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+        return [i for i in self.metadata[tikr]['submissions']
+                if self._is_10q_annotated(tikr, i, silent=silent)]
+=======
+        return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
+>>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
+>>>>>>> 4ba9685 (download and parse 8-k and 10-q or all)
 
     """
         Returns whether given tikr submission has annotated ix elements
@@ -356,6 +364,7 @@ class edgar_parser:
                 tikr, submission, silent=silent)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def _is_8k_annotated(self, tikr, submission, silent: bool = False) -> bool:
 
         assert tikr in self.metadata;
@@ -372,6 +381,24 @@ class edgar_parser:
     def _gen_10q_annotated_metadata(
             self, tikr, submission, silent: bool = False):
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+    def _gen_10q_annotated_metadata(
+            self, tikr, submission, silent: bool = False):
+=======
+    def _is_8k_annotated(self, tikr, submission, silent: bool = False) -> bool:
+
+        assert tikr in self.metadata;
+        assert submission in self.metadata[tikr]['submissions']
+
+        is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get('is_8k_annotated', None)
+        if is_annotated is not None:
+            return is_annotated
+        else:
+            return self._gen_8k_annotated_metadata(tikr, submission, silent=silent)
+
+    def _gen_10q_annotated_metadata(self, tikr, submission, silent: bool = False):
+>>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
+>>>>>>> 4ba9685 (download and parse 8-k and 10-q or all)
 
         annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
 
@@ -417,6 +444,10 @@ class edgar_parser:
         return False
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 4ba9685 (download and parse 8-k and 10-q or all)
     def _gen_8k_annotated_metadata(self, tikr, submission, silent: bool = False):
 
         annotated_tag_list = {'ix:nonnumeric','ix:nonfraction'}
@@ -456,8 +487,12 @@ class edgar_parser:
         return False
 
 
+<<<<<<< HEAD
 =======
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+>>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
+>>>>>>> 4ba9685 (download and parse 8-k and 10-q or all)
     """
     Parses some documents 2020+ at least
 
