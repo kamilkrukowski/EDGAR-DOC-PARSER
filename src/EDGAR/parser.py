@@ -30,11 +30,16 @@ class edgar_parser:
             Parameters
             --------------
 <<<<<<< HEAD
+<<<<<<< HEAD
             info: a set in structure ((tag, attributes),data, range) that contains information of the element.
                         Attributes is in a format of list of set : `[(attr, value)]`
 =======
             info: a set in structure ((tag, attributes),data, range) that contains information of the element. Attributes is in a format of list of set : `[(attr, value)]`
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+            info: a set in structure ((tag, attributes),data, range) that contains information of the element.
+                        Attributes is in a format of list of set : `[(attr, value)]`
+>>>>>>> c6bbdd9 (Aggressive autopep8)
 
             attributes
             ----------
@@ -389,6 +394,7 @@ class edgar_parser:
         assert submission in self.metadata[tikr]['submissions']
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get('is_8k_annotated', None)
         if is_annotated is not None:
             return is_annotated
@@ -422,6 +428,10 @@ class edgar_parser:
 =======
         is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get(
             'is_10q_annotated', None)
+=======
+        is_annotated = self.metadata[tikr]['submissions'][submission][
+            'attrs'].get('is_10q_annotated', None)
+>>>>>>> c6bbdd9 (Aggressive autopep8)
         if is_annotated is not None:
             return is_annotated
         else:
@@ -526,9 +536,17 @@ class edgar_parser:
             data = f.read()
         for tag in annotated_tag_list:
             if re.search(tag, data):
+<<<<<<< HEAD
                 self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = True
                 return True
         self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = False
+=======
+                self.metadata[tikr]['submissions'][submission]['attrs'][
+                    'is_10q_annotated'] = True
+                return True
+        self.metadata[tikr]['submissions'][submission]['attrs'][
+            'is_10q_annotated'] = False
+>>>>>>> c6bbdd9 (Aggressive autopep8)
         return False
 
 <<<<<<< HEAD

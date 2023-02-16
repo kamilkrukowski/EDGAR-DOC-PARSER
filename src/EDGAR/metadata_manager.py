@@ -157,7 +157,11 @@ class metadata_manager(dict):
             val: bool):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
+<<<<<<< HEAD
         self._get_submission(tikr, submission)['documents'][sequence][
+=======
+        self[tikr]['submissions'][submission]['documents'][sequence][
+>>>>>>> c6bbdd9 (Aggressive autopep8)
             'features_pregenerated'] = val
 
     def file_was_processed(self, tikr: str, submission: str, filename: str):
