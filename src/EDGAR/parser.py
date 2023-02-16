@@ -29,7 +29,8 @@ class edgar_parser:
 
             Parameters
             --------------
-            info: a set in structure ((tag, attributes),data, range) that contains information of the element. Attributes is in a format of list of set : `[(attr, value)]`
+            info: a set in structure ((tag, attributes),data, range) that contains information of the element.
+                        Attributes is in a format of list of set : `[(attr, value)]`
 
             attributes
             ----------
@@ -167,7 +168,8 @@ class edgar_parser:
 
         Parameters
         ---------
-        pattern -- a list of two strings, corresponding to start and end of an element, ex. '['<span', '</span>']'. The tags to be find and extract
+        pattern -- a list of two strings, corresponding to start and end of an element,
+                        ex. '['<span', '</span>']'. The tags to be find and extract
         txt -- the string taht containing some html code
 
         Returns
@@ -341,8 +343,8 @@ class edgar_parser:
         assert tikr in self.metadata
         assert submission in self.metadata[tikr]['submissions']
 
-        is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get(
-            'is_10q_annotated', None)
+        is_annotated = self.metadata[tikr]['submissions'][submission][
+            'attrs'].get('is_10q_annotated', None)
         if is_annotated is not None:
             return is_annotated
         else:
@@ -369,7 +371,8 @@ class edgar_parser:
                     "Document Encountered without 10-Q", RuntimeWarning)
                 for file in files:
                     if files[file].get('is_ims-document', False):
-                        self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+                        self.metadata[tikr]['submissions'][submission][
+                            'attrs']['is_10q_annotated'] = False
                         warnings.warn(
                             "Encountered unlabeled IMS-DOCUMENT",
                             RuntimeWarning)
@@ -387,9 +390,11 @@ class edgar_parser:
             data = f.read()
         for tag in annotated_tag_list:
             if re.search(tag, data):
-                self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = True
+                self.metadata[tikr]['submissions'][submission]['attrs'][
+                    'is_10q_annotated'] = True
                 return True
-        self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+        self.metadata[tikr]['submissions'][submission]['attrs'][
+            'is_10q_annotated'] = False
         return False
 
     """
@@ -536,7 +541,8 @@ class edgar_parser:
     """
     text - the text value of the annotated label (e.g. 10-Q)
     found_index - index of the parent span webelement in the list of webelements
-    full_text - neighboring text (based on the text value of the parent span) (** replace it with new identify neighboring text function)
+    full_text - neighboring text (based on the text value of the parent span)
+                    (** replace it with new identify neighboring text function)
     anno_index - index of the annotation in the list of annotation based on its webelement
     anno_name - the name attribute from the annotation tag (e.g. us-gaap:SegmentReportingDisclosureTextBlock)
     anno_id - the id attribute from the annotation tag (e.g. id3VybDovL2RvY3MudjEvZG9jOjY0OTlhYTNmZjJk...)
@@ -579,12 +585,14 @@ class edgar_parser:
         Returns
         --------
         DataFrame
-            Each row corresponds to one text field. Rows are not unique, one is generated for each iXBRL annotation on that text field.
+            Each row corresponds to one text field. Rows are not unique,
+                one is generated for each iXBRL annotation on that text field.
 
 
         Notes
         ------
-        Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
+        Documents without annotations receive entries
+            in the dataframe with a sentinel column ``is_annotated`` set to False.
         """
         COLUMN_NAMES = [
             "anno_text",
@@ -687,19 +695,23 @@ class edgar_parser:
         filename: str
             The name of the file to featurize
         force: bool, default=False
-            if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+            if (True), then ignore locally downloaded files and
+                overwrite them. Otherwise, attempt to detect previous download
+                    and abort server query.
         silent: bool default=False
             if (True), then does not print runtime warnings.
 
         Returns
         --------
         DataFrame
-            Each row corresponds to one text field. Rows are not unique, one is generated for each iXBRL annotation on that text field.
+            Each row corresponds to one text field. Rows are not unique,
+             one is generated for each iXBRL annotation on that text field.
 
 
         Notes
         ------
-        Documents without annotations receive entries in the dataframe with a sentinel column ``is_annotated`` set to False.
+        Documents without annotations receive entries in the dataframe
+            The sentinel column ``is_annotated`` set to False.
         """
         if not force and self.metadata.file_was_processed(
                 tikr, submission, filename):
