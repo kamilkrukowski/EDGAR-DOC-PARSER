@@ -2,6 +2,8 @@ import os
 import pickle as pkl
 from yaml import load, CLoader as Loader, dump, CDumper as Dumper
 import warnings
+import urllib.request
+import json
 
 
 import numpy as np
@@ -164,3 +166,23 @@ class metadata_manager(dict):
 
         data_path = os.path.join(self.data_dir, "array_dataset", f"{tikr}.pkl")
         return np.load(data_path)
+    
+    @staticmethod
+    def tikr_list():
+        """
+        Download tikr list if not exist to the data folder. Parse into list of tickers
+
+        Returns
+        --------
+        tikr : list
+            a list of string tickers
+            
+        """
+        if not os.path.exists('data'):
+            os.makedirs('data')
+        if not os.path.isfile('tikr.json'):
+            urllib.request.urlretrieve("https://www.sec.gov/files/company_tickers.json", os.path.join('data','tikr.json'))
+        with open('tikr.json') as json_file:
+            data = json.load(json_file)
+        return [data[i]['ticker'] for i in data]
+        
