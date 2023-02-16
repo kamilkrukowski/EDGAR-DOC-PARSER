@@ -302,7 +302,7 @@ class edgar_parser:
         Return list of submissions names with annotated 10-Q forms
     """
     def get_annotated_submissions(self, tikr, silent: bool = False):
-        return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent)]
+        return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
 
     """
         Returns whether given tikr submission has annotated ix elements
@@ -317,6 +317,17 @@ class edgar_parser:
             return is_annotated
         else:
             return self._gen_10q_annotated_metadata(tikr, submission, silent=silent)
+
+    def _is_8k_annotated(self, tikr, submission, silent: bool = False) -> bool:
+
+        assert tikr in self.metadata;
+        assert submission in self.metadata[tikr]['submissions']
+
+        is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get('is_8k_annotated', None)
+        if is_annotated is not None:
+            return is_annotated
+        else:
+            return self._gen_8k_annotated_metadata(tikr, submission, silent=silent)
 
     def _gen_10q_annotated_metadata(self, tikr, submission, silent: bool = False):
 
@@ -354,6 +365,44 @@ class edgar_parser:
                 self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = True
                 return True
         self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+        return False
+
+    def _gen_8k_annotated_metadata(self, tikr, submission, silent: bool = False):
+
+        annotated_tag_list = {'ix:nonnumeric','ix:nonfraction'}
+
+        _file = None
+        files = self.metadata[tikr]['submissions'][submission]['documents']
+        for file in files:
+            if files[file]['type'] == '8-K':
+                _file = files[file]['filename']
+
+        # TODO handle ims-document
+        if _file is None:
+            if silent:
+                return False;
+            else:
+                warnings.warn("Document Encountered without 8-K", RuntimeWarning)
+                for file in files:
+                    if files[file].get('is_ims-document', False):
+                        self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = False
+                        warnings.warn("Encountered unlabeled IMS-DOCUMENT", RuntimeWarning)
+                        return False
+                if len(files) == 0:
+                    warnings.warn("No Files under Document", RuntimeWarning)
+                    return False
+
+        assert _file is not None, 'Missing 8-K'
+
+        data = None
+        fname = os.path.join(self.data_dir, 'processed', tikr, submission, _file)
+        with open(fname, 'r') as f:
+            data = f.read();
+        for tag in annotated_tag_list:
+            if re.search(tag, data):
+                self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = True
+                return True
+        self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = False
         return False
 
 
@@ -613,7 +662,7 @@ class edgar_parser:
             return self.load_processed(tikr, submission, filename)
         else:
             # TODO make process_file detect and work on unannotated files
-            if not self._is_10q_annotated(tikr, submission, silent=silent):
+            if not self._is_10q_annotated(tikr, submission, silent=silent) and not self._is_8k_annotated(tikr, submission, silent=silent) :
                 raise NotImplementedError
             elems, annotation_dict, in_table = self._parse_annotated_text(self.get_driver_path(tikr, submission, filename))
             features = self.get_annotation_features(elems, annotation_dict, in_table)

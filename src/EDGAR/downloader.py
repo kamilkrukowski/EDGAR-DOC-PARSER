@@ -166,7 +166,7 @@ class edgar_downloader:
         assert document_type in {'10q', '8k'}
         if document_type == '10q':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '10-Q')
-        elif document_type == '8q':
+        elif document_type == '8k':
             d_dir = os.path.join(self.raw_dir, f'{tikr}', '8-K')
         return os.listdir(d_dir)
     
@@ -272,8 +272,7 @@ class edgar_downloader:
         metadata = self.metadata[tikr]['submissions'][fsub]['documents']
 
         # Processed data directory path
-        out_path = os.path.join(
-            self.path, self.data_dir, 'processed',
+        out_path = os.path.join(self.data_dir, 'processed',
             tikr, file.split('.txt')[0])
         if not os.path.exists(out_path):
             os.system('mkdir -p ' + out_path)
