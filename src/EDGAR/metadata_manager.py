@@ -33,13 +33,12 @@ class metadata_manager(dict):
         self.keys = load(open(self.keys_path, 'r'), Loader=Loader)
 
     def save_keys(self):
-
+        
         dump(self.keys, open(self.keys_path, 'w'), Dumper=Dumper)
 
     def load_tikr_metadata(self, tikr):
 
         data_path = os.path.join(self.meta_dir, f"{tikr}.pkl")
-
         if os.path.exists(data_path):
 
             with open(data_path, 'rb') as f:
@@ -58,6 +57,11 @@ class metadata_manager(dict):
 
         with open(data_path, 'wb') as f:
             pkl.dump(self.get(tikr), f)
+
+    def _get_tikr(self, tikr):
+        if tikr not in self:
+            self.load_tikr_metadata(tikr)
+        return self[tikr]
 
     def initialize_tikr_metadata(self, tikr):
         if tikr not in self:
@@ -83,10 +87,10 @@ class metadata_manager(dict):
         filename: str
             The name of the 10-q file associated with the submission, or None
         """
-        meta = self[tikr]['submissions'][submission]['documents']
-        for file in meta:
-            if meta[file]['type'] in ['10-Q', 'FORM 10-Q']:
-                return meta[file]['filename']
+        files = self._get_submission(tikr, submission)['documents']
+        for file in files:
+            if files[file]['type'] in ['10-Q', 'FORM 10-Q']:
+                return files[file]['filename']
         return None
 
     def get_8k_name(self, tikr, submission):
@@ -104,11 +108,18 @@ class metadata_manager(dict):
         filename: str
             The name of the 8-k file associated with the submission, or None
         """
-        meta = self[tikr]['submissions'][submission]['documents']
-        for file in meta:
-            if meta[file]['type'] in ['8-K', 'FORM 8-K', '8K']:
-                return meta[file]['filename']
+        files = self._get_submission(tikr, submission)['documents']
+        for file in files:
+            if files[file]['type'] in ['8-K', 'FORM 8-K', '8K']:
+                return files[file]['filename']
         return None
+
+    def _get_submission(self, tikr, submission):
+        tikr_data = self._get_tikr(tikr)['submissions']
+        if submission not in tikr_data:
+            raise NameError(
+                f"{submission} for {tikr} not found in {self.data_dir}")
+        return tikr_data[submission]
 
     def get_submissions(self, tikr):
         """
@@ -142,7 +153,7 @@ class metadata_manager(dict):
             val: bool):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
-        self[tikr]['submissions'][submission]['documents'][sequence][
+        self._get_submission(tikr, submission)['documents'][sequence][
             'features_pregenerated'] = val
 
     def file_was_processed(self, tikr: str, submission: str, filename: str):
@@ -150,22 +161,6 @@ class metadata_manager(dict):
         assert sequence is not None, "Error: filename not found"
         doc = self[tikr]['submissions'][submission]['documents'][sequence]
         return doc.get('features_pregenerated', False)
-
-    def save_tikrdataset(self, tikr_data, tikr: str):
-        self[tikr]['HAS_DATASET'] = True
-
-        data_path = os.path.join(self.data_dir, "array_dataset", f"{tikr}.pkl")
-        if not os.path.exists(os.path.join(self.data_dir, "array_dataset")):
-            os.mkdir(os.path.join(self.data_dir, "array_dataset"))
-
-        np.save(data_path, tikr_data)
-
-    def load_tikrdataset(self, tikr: str):
-
-        assert self[tikr]['HAS_DATASET'], "NO DATASET FOR TIKR"
-
-        data_path = os.path.join(self.data_dir, "array_dataset", f"{tikr}.pkl")
-        return np.load(data_path)
 
     def get_tikr_list(self):
         """
