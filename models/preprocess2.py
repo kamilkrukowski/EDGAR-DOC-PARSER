@@ -4,7 +4,7 @@
 """
 
 import sys
-sys.path.append(os.path.join('..', 'EDGAR'))
+sys.path.append(os.path.join('..', 'src','EDGAR'))
 import EDGAR
 import torch
 import numpy as np
