@@ -476,6 +476,7 @@ class edgar_parser:
         fname = os.path.join(self.data_dir, 'processed',
                              tikr, submission, _file)
         with open(fname, 'r', encoding = 'utf-8') as f:
+<<<<<<< HEAD
             data = f.read()
         for tag in annotated_tag_list:
             if re.search(tag, data):
@@ -533,6 +534,8 @@ class edgar_parser:
         fname = os.path.join(self.data_dir, 'processed',
                              tikr, submission, _file)
         with open(fname, 'r') as f:
+=======
+>>>>>>> 76fe6ed (clean raw data)
             data = f.read()
         for tag in annotated_tag_list:
             if re.search(tag, data):
@@ -845,11 +848,16 @@ class edgar_parser:
             filename: str,
             force: bool = False,
 <<<<<<< HEAD
+<<<<<<< HEAD
             silent: bool = False,
             **kwargs):
 =======
             silent: bool = False):
 >>>>>>> 01fa547 (autopep8 aggressive src)
+=======
+            silent: bool = False,
+            **kwargs):
+>>>>>>> 76fe6ed (clean raw data)
         """
 
 
