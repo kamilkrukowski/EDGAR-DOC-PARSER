@@ -12,7 +12,6 @@ sys.path.append('..')
 
 
 from tqdm.auto import tqdm
-from secedgar import FilingType
 from transformers import BertTokenizerFast
 import numpy as np
 import torch

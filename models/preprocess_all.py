@@ -12,7 +12,6 @@ import EDGAR
 import torch
 import numpy as np
 from transformers import BertTokenizerFast
-from secedgar import FilingType
 from tqdm.auto import tqdm
 # import os
 import time
