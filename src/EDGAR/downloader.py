@@ -136,8 +136,18 @@ class edgar_downloader:
 
         user_agent = "".join([f"{self.metadata.keys['edgar_agent']}", 
                               f": {self.metadata.keys['edgar_email']}"])
+
+        document_type = kwargs.get('document_type', '10-Q').replace('-',"").lower()
+        assert document_type in {'10q', '8k', None}
+       
+        if document_type == '10q':
+            filing_type = FilingType.FILING_10Q
+        elif document_type == '8k':
+            filing_type = FilingType.FILING_8K
+        else:
+            filing_type = None
         f = filings(cik_lookup=tikr,
-                    filing_type=kwargs.get('filing_type', None),
+                    filing_type=filing_type,
                     count=kwargs.get('max_num_filings', None),
                     user_agent=user_agent,
                     start_date=kwargs.get('start_date', None),

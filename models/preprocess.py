@@ -59,7 +59,7 @@ def download_tikrs(tikrs):
 
     if len(to_download) != 0:
         for tikr in tqdm(to_download, desc="Downloading", leave=False):
-            loader.query_server(tikr, force=args.force, filing_type=FilingType.FILING_10Q)
+            loader.query_server(tikr, force=args.force, document_type='10-Q')
             time.sleep(5)
 
 def change_digit_to_alphanumeric(text):

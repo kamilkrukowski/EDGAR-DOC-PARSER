@@ -60,7 +60,7 @@ def download_tikrs(tikrs):
             loader.query_server(
                 tikr,
                 force=args.force,
-                filing_type=FilingType.FILING_10Q)
+                document_type='10-Q')
             time.sleep(5)
 
     if len(to_download) != 0:
@@ -68,7 +68,7 @@ def download_tikrs(tikrs):
             loader.query_server(
                 tikr,
                 force=args.force,
-                filing_type=FilingType.FILING_8K)
+                document_type='8-K')
             time.sleep(5)
 
 
@@ -78,7 +78,7 @@ def change_digit_to_alphanumeric(text):
     return text
 
 
-# download_tikrs(tikrs)
+download_tikrs(tikrs)
 
 raw_data = list()
 label_map = set()
@@ -92,8 +92,8 @@ for tikr in tikrs:
         document_type="all",
         desc=f"{tikr} :Inflating HTM")
     annotated_docs = parser.get_annotated_submissions(tikr, silent=True)
-    # if (args.demo):
-    #     annotated_docs = [annotated_docs[0]]
+    if (args.demo):
+        annotated_docs = [annotated_docs[0]]
 
     # to process the documents and extract relevant information.
     for doc in annotated_docs:
