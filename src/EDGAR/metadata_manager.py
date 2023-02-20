@@ -33,7 +33,11 @@ class metadata_manager(dict):
         self.keys = load(open(self.keys_path, 'r'), Loader=Loader)
 
     def save_keys(self):
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 01fa547 (autopep8 aggressive src)
         dump(self.keys, open(self.keys_path, 'w'), Dumper=Dumper)
 
     def load_tikr_metadata(self, tikr):
@@ -159,6 +163,7 @@ class metadata_manager(dict):
     def file_was_processed(self, tikr: str, submission: str, filename: str):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
         assert sequence is not None, "Error: filename not found"
+<<<<<<< HEAD
         doc = self[tikr]['submissions'][submission]['documents'][sequence]
         return doc.get('features_pregenerated', False)
 
@@ -182,3 +187,23 @@ class metadata_manager(dict):
         with open(tikr_fpath) as json_file:
             data = json.load(json_file)
         return [data[i]['ticker'] for i in data]
+=======
+        return self[tikr]['submissions'][submission]['documents'][sequence].get(
+            'features_pregenerated', False)
+
+    def save_tikrdataset(self, tikr_data, tikr: str):
+        self[tikr]['HAS_DATASET'] = True
+
+        data_path = os.path.join(self.data_dir, "array_dataset", f"{tikr}.pkl")
+        if not os.path.exists(os.path.join(self.data_dir, "array_dataset")):
+            os.mkdir(os.path.join(self.data_dir, "array_dataset"))
+
+        np.save(data_path, tikr_data)
+
+    def load_tikrdataset(self, tikr: str):
+
+        assert self[tikr]['HAS_DATASET'], "NO DATASET FOR TIKR"
+
+        data_path = os.path.join(self.data_dir, "array_dataset", f"{tikr}.pkl")
+        return np.load(data_path)
+>>>>>>> 01fa547 (autopep8 aggressive src)

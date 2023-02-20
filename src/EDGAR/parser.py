@@ -29,8 +29,12 @@ class edgar_parser:
 
             Parameters
             --------------
+<<<<<<< HEAD
             info: a set in structure ((tag, attributes),data, range) that contains information of the element.
                         Attributes is in a format of list of set : `[(attr, value)]`
+=======
+            info: a set in structure ((tag, attributes),data, range) that contains information of the element. Attributes is in a format of list of set : `[(attr, value)]`
+>>>>>>> 01fa547 (autopep8 aggressive src)
 
             attributes
             ----------
@@ -329,6 +333,7 @@ class edgar_parser:
     def get_annotated_submissions(self, tikr, silent: bool = False):
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
 =======
         return [i for i in self.metadata[tikr]['submissions']
@@ -341,10 +346,15 @@ class edgar_parser:
         return [i for i in self.metadata[tikr]['submissions'] if self._is_10q_annotated(tikr, i, silent=silent) or self._is_8k_annotated(tikr, i, silent=silent)]
 >>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
 >>>>>>> 4ba9685 (download and parse 8-k and 10-q or all)
+=======
+        return [i for i in self.metadata[tikr]['submissions']
+                if self._is_10q_annotated(tikr, i, silent=silent)]
+>>>>>>> 01fa547 (autopep8 aggressive src)
 
     """
         Returns whether given tikr submission has annotated ix elements
     """
+<<<<<<< HEAD
 
     def _is_10q_annotated(
             self,
@@ -366,10 +376,19 @@ class edgar_parser:
 <<<<<<< HEAD
 <<<<<<< HEAD
     def _is_8k_annotated(self, tikr, submission, silent: bool = False) -> bool:
+=======
+>>>>>>> 01fa547 (autopep8 aggressive src)
 
-        assert tikr in self.metadata;
+    def _is_10q_annotated(
+            self,
+            tikr,
+            submission,
+            silent: bool = False) -> bool:
+
+        assert tikr in self.metadata
         assert submission in self.metadata[tikr]['submissions']
 
+<<<<<<< HEAD
         is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get('is_8k_annotated', None)
         if is_annotated is not None:
             return is_annotated
@@ -400,6 +419,19 @@ class edgar_parser:
 >>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
 >>>>>>> 4ba9685 (download and parse 8-k and 10-q or all)
 
+=======
+        is_annotated = self.metadata[tikr]['submissions'][submission]['attrs'].get(
+            'is_10q_annotated', None)
+        if is_annotated is not None:
+            return is_annotated
+        else:
+            return self._gen_10q_annotated_metadata(
+                tikr, submission, silent=silent)
+
+    def _gen_10q_annotated_metadata(
+            self, tikr, submission, silent: bool = False):
+
+>>>>>>> 01fa547 (autopep8 aggressive src)
         annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
 
         _file = None
@@ -412,6 +444,7 @@ class edgar_parser:
         if _file is None:
             if silent:
                 return False
+<<<<<<< HEAD
             else:
                 warnings.warn(
                     "Document Encountered without 10-Q", RuntimeWarning)
@@ -468,6 +501,17 @@ class edgar_parser:
                     if files[file].get('is_ims-document', False):
                         self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = False
                         warnings.warn("Encountered unlabeled IMS-DOCUMENT", RuntimeWarning)
+=======
+            else:
+                warnings.warn(
+                    "Document Encountered without 10-Q", RuntimeWarning)
+                for file in files:
+                    if files[file].get('is_ims-document', False):
+                        self.metadata[tikr]['submissions'][submission]['attrs']['is_10q_annotated'] = False
+                        warnings.warn(
+                            "Encountered unlabeled IMS-DOCUMENT",
+                            RuntimeWarning)
+>>>>>>> 01fa547 (autopep8 aggressive src)
                         return False
                 if len(files) == 0:
                     warnings.warn("No Files under Document", RuntimeWarning)
@@ -476,9 +520,10 @@ class edgar_parser:
         assert _file is not None, 'Missing 8-K'
 
         data = None
-        fname = os.path.join(self.data_dir, 'processed', tikr, submission, _file)
+        fname = os.path.join(self.data_dir, 'processed',
+                             tikr, submission, _file)
         with open(fname, 'r') as f:
-            data = f.read();
+            data = f.read()
         for tag in annotated_tag_list:
             if re.search(tag, data):
                 self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = True
@@ -486,6 +531,7 @@ class edgar_parser:
         self.metadata[tikr]['submissions'][submission]['attrs']['is_8k_annotated'] = False
         return False
 
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 =======
@@ -493,6 +539,8 @@ class edgar_parser:
 =======
 >>>>>>> 9ac5426 (download and parse 8-k and 10-q or all)
 >>>>>>> 4ba9685 (download and parse 8-k and 10-q or all)
+=======
+>>>>>>> 01fa547 (autopep8 aggressive src)
     """
     Parses some documents 2020+ at least
 
@@ -778,8 +826,12 @@ class edgar_parser:
             submission: str,
             filename: str,
             force: bool = False,
+<<<<<<< HEAD
             silent: bool = False,
             **kwargs):
+=======
+            silent: bool = False):
+>>>>>>> 01fa547 (autopep8 aggressive src)
         """
 
 
