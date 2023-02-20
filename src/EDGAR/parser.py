@@ -1,4 +1,3 @@
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webelement import WebElement
@@ -14,9 +13,10 @@ import pathlib
 from html.parser import HTMLParser
 
 from .metadata_manager import metadata_manager
+from .document import DocumentType
 
 
-class edgar_parser:
+class Parser:
     """
 
         Main class for extracting information from HTML documents
@@ -29,8 +29,9 @@ class edgar_parser:
 
             Parameters
             --------------
-            info: a set in structure ((tag, attributes),data, range) that contains information of the element.
-                        Attributes is in a format of list of set : `[(attr, value)]`
+            info: a set in structure ((tag, attributes),data, range) that
+                        contains information of the element. Attributes is
+                            in a format of list of set : `[(attr, value)]`
 
             attributes
             ----------
@@ -61,7 +62,8 @@ class edgar_parser:
     class Span_Parser(HTMLParser):
         """
             Class that handles the a string of span element
-            It can also be used on unannotated documents, and only the first output is used.
+            It can also be used on unannotated documents,
+                and only the first output is used.
 
             return
             -------
@@ -70,7 +72,7 @@ class edgar_parser:
         """
 
         def __init__(self):
-            super(edgar_parser.Span_Parser, self).__init__()
+            super(Parser.Span_Parser, self).__init__()
             self.tags_opened = []
             self.found_annotation = []  # ((tag, attr), data)
             self.count = 0  # sanity check, should be len(span_txt)+1
@@ -94,8 +96,9 @@ class edgar_parser:
             if len(self.tags_opened) == 1:  # the out most tag
                 self.count += 1
             if self.tags_opened[-1][0] in annot_tag:  # in annotation element
-                self.found_annotation += [(self.tags_opened[-1],
-                                           data.replace('\n', '').strip() + ' ')]
+                addition = [(self.tags_opened[-1],
+                             data.replace('\n', '').strip() + ' ')]
+                self.found_annotation += addition
 
         # wrap things up into an element, and a list of elements of annotation
         # elements
@@ -104,7 +107,7 @@ class edgar_parser:
             return root_element, self.found_annotation
 
     def __init__(self, metadata: metadata_manager,
-                 data_dir: str,
+                 data_dir: str = 'edgar_data',
                  headless: bool = True):
         """
 
@@ -113,18 +116,18 @@ class edgar_parser:
         ---------
         metadata: metadata_manager, default=None
             a meta_manager that can process all metadata
-        data_dir: str, default = 'edgar_download'
+        data_dir: str, default = 'edgar_data'
             string for data directory
          headless: bool, default=True
             If (True), it will launch browser without UI
 
         Returns
         --------
-        edgar_parser
+        Parser
 
         Notes
         ------
-        edgar_parser extracts information from HTML documents
+        Prser extracts information from HTML documents
         """
         self.driver = None
         self.headless = headless
@@ -163,21 +166,23 @@ class edgar_parser:
         self.annot_search_pattern = annot_search_pattern
         self.unannot_search_pattern = unannot_search_pattern
 
-    """
-        helper function that finds element with given tags
-
-        Parameters
-        ---------
-        pattern -- a list of two strings, corresponding to start and end of an element,
-                        ex. '['<span', '</span>']'. The tags to be find and extract
-        txt -- the string taht containing some html code
-
-        Returns
-        --------
-        A list of set of two numbers, representing the begining and end positon of an element.
-    """
     @staticmethod
     def find_all_pattern(pattern, txt):
+        """
+            helper function that finds element with given tags
+
+            Parameters
+            ---------
+            pattern -- a list of two strings, corresponding to start
+                            and end of an element, ex. '['<span', '</span>']'.
+                                The tags to be find and extract
+            txt -- the string that containing some html code
+
+            Returns
+            --------
+            A list of set of two numbers, representing
+                the beginning and end position of an element.
+        """
         starts = list(re.finditer(pattern[0], txt))
         ends = list(re.finditer(pattern[1], txt))
         tag_finds = sorted(starts + ends, key=lambda x: x.span()[0])
@@ -194,18 +199,18 @@ class edgar_parser:
         result1 = [(i[0].span()[0], i[1].span()[1]) for i in result]
         return result1
 
-    """
-    check whether strings in child_span is in any of the parent_span
-        Parameters
-        ---------
-        child_span, parent_span: a list of spans
-
-        Returns
-        --------
-        a list of boolean values
-    """
     @staticmethod
     def labels_in_table(child_span, parent_span):
+        """
+        check whether strings in child_span is in any of the parent_span
+            Parameters
+            ---------
+            child_span, parent_span: a list of spans
+
+            Returns
+            --------
+            a list of boolean values
+        """
 
         # print('child_span:', child_span)
 
@@ -225,22 +230,16 @@ class edgar_parser:
                 t_p += 1
         return child_in_parent
 
-    """
-    Parses some documents (2001-2013) at least
-
-        driver_path -- path of file to open
-        highlight -- add red box around detected fields
-        save -- save htm copy (with/without highlighting) to out_path
-    """
-
     def _parse_unannotated_text(
-        self,
-        driver_path: str,
-        highlight: bool = False,
-        save: bool = False,
-        out_path: str = os.path.join(
-            '.',
-            'sample.htm')):
+            self,
+            driver_path: str):
+        """
+        Parses some documents (2001-2013) at least
+
+            driver_path -- path of file to open
+            highlight -- add red box around detected fields
+            save -- save htm copy (with/without highlighting) to out_path
+        """
 
         with open(driver_path, encoding='utf-8') as file:
             f = file.read()
@@ -263,7 +262,7 @@ class edgar_parser:
         Get a driver filename uri path from data identifiers
     """
 
-    def get_driver_path(self, tikr, submission, fname, partition='processed'):
+    def get_driver_path(self, tikr, submission, fname, partition):
         # return pathlib.Path(os.path.join(self.data_dir, partition, tikr,
         # submission, fname)).absolute().as_uri()
         return pathlib.Path(
@@ -275,13 +274,7 @@ class edgar_parser:
                 fname)).absolute()
 
     def _parse_annotated_text(
-        self,
-        driver_path: str,
-        highlight: bool = False,
-        save: bool = False,
-        out_path: str = os.path.join(
-            '.',
-            'sample.htm')):
+            self, driver_path: str, **kwargs):
         """
         Parses some documents 2020+ at least
 
@@ -308,37 +301,60 @@ class edgar_parser:
         forbidden = {
             i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'', '**'})
 
-        # print('f: \n', len(f))
-        # print('found before forbidden: ', found)
-
         found = [i for i in found if i.text not in forbidden]
         annotation_dict2 = dict()
         for i in found:
             annotation_dict2[i] = annotation_dict[i]
 
-        # print('found: ', found)
-
         table_range = self.find_all_pattern(self.table_search_key, f)
         in_table = self.labels_in_table([i.range for i in found], table_range)
         return found, annotation_dict, in_table
 
-    """
-        Return list of submissions names with annotated 10-Q forms
-    """
+    # TODO make work with 8k
+    def get_annotated_submissions(self, tikr,
+                                  document_type='all',
+                                  silent: bool = False) -> list:
+        """
+            Return list of submissions names with annotated 10-Q forms
+        """
+        document_type = DocumentType(document_type)
 
-    def get_annotated_submissions(self, tikr, silent: bool = False):
-        return [i for i in self.metadata[tikr]['submissions']
-                if self._is_10q_annotated(tikr, i, silent=silent)]
+        if document_type == 'all':
+            return self.get_annotated_submissions(
+                tikr=tikr,
+                document_type='10q',
+                silent=silent) + self.get_annotated_submissions(
+                    tikr,
+                    document_type='8k', silent=silent)
 
-    """
-        Returns whether given tikr submission has annotated ix elements
-    """
+        submissions = [i for i in self.metadata._get_tikr(tikr)['submissions']]
+        out = list()
+        for submission in submissions:
+            form_type = self.metadata._get_submission(
+                tikr, submission)['attrs']['FORM TYPE']
+            form_type = DocumentType(form_type)
+            if form_type == '10q' and document_type == '10q':
+                if self._is_10q_annotated(
+                        tikr=tikr,
+                        submission=submission, silent=silent):
+
+                    out.append(submission)
+            elif form_type == '8k' and document_type == '8k':
+                raise RuntimeWarning("FORM 8K UNIMPLEMENTED FOR SUBMISSION")
+            elif form_type == 'other' and document_type == 'other':
+                raise RuntimeWarning(
+                    "FORM TYPE \'OTHER\' UNIMPLEMENTED FOR SUBMISSION")
+
+        return out
 
     def _is_10q_annotated(
             self,
             tikr,
             submission,
             silent: bool = False) -> bool:
+        """
+            Returns whether given tikr submission has annotated ix elements
+        """
 
         assert tikr in self.metadata
         assert submission in self.metadata[tikr]['submissions']
@@ -352,9 +368,15 @@ class edgar_parser:
                 tikr, submission, silent=silent)
 
     def _gen_10q_annotated_metadata(
-            self, tikr, submission, silent: bool = False):
+            self, tikr, submission, silent: bool = False, **kwargs):
 
         annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
+
+        document_type = kwargs.get('document_type', None)
+        if document_type is None:
+            document_type = self.metadata._get_submission(
+                tikr, submission)['attrs']['FORM TYPE']
+            document_type = DocumentType(document_type)
 
         _file = None
         files = self.metadata[tikr]['submissions'][submission]['documents']
@@ -384,16 +406,20 @@ class edgar_parser:
         assert _file is not None, 'Missing 10-Q'
 
         data = None
-        fname = os.path.join(self.data_dir, 'processed',
-                             tikr, submission, _file)
-        with open(fname, 'r', encoding = 'utf-8') as f:
-            data = f.read()
-        for tag in annotated_tag_list:
-            if re.search(tag, data):
-                self.metadata[tikr]['submissions'][submission]['attrs'][
-                    'is_10q_annotated'] = True
-                return True
-        self.metadata[tikr]['submissions'][submission]['attrs'][
+        fname = os.path.join(self.data_dir,
+                             DocumentType.EXTRACTED_FILE_DIR_NAME,
+                             tikr, f'{document_type}', submission)
+        files = os.listdir(fname)
+
+        for file in files:
+            with open(os.path.join(fname, file), 'r', encoding='utf-8') as f:
+                data = f.read()
+            for tag in annotated_tag_list:
+                if re.search(tag, data):
+                    self.metadata._get_submission(tikr, submission)['attrs'][
+                        'is_annotated'] = True
+                    return True
+        self.metadata._get_submission(tikr, submission)['attrs'][
             'is_10q_annotated'] = False
         return False
 
@@ -406,13 +432,9 @@ class edgar_parser:
     """
 
     def parse_annotated_tables(
-        self,
-        driver_path: str,
-        highlight: bool = False,
-        save: bool = False,
-        out_path: str = os.path.join(
-            '.',
-            'sample.htm')):
+            self,
+            driver_path: str,
+            save: bool = False):
 
         # If path is None, stay on current document
         if driver_path is not None:
@@ -433,7 +455,8 @@ class edgar_parser:
             try:
                 found_numeric = found_table[i].find_element(
                     By.TAG_NAME, 'ix:nonfraction')
-                table_is_numeric[i] = 0
+                if found_numeric:
+                    table_is_numeric[i] = 0
                 continue
 
             except NoSuchElementException:
@@ -442,7 +465,8 @@ class edgar_parser:
             try:
                 found_numeric = found_table[i].find_element(
                     By.TAG_NAME, 'ix:nonnumeric')
-                table_is_numeric[i] = 1
+                if found_numeric:
+                    table_is_numeric[i] = 1
 
             except NoSuchElementException:
                 pass
@@ -455,9 +479,6 @@ class edgar_parser:
                 self._draw_border(found_table[i], 'yellow')
             else:
                 self._draw_border(found_table[i], 'pink')
-
-        if save:
-            self._save_driver_source(out_path)
 
         return found_table, table_is_numeric
 
@@ -483,33 +504,14 @@ class edgar_parser:
         Returns
         --------
         Dictionary
-            a dictionary based on page number. The value of the dictionary is the y-coordinates of the corresponding page.
+            a dictionary based on page number. The value of the dictionary
+                    is the y-coordinates of the corresponding page.
 
 
         Notes
         ------
 
         """
-#         page_breaks = self._get_driver().find_elements(By.TAG_NAME, 'hr')
-#         page_breaks = [ i  for i in page_breaks if i.get_attribute("color") == "#999999" or i.get_attribute("color")== ""]
-#         # TODO add logic to handle this
-#         if len(page_breaks) == 0:
-#             warnings.warn("No page breaks detected in document", RuntimeWarning)
-#             return None
-#         page_number = 1
-#         # get the range of y for page 1
-#         page_location = {page_number: [0,page_breaks[0].location["y"]]}
-#         next_page_start =  page_location[page_number][1]
-
-#         # get the range of y for page 2 to  n-1 (n is the last page)
-#         for hr in page_breaks[1:]:
-#             page_number += 1
-#             page_location[page_number]= [next_page_start,hr.location["y"]]
-#             next_page_start =  page_location[page_number][1]
-#         # get the range of y for last page
-#         page_number += 1
-#         page_location[page_number]= [next_page_start,float('inf')]
-#         return page_location
         return None
 
     def get_page_number(self, page_location: dict, element: WebElement) -> int:
@@ -519,7 +521,8 @@ class edgar_parser:
         Parameters
         ---------
         page_location: dict
-            a dictionary based on page number. The value is the y-coordinates of the corresponding page.
+            a dictionary based on page number. The value is
+                the y-coordinates of the corresponding page.
         element: WebElement
             a WebElement to query
 
@@ -528,7 +531,8 @@ class edgar_parser:
         integer
             page number
         integer
-            new y-coordinate of the webelement relative to the y-coordinate of the page
+            new y-coordinate of the webelement relative
+                to the y-coordinate of the page
 
         Notes
         ------
@@ -537,20 +541,29 @@ class edgar_parser:
         if page_location is None:
             return None, None
 
-    # -----------get attribute-------------------------------------------------#
+    # -----------get attribute-----------------------------------------------#
     """
     text - the text value of the annotated label (e.g. 10-Q)
-    found_index - index of the parent span webelement in the list of webelements
+    found_index - index of the parent span webelement
+                        in the list of webelements
     full_text - neighboring text (based on the text value of the parent span)
                     (** replace it with new identify neighboring text function)
-    anno_index - index of the annotation in the list of annotation based on its webelement
-    anno_name - the name attribute from the annotation tag (e.g. us-gaap:SegmentReportingDisclosureTextBlock)
-    anno_id - the id attribute from the annotation tag (e.g. id3VybDovL2RvY3MudjEvZG9jOjY0OTlhYTNmZjJk...)
-    anno_format - the format attribute from the annotation tag (e.g. ixt:numdotdecimal)
-    anno_ix_type - the ix type attribute from the annotation tag (e.g. ix:nonfraction)
-    anno_unitref - the unit reference attribute from the annotation tag (e.g. usd)
-    anno_decimals - the decimal place attribute from the annotation tag (e.g. -3)
-    anno_contextref - the context reference attribute from the annotation tag (e.g. ic6b57dd3d48343d99e743248386420fc_I20201231)
+    anno_index - index of the annotation in the
+                    list of annotation based on its webelement
+    anno_name - the name attribute from the annotation tag
+                    (e.g. us-gaap:SegmentReportingDisclosureTextBlock)
+    anno_id - the id attribute from the annotation tag
+                    (e.g. id3VybDovL2RvY3MudjEvZG9jOjY0OTlhYTNmZjJk...)
+    anno_format - the format attribute from the annotation tag
+                        (e.g. ixt:numdotdecimal)
+    anno_ix_type - the ix type attribute from the annotation tag
+                        (e.g. ix:nonfraction)
+    anno_unitref - the unit reference attribute from the annotation tag
+                        (e.g. usd)
+    anno_decimals - the decimal place attribute from the annotation tag
+                        (e.g. -3)
+    anno_contextref - the context reference attribute from the annotation tag
+                        (e.g. ic6b57dd3d48343d99e743248386420fc_I20201231)
     page_number - the page number for the label
     x - x coordinate
     y - y coordinate base on page number
@@ -574,7 +587,8 @@ class edgar_parser:
         webelements: list[WebElement]
             list of span WebElement
         annotations: dict
-            Value is the list of annotation webelement. Key is the span webelement.
+            Value is the list of annotation webelement.
+                Key is the span webelement.
         in_table: list[Boolean]
             list of boolean. If (True), then it is table related webelement.
         save: bool, default=False
@@ -592,7 +606,8 @@ class edgar_parser:
         Notes
         ------
         Documents without annotations receive entries
-            in the dataframe with a sentinel column ``is_annotated`` set to False.
+            in the dataframe with a sentinel column ``is_annotated``
+                set to False.
         """
         COLUMN_NAMES = [
             "anno_text",
@@ -613,7 +628,6 @@ class edgar_parser:
             "width",
             "is_annotated",
             "in_table"]
-        page_location = None  # page number and y range
         df = pd.DataFrame(columns=COLUMN_NAMES)
 
         for i, elem in enumerate(webelements):
@@ -683,6 +697,7 @@ class edgar_parser:
             filename: str,
             force: bool = False,
             silent: bool = False,
+            remove_raw: bool = False,
             **kwargs):
         """
 
@@ -701,8 +716,9 @@ class edgar_parser:
                     and abort server query.
         silent: bool default=False
             if (True), then does not print runtime warnings.
-        clean_raw: bool
-                default to be False. If true, the raw data will be cleaned after parsed. 
+        remove_raw: bool
+                default to be False. If true, the raw data will be deleted
+                    after parsing and caching result.
 
         Returns
         --------
@@ -716,22 +732,36 @@ class edgar_parser:
         Documents without annotations receive entries in the dataframe
             The sentinel column ``is_annotated`` set to False.
         """
+        document_type = self.metadata.get_doctype(tikr, submission, filename)
         if not force and self.metadata.file_was_processed(
                 tikr, submission, filename):
-            return self.load_processed(tikr, submission, filename)
+            return self.load_processed(tikr, submission,
+                                       filename, document_type=document_type)
         else:
+            if document_type != '10q':
+                raise NotImplementedError(
+                    "Not implemented for current form type")
+
             # TODO make process_file detect and work on unannotated files
             if not self._is_10q_annotated(tikr, submission, silent=silent):
                 raise NotImplementedError
+            f_anno_file = pathlib.Path(
+                os.path.join(
+                    self.data_dir,
+                    DocumentType.EXTRACTED_FILE_DIR_NAME,
+                    tikr,
+                    f'{document_type}',
+                    submission,
+                    filename)).absolute()
             elems, annotation_dict, in_table = self._parse_annotated_text(
-                self.get_driver_path(tikr, submission, filename))
+                f_anno_file)
             features = self.get_annotation_features(
                 elems, annotation_dict, in_table)
             self.save_processed(tikr, submission, filename,
-                                elems, annotation_dict, features)
+                                document_type, features)
             self.metadata.save_tikr_metadata(tikr)
-            if kwargs.get('clean_raw', False):
-                os.remove(self.get_driver_path(tikr, submission, filename))
+            if remove_raw and os.path.exists(f_anno_file):
+                os.remove(pathlib.Path(f_anno_file))
             return features
 
     def save_processed(
@@ -739,20 +769,20 @@ class edgar_parser:
             tikr: str,
             submission: str,
             filename: str,
-            elems,
-            annotations: dict,
+            document_type,
             features):
-        path = os.path.join(self.data_dir, 'parsed',
-                            tikr, submission, filename)
+        path = os.path.join(self.data_dir, DocumentType.PARSED_FILE_DIR_NAME,
+                            tikr, f'{submission}',
+                            f'{document_type}', filename)
         if not os.path.exists(path):
             os.system(f"mkdir -p {path}")
         with open(os.path.join(path, 'features.pkl'), 'wb') as f:
             pkl.dump(features, f)
         self.metadata.file_set_processed(tikr, submission, filename, True)
 
-    def load_processed(self, tikr, submission, filename):
-        path = os.path.join(self.data_dir, 'parsed',
-                            tikr, submission, filename)
+    def load_processed(self, tikr, submission, filename, document_type):
+        path = os.path.join(self.data_dir, DocumentType.PARSED_FILE_DIR_NAME,
+                            tikr, submission, f'{document_type}', filename)
         with open(os.path.join(path, 'features.pkl'), 'rb') as f:
             return pkl.load(f)
 

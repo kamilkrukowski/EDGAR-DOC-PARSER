@@ -11,3 +11,4 @@ jobs:
         select: E3,E4,E5,E7,W6,F,B,G0
         maxlinelength: 100
         repotoken: ${{ secrets.GITHUB_TOKEN }}
+        path: src/EDGAR

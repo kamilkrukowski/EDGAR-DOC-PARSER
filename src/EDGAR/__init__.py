@@ -6,8 +6,8 @@ import os
 import inspect
 
 from . import metadata_manager as edgar_metadata
-from . import downloader as edgar_downloader
-from . import parser as edgar_parser
+from .downloader import Downloader
+from .parser import Parser
 
 
 def _relative_to_abs_path(relative_p):
@@ -51,8 +51,7 @@ class EDGAR_singleton:
             kwargs['metadata'] = self._get_metadata(
                 data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
         if self.downloader is None or not reuse:
-            self.downloader = edgar_downloader.edgar_downloader(
-                *args, **kwargs)
+            self.downloader = Downloader(*args, **kwargs)
         return self.downloader
 
     def _get_parser(self, reuse: bool = True, *args, **kwargs):
@@ -63,7 +62,7 @@ class EDGAR_singleton:
             kwargs['metadata'] = self._get_metadata(
                 data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
         if self.parser is None or not reuse:
-            self.parser = edgar_parser.edgar_parser(*args, **kwargs)
+            self.parser = Parser(*args, **kwargs)
         return self.parser
 
 
