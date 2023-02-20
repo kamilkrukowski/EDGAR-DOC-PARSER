@@ -231,13 +231,8 @@ class Parser:
         return child_in_parent
 
     def _parse_unannotated_text(
-        self,
-        driver_path: str,
-        highlight: bool = False,
-        save: bool = False,
-        out_path: str = os.path.join(
-            '.',
-            'sample.htm')):
+            self,
+            driver_path: str):
         """
         Parses some documents (2001-2013) at least
 
@@ -437,13 +432,9 @@ class Parser:
     """
 
     def parse_annotated_tables(
-        self,
-        driver_path: str,
-        highlight: bool = False,
-        save: bool = False,
-        out_path: str = os.path.join(
-            '.',
-            'sample.htm')):
+            self,
+            driver_path: str,
+            save: bool = False):
 
         # If path is None, stay on current document
         if driver_path is not None:
@@ -488,9 +479,6 @@ class Parser:
                 self._draw_border(found_table[i], 'yellow')
             else:
                 self._draw_border(found_table[i], 'pink')
-
-        if save:
-            self._save_driver_source(out_path)
 
         return found_table, table_is_numeric
 
