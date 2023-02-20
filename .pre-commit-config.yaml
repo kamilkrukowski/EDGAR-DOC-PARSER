@@ -1,6 +1,21 @@
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.1.0
+      rev: v4.4.0
       hooks:
         - id: check-added-large-files
+        - id: check-docstring-first
+        - id: check-yaml
         - id: detect-private-key
+        - id: double-quote-string-fixer
+        - id: end-of-file-fixer
+        - id: trailing-whitespace
+        
+    - repo: https://github.com/pycqa/flake8
+      rev: 6.0.0  
+      hooks:
+        -   id: flake8
+
+    - repo: https://github.com/pycqa/pydocstyle
+      rev: 6.3.0  # pick a git hash / tag to point to
+      hooks:
+        -   id: pydocstyle
