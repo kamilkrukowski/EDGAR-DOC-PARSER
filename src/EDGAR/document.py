@@ -1,7 +1,7 @@
 
 
 class DocumentType:
-    
+
     RAW_FILE_DIR_NAME = '.rawcache'
     EXTRACTED_FILE_DIR_NAME = 'files'
     PARSED_FILE_DIR_NAME = 'parsed'
@@ -12,23 +12,21 @@ class DocumentType:
 
     def __init__(self, *args, **kwargs):
 
-        
         if len(args) == 0:
             self.dtype = 'all'
-        elif type(args[0]) is str:
+        elif isinstance(args[0], str):
             self.dtype = DocumentType.parse_string(args[0])
             if self.dtype not in DocumentType.valid_types:
                 raise RuntimeError("Invalid DocumentType Specified")
-        elif type(args[0]) is DocumentType:
-            self.dtype = args[0].dtype;
-        
+        elif isinstance(args[0], DocumentType):
+            self.dtype = args[0].dtype
 
     def __contains__(self, item):
-        if type(item) is str:
-            item = item.lower().replace('-','').strip()
+        if isinstance(item, str):
+            item = item.lower().replace('-', '').strip()
             if item in self.valid_types:
-                return True;
-        return False;
+                return True
+        return False
 
     @staticmethod
     def parse_string(target):
@@ -40,20 +38,18 @@ class DocumentType:
 
     @staticmethod
     def is_valid_type(target):
-        if type(target) is DocumentType:
+        if isinstance(target, DocumentType):
             return True
-        if type(target) is str:
-            return DocumentType.parse_string(target) in DocumentType.valid_types
+        if isinstance(target, str):
+            return DocumentType.parse_string(
+                target) in DocumentType.valid_types
         return False
-        
+
     def __repr__(self):
         out = self.dtype
         if self.dtype in {'10q', '8k'}:
             return out[:-1] + '-' + out.upper()[-1]
         return out
 
-
-
     def __eq__(self, other):
-        return self.dtype == other;
-
+        return self.dtype == other

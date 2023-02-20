@@ -1,4 +1,4 @@
-from secedgar import filings, FilingType
+from secedgar import filings
 from bs4 import BeautifulSoup
 
 
@@ -10,8 +10,6 @@ from tqdm.auto import tqdm
 from time import sleep
 
 
-
-from .metadata_manager import metadata_manager
 from .document import DocumentType
 
 
@@ -20,7 +18,7 @@ class Downloader:
         Class for querying SEC-EDGAR database for files
     """
 
-    def __init__(self, data_dir: str = 'edgar_data', metadata = None):
+    def __init__(self, data_dir: str = 'edgar_data', metadata=None):
 
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
@@ -29,8 +27,10 @@ class Downloader:
         # Always gets the path of the current file
         self.data_dir = data_dir
         # Download and processed directories
-        self.raw_dir = os.path.join(self.data_dir, DocumentType.RAW_FILE_DIR_NAME)
-        self.proc_dir = os.path.join(self.data_dir, DocumentType.PARSED_FILE_DIR_NAME)
+        self.raw_dir = os.path.join(
+            self.data_dir, DocumentType.RAW_FILE_DIR_NAME)
+        self.proc_dir = os.path.join(
+            self.data_dir, DocumentType.PARSED_FILE_DIR_NAME)
 
         self.metadata = metadata
 
@@ -38,24 +38,32 @@ class Downloader:
         self.metadata.load_keys()
 
         # Generate new API Header if missing
-        if 'edgar_email' not in self.metadata.keys or 'edgar_agent' not in self.metadata.keys:
+        if 'edgar_email' not in self.metadata.keys or (
+                'edgar_agent' not in self.metadata.keys):
             print(
-                f"No API Header detected.\nThe SEC requires all EDGAR API users to identify themselves\n\n")
+                ("No API Header detected.\n"
+                 "The SEC requires all EDGAR API users "
+                 "to identify themselves\n\n"))
             if 'edgar_agent' not in self.metadata.keys:
                 print(
-                    "The SEC requires a legal name of the user and any organizational affiliation")
+                    ("The SEC requires a legal name of "
+                     "the user and any organizational affiliation"))
                 answer = 'n'
                 while (answer[0] != 'y' or len(answer) > 4):
                     self.metadata.keys['edgar_agent'] = input("User(s): ")
                     answer = input(
-                        f"Input User(s) \'{self.metadata.keys['edgar_agent']}\'\n Is this correct? (y/n)")
+                        ("Input User(s) "
+                         f"\'{self.metadata.keys['edgar_agent']}\'\n"
+                         " Is this correct? (y/n)"))
             if 'edgar_email' not in self.metadata.keys:
                 print("The SEC requires a contact email for the API user")
                 answer = 'n'
                 while (answer[0] != 'y' or len(answer) > 4):
                     self.metadata.keys['edgar_email'] = input("Email: ")
                     answer = input(
-                        f"Input Email \'{self.metadata.keys['edgar_email']}\'\n Is this correct? (y/n)")
+                        ("Input Email "
+                         f"\'{self.metadata.keys['edgar_email']}\'\n"
+                         " Is this correct? (y/n)"))
             self.metadata.save_keys()
 
     def _gen_tikr_metadata(self, tikr: str, documents, key):
@@ -101,9 +109,11 @@ class Downloader:
             dict(out, **self.metadata[tikr]['submissions'][key]['documents'])
 
     def query_server(
-            self, tikr: str, delay_time: int = 1, force: bool = False, **kwargs):
+            self, tikr: str, delay_time: int = 1,
+            force: bool = False, **kwargs):
         """
-            Download SEC filings to a local directory for later parsing, by company TIKR
+            Download SEC filings to a local directory for later parsing,
+                by company TIKR
 
 
             Parameters
@@ -111,15 +121,19 @@ class Downloader:
             tikr: str
                 a company identifier to query
             force: bool
-                if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+                if (True), then ignore locally downloaded files
+                    and overwrite them. Otherwise, attempt to detect
+                        previous download and abort server query.
             start_date: optional
                 The earliest date to look for filings
             end_date: optional
                 The latest filing date retrievable
             max_num_filings:
-                The maximum number of documents to retrieve. Retrieves all documents if set to `None`.
+                The maximum number of documents to retrieve. Retrieves all
+                    documents if set to `None`.
             delay_time:
-                The time (in seconds) delayed at the beginning of this function. 
+                The time (in seconds) delayed at the
+                    beginning of this function.
         """
         sleep(delay_time)
 
@@ -127,8 +141,9 @@ class Downloader:
             print('\talready downloaded')
             return
 
-        elif (kwargs.get('start_date', None) is None and kwargs.get('end_date', None) is None and
-              kwargs.get('max_num_filings', None) is None
+        elif (kwargs.get('start_date', None) is None and (
+                kwargs.get('end_date', None) is None) and (
+              kwargs.get('max_num_filings', None) is None)
               ):
 
             self.metadata.set_downloaded(tikr, True)
@@ -148,7 +163,8 @@ class Downloader:
         f.save(self.raw_dir)
         warnings.simplefilter('default')
 
-    def get_unpackable_files(self, tikr: str, document_type: str = 'all', **kwargs):
+    def get_unpackable_files(
+            self, tikr: str, document_type: str = 'all', **kwargs):
         """
             Get list of targets for unpack_file func
 
@@ -161,16 +177,17 @@ class Downloader:
 
         """
         # sec-edgar data save location for documents filing ticker
-        document_type = DocumentType(document_type);
+        document_type = DocumentType(document_type)
 
         if document_type == 'all':
-            return self.get_unpackable_files(tikr=tikr, 
-            document_type='10q', **kwargs) + self.get_unpackable_files(
+            return self.get_unpackable_files(
+                tikr=tikr, document_type='10q',
+                **kwargs) + self.get_unpackable_files(
                 tikr=tikr, document_type='8k', **kwargs)
 
         d_dir = os.path.join(self.raw_dir, f'{tikr}', f'{document_type}')
         if not os.path.exists(d_dir):
-            return [];
+            return []
         return os.listdir(d_dir)
 
     def get_submissions(self, tikr, **kwargs):
@@ -188,9 +205,9 @@ class Downloader:
         return [i.split('.txt')[0] for i in self.get_unpackable_files(
             tikr, document_type=kwargs.get('document_type', '10q'))]
 
-
     valid_unpack_types = {
-                "FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}
+        "FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}
+
     def __unpack_doc__(
             self, tikr, submission, doc, document_type, force=True):
         """
@@ -202,13 +219,13 @@ class Downloader:
                 the company the document belongs to
             submission: str
                 the submission the document is from
-            doc: str 
+            doc: str
         """
-        
+
         submission = submission.split('.')[0]
 
         metadata = self.metadata._get_submission(tikr, submission)['documents']
-        
+
         seq = doc.find('sequence')
         i = 20
         while ('\n') not in seq.text[:i]:
@@ -229,39 +246,44 @@ class Downloader:
                 form_type = DocumentType(form_type)
             else:
                 form_type = 'other'
-        
+
         filename = metadata[sequence]['filename']
 
-        ensure_path = os.path.join(self.data_dir, DocumentType.EXTRACTED_FILE_DIR_NAME)
+        ensure_path = os.path.join(
+            self.data_dir, DocumentType.EXTRACTED_FILE_DIR_NAME)
         if not os.path.exists(ensure_path):
-            os.mkdir(ensure_path);
+            os.mkdir(ensure_path)
         ensure_path = os.path.join(ensure_path, f'{tikr}')
         if not os.path.exists(ensure_path):
-            os.mkdir(ensure_path);
+            os.mkdir(ensure_path)
         ensure_path = os.path.join(ensure_path, f'{document_type}')
         if not os.path.exists(ensure_path):
-            os.mkdir(ensure_path);
+            os.mkdir(ensure_path)
         ensure_path = os.path.join(ensure_path, submission)
         if not os.path.exists(ensure_path):
-            os.mkdir(ensure_path);
+            os.mkdir(ensure_path)
 
         out_path = None
         if form_type == '10q':
             if document_type == 'all' or document_type == '10q':
-                out_path = os.path.join(self.data_dir, 
-                    DocumentType.EXTRACTED_FILE_DIR_NAME, f'{tikr}',
-                    f'{document_type}')
+                out_path = os.path.join(
+                    self.data_dir, DocumentType.EXTRACTED_FILE_DIR_NAME,
+                    f'{tikr}', f'{document_type}')
         elif form_type == '8k':
             if document_type == 'all' or document_type == '8k':
-                out_path = os.path.join(self.data_dir, 
-                    DocumentType.EXTRACTED_FILE_DIR_NAME,
-                    f'{tikr}', f'{document_type}')
+                out_path = os.path.join(self.data_dir,
+                                        DocumentType.EXTRACTED_FILE_DIR_NAME,
+                                        f'{tikr}', f'{document_type}')
 
-        with open(os.path.join(out_path, submission, filename), 'w', encoding='utf-8') as f:
+        with open(
+                os.path.join(out_path, submission, filename),
+                'w', encoding='utf-8') as f:
+
             f.write(doc.prettify())
             metadata[sequence]['extracted'] = True
 
-    def unpack_file(self, tikr, file, document_type='all', force=True, remove_raw=False, **kwargs):
+    def unpack_file(self, tikr, file, document_type='all',
+                    force=True, remove_raw=False, **kwargs):
         """
             Processes raw data from one filing at one company;
                 See utility function for getting file names;
@@ -277,9 +299,12 @@ class Downloader:
             document_type: str
                 document type to unpack (10-Q, 8-K, or all)
             force: bool
-                if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+                if (True), then ignore locally downloaded files and
+                    overwrite them. Otherwise, attempt to detect
+                    previous download and abort server query.
             clean_raw: bool
-                default to be true. If true, the raw data will be cleaned after parsed. 
+                default to be true. If true, the raw data will be
+                    cleaned after parsed.
         """
 
         # sec-edgar data save location for documents filing ticker
@@ -315,15 +340,15 @@ class Downloader:
         sec_header = [i for i in sec_header if ':' in i]
         attrs = {i.split(':')[0]: i.split(':')[1] for i in sec_header}
         self.metadata._get_tikr(tikr)['submissions'][fname]['attrs'] = attrs
-    
+
         for doc in documents:
             self.__unpack_doc__(
                 tikr, fname, doc, document_type=document_type, force=force)
-        
+
         if remove_raw:
-            os.remove(os.path.join(d_dir, file));
-            self.metadata.set_downloaded(tikr, False);
-        
+            os.remove(os.path.join(d_dir, file))
+            self.metadata.set_downloaded(tikr, False)
+
         self.metadata.save_tikr_metadata(tikr)
 
     def _is_10q_unpacked(self, tikr):
@@ -337,7 +362,7 @@ class Downloader:
 
     def unpack_bulk(
             self, tikr, force=False, loading_bar=False,
-            desc='Inflating HTM', remove_raw=False, 
+            desc='Inflating HTM', remove_raw=False,
             document_type='all', silent=False):
         """
             Processes all raw data from one company
@@ -347,27 +372,30 @@ class Downloader:
             tikr: str
                 company ticker associated with unpacking
             force: bool
-                if (True), then ignore locally downloaded files and overwrite them. Otherwise, attempt to detect previous download and abort server query.
+                if (True), then ignore locally downloaded files and
+                    overwrite them. Otherwise, attempt to detect
+                    previous download and abort server query.
             loading__bar: bool:
                 if True, will time and show progress
             document_type:
-            
+
         """
-        document_type = DocumentType(document_type);
+        document_type = DocumentType(document_type)
         if document_type == 'all':
             self.unpack_bulk(tikr, force=force, loading_bar=False,
-            desc=desc, remove_raw=remove_raw, document_type='10q', silent=silent)
+                             desc=desc, remove_raw=remove_raw,
+                             document_type='10q', silent=silent)
             self.unpack_bulk(tikr, force=force, loading_bar=False,
-            desc=desc, remove_raw=remove_raw, document_type='8k', silent=silent)
-            return;
+                             desc=desc, remove_raw=remove_raw,
+                             document_type='8k', silent=silent)
+            return
 
         # Early quitting conditions
         if not force:
             if document_type == '10q' and self._is_10q_unpacked(tikr):
                 return
-            if document_type == '8k'  and self._is_8k_unpacked(tikr):
+            if document_type == '8k' and self._is_8k_unpacked(tikr):
                 return
-        
 
         # Read each text submission dump for each quarterly filing
         files = self.get_unpackable_files(
@@ -387,7 +415,8 @@ class Downloader:
                 remove_raw=remove_raw)
 
         # TODO if we unpack 10-q then 8-k we should have all unpacked
-        self.metadata.set_unpacked(tikr, document_type=document_type, value=True);
+        self.metadata.set_unpacked(
+            tikr, document_type=document_type, value=True)
 
         # Delete raw files if desired
         d_dir = os.path.join(self.raw_dir, f'{tikr}', f'{document_type}')

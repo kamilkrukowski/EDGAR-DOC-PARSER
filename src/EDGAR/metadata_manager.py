@@ -15,7 +15,8 @@ class metadata_manager(dict):
         # Always gets the path of the current file
         self.data_dir = data_dir
 
-        self.meta_dir = os.path.join(self.data_dir, DocumentType.META_FILE_DIR_NAME)
+        self.meta_dir = os.path.join(
+            self.data_dir, DocumentType.META_FILE_DIR_NAME)
         if not os.path.exists(self.meta_dir):
             os.system('mkdir -p ' + self.meta_dir)
 
@@ -27,8 +28,8 @@ class metadata_manager(dict):
         for file in os.listdir(self.meta_dir):
             os.remove(os.path.join(self.meta_dir, file))
         # Keep API Keys
-        self.save_keys();
-        self.clear();
+        self.save_keys()
+        self.clear()
 
     def load_keys(self):
 
@@ -39,7 +40,7 @@ class metadata_manager(dict):
         self.keys = load(open(self.keys_path, 'r'), Loader=Loader)
 
     def save_keys(self):
-        
+
         dump(self.keys, open(self.keys_path, 'w'), Dumper=Dumper)
 
     def load_tikr_metadata(self, tikr):
@@ -77,10 +78,10 @@ class metadata_manager(dict):
         pdict = self[tikr]['submissions']
         if fname not in pdict:
             pdict[fname] = {'attrs': dict(), 'documents': dict()}
-    
+
     def get_doctype(self, tikr, submission, filename):
-        sequence = self.find_sequence_of_file(tikr=tikr, 
-                        submission=submission, filename=filename);
+        sequence = self.find_sequence_of_file(
+                        tikr=tikr, submission=submission, filename=filename)
         form_type = self._get_submission(tikr, submission)['documents']
         form_type = form_type[sequence]['type']
 
@@ -181,28 +182,29 @@ class metadata_manager(dict):
         doc = self[tikr]['submissions'][submission]['documents'][sequence]
         return doc.get('features_pregenerated', False)
 
-    def set_downloaded(self, tikr: str, value: bool=True):
-        self._get_tikr(tikr)['attrs']['downloaded'] = value;
+    def set_downloaded(self, tikr: str, value: bool = True):
+        self._get_tikr(tikr)['attrs']['downloaded'] = value
         self.save_tikr_metadata(tikr)
-    
+
     def is_downloaded(self, tikr):
         """
             Returns True if TIKR had previous bulk download
         """
         return self._get_tikr(tikr)['attrs'].get('downloaded', False)
-    
+
     def set_unpacked(self, tikr, document_type, value=True):
 
         document_type = DocumentType(document_type)
-        self._get_tikr(tikr)['attrs'][f'unpacked_{document_type}'] = value;
+        self._get_tikr(tikr)['attrs'][f'unpacked_{document_type}'] = value
         self.save_tikr_metadata(tikr)
-    
+
     def is_unpacked(self, tikr, document_type):
         """
             Returns True if TIKR had previous bulk download
         """
         document_type = DocumentType(document_type)
-        return self._get_tikr(tikr)['attrs'].get(f'unpacked_{document_type}', False)
+        return self._get_tikr(tikr)['attrs'].get(
+            f'unpacked_{document_type}', False)
 
     def get_tikr_list(self):
         """
