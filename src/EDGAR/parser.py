@@ -329,11 +329,14 @@ class Parser:
         for submission in submissions:
             form_type = self.metadata._get_submission(tikr, submission)['attrs']['FORM TYPE']
             form_type = DocumentType(form_type)
-            if form_type == '10q':
+            if form_type == '10q' and document_type == '10q':
                 if self._is_10q_annotated(tikr=tikr, submission=submission, silent=silent):
                     out.append(submission);
-            elif form_type == '8k':
+            elif form_type == '8k' and document_type == '8k':
                 raise RuntimeWarning("FORM 8K UNIMPLEMENTED FOR SUBMISSION")
+            elif form_type == 'other' and document_type == 'other':
+                raise RuntimeWarning("FORM TYPE \'OTHER\' UNIMPLEMENTED FOR SUBMISSION")
+
         return out
 
     def _is_10q_annotated(
@@ -397,14 +400,17 @@ class Parser:
         data = None
         fname = os.path.join(self.data_dir, DocumentType.EXTRACTED_FILE_DIR_NAME,
                              tikr, f'{document_type}', submission)
-        with open(fname, 'r', encoding = 'utf-8') as f:
-            data = f.read()
-        for tag in annotated_tag_list:
-            if re.search(tag, data):
-                self.metadata[tikr]['submissions'][submission]['attrs'][
-                    'is_10q_annotated'] = True
-                return True
-        self.metadata[tikr]['submissions'][submission]['attrs'][
+        files = os.listdir(fname);
+
+        for file in files:
+            with open(os.path.join(fname, file), 'r', encoding = 'utf-8') as f:
+                data = f.read()
+            for tag in annotated_tag_list:
+                if re.search(tag, data):
+                    self.metadata._get_submission(tikr, submission)['attrs'][
+                        'is_annotated'] = True
+                    return True
+        self.metadata._get_submission(tikr, submission)['attrs'][
             'is_10q_annotated'] = False
         return False
 
@@ -729,42 +735,34 @@ class Parser:
         Documents without annotations receive entries in the dataframe
             The sentinel column ``is_annotated`` set to False.
         """
+        document_type = self.metadata.get_doctype(tikr, submission, filename); 
         if not force and self.metadata.file_was_processed(
                 tikr, submission, filename):
-            return self.load_processed(tikr, submission, filename)
+            return self.load_processed(tikr, submission,
+                        filename, document_type=document_type)
         else:
-            document_type = self.metadata._get_submission(
-                tikr, submission)['attrs']['FORM TYPE']
-            document_type = DocumentType(document_type)
-
             if document_type != '10q':
                 raise NotImplementedError("Not implemented for current form type")
                 
             # TODO make process_file detect and work on unannotated files
             if not self._is_10q_annotated(tikr, submission, silent=silent):
                 raise NotImplementedError
-            elems, annotation_dict, in_table = self._parse_annotated_text(
-                pathlib.Path(
-                    os.path.join(
+            f_anno_file = pathlib.Path(
+                        os.path.join(
                         self.data_dir,
                         DocumentType.EXTRACTED_FILE_DIR_NAME,
                         tikr,
                         f'{document_type}',
-                        filename)).absolute())
+                        submission,
+                        filename)).absolute()
+            elems, annotation_dict, in_table = self._parse_annotated_text(f_anno_file)
             features = self.get_annotation_features(
                 elems, annotation_dict, in_table)
             self.save_processed(tikr, submission, filename,
-                                elems, annotation_dict, features)
+                                document_type, features)
             self.metadata.save_tikr_metadata(tikr)
-            if remove_raw:
-                os.remove(
-                    pathlib.Path(
-                        os.path.join(
-                            self.data_dir,
-                            DocumentType.EXTRACTED_FILE_DIR_NAME,
-                            tikr,
-                            f'{document_type}',
-                            filename)).absolute())
+            if remove_raw and os.path.exists(f_anno_file):
+                os.remove(pathlib.Path(f_anno_file))
             return features
 
     def save_processed(
@@ -772,20 +770,19 @@ class Parser:
             tikr: str,
             submission: str,
             filename: str,
-            elems,
-            annotations: dict,
+            document_type,
             features):
         path = os.path.join(self.data_dir, DocumentType.PARSED_FILE_DIR_NAME,
-                            tikr, submission, filename)
+                            tikr, f'{submission}', f'{document_type}', filename)
         if not os.path.exists(path):
             os.system(f"mkdir -p {path}")
         with open(os.path.join(path, 'features.pkl'), 'wb') as f:
             pkl.dump(features, f)
         self.metadata.file_set_processed(tikr, submission, filename, True)
 
-    def load_processed(self, tikr, submission, filename):
+    def load_processed(self, tikr, submission, filename, document_type):
         path = os.path.join(self.data_dir, DocumentType.PARSED_FILE_DIR_NAME,
-                            tikr, submission, filename)
+                            tikr, submission, f'{document_type}', filename)
         with open(os.path.join(path, 'features.pkl'), 'rb') as f:
             return pkl.load(f)
 

@@ -77,6 +77,19 @@ class metadata_manager(dict):
         pdict = self[tikr]['submissions']
         if fname not in pdict:
             pdict[fname] = {'attrs': dict(), 'documents': dict()}
+    
+    def get_doctype(self, tikr, submission, filename):
+        sequence = self.find_sequence_of_file(tikr=tikr, 
+                        submission=submission, filename=filename);
+        form_type = self._get_submission(tikr, submission)['documents']
+        form_type = form_type[sequence]['type']
+
+        if DocumentType.is_valid_type(form_type):
+            form_type = DocumentType(form_type)
+        else:
+            form_type = DocumentType('other')
+
+        return form_type
 
     def get_10q_name(self, tikr, submission):
         """
