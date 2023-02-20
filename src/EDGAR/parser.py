@@ -14,9 +14,10 @@ import pathlib
 from html.parser import HTMLParser
 
 from .metadata_manager import metadata_manager
+from .document import DocumentType
 
 
-class edgar_parser:
+class Parser:
     """
 
         Main class for extracting information from HTML documents
@@ -61,7 +62,8 @@ class edgar_parser:
     class Span_Parser(HTMLParser):
         """
             Class that handles the a string of span element
-            It can also be used on unannotated documents, and only the first output is used.
+            It can also be used on unannotated documents, 
+                and only the first output is used.
 
             return
             -------
@@ -70,7 +72,7 @@ class edgar_parser:
         """
 
         def __init__(self):
-            super(edgar_parser.Span_Parser, self).__init__()
+            super(Parser.Span_Parser, self).__init__()
             self.tags_opened = []
             self.found_annotation = []  # ((tag, attr), data)
             self.count = 0  # sanity check, should be len(span_txt)+1
@@ -104,7 +106,7 @@ class edgar_parser:
             return root_element, self.found_annotation
 
     def __init__(self, metadata: metadata_manager,
-                 data_dir: str,
+                 data_dir: str = 'edgar_data',
                  headless: bool = True):
         """
 
@@ -113,18 +115,18 @@ class edgar_parser:
         ---------
         metadata: metadata_manager, default=None
             a meta_manager that can process all metadata
-        data_dir: str, default = 'edgar_download'
+        data_dir: str, default = 'edgar_data'
             string for data directory
          headless: bool, default=True
             If (True), it will launch browser without UI
 
         Returns
         --------
-        edgar_parser
+        Parser
 
         Notes
         ------
-        edgar_parser extracts information from HTML documents
+        Prser extracts information from HTML documents
         """
         self.driver = None
         self.headless = headless
@@ -163,21 +165,21 @@ class edgar_parser:
         self.annot_search_pattern = annot_search_pattern
         self.unannot_search_pattern = unannot_search_pattern
 
-    """
-        helper function that finds element with given tags
-
-        Parameters
-        ---------
-        pattern -- a list of two strings, corresponding to start and end of an element,
-                        ex. '['<span', '</span>']'. The tags to be find and extract
-        txt -- the string taht containing some html code
-
-        Returns
-        --------
-        A list of set of two numbers, representing the begining and end positon of an element.
-    """
     @staticmethod
     def find_all_pattern(pattern, txt):
+        """
+            helper function that finds element with given tags
+
+            Parameters
+            ---------
+            pattern -- a list of two strings, corresponding to start and end of an element,
+                            ex. '['<span', '</span>']'. The tags to be find and extract
+            txt -- the string taht containing some html code
+
+            Returns
+            --------
+            A list of set of two numbers, representing the begining and end positon of an element.
+        """
         starts = list(re.finditer(pattern[0], txt))
         ends = list(re.finditer(pattern[1], txt))
         tag_finds = sorted(starts + ends, key=lambda x: x.span()[0])
@@ -194,18 +196,18 @@ class edgar_parser:
         result1 = [(i[0].span()[0], i[1].span()[1]) for i in result]
         return result1
 
-    """
-    check whether strings in child_span is in any of the parent_span
-        Parameters
-        ---------
-        child_span, parent_span: a list of spans
-
-        Returns
-        --------
-        a list of boolean values
-    """
     @staticmethod
     def labels_in_table(child_span, parent_span):
+        """
+        check whether strings in child_span is in any of the parent_span
+            Parameters
+            ---------
+            child_span, parent_span: a list of spans
+
+            Returns
+            --------
+            a list of boolean values
+        """
 
         # print('child_span:', child_span)
 
@@ -225,14 +227,6 @@ class edgar_parser:
                 t_p += 1
         return child_in_parent
 
-    """
-    Parses some documents (2001-2013) at least
-
-        driver_path -- path of file to open
-        highlight -- add red box around detected fields
-        save -- save htm copy (with/without highlighting) to out_path
-    """
-
     def _parse_unannotated_text(
         self,
         driver_path: str,
@@ -241,6 +235,13 @@ class edgar_parser:
         out_path: str = os.path.join(
             '.',
             'sample.htm')):
+        """
+        Parses some documents (2001-2013) at least
+
+            driver_path -- path of file to open
+            highlight -- add red box around detected fields
+            save -- save htm copy (with/without highlighting) to out_path
+        """
 
         with open(driver_path, encoding='utf-8') as file:
             f = file.read()
@@ -263,7 +264,7 @@ class edgar_parser:
         Get a driver filename uri path from data identifiers
     """
 
-    def get_driver_path(self, tikr, submission, fname, partition='processed'):
+    def get_driver_path(self, tikr, submission, fname, partition):
         # return pathlib.Path(os.path.join(self.data_dir, partition, tikr,
         # submission, fname)).absolute().as_uri()
         return pathlib.Path(
@@ -275,13 +276,7 @@ class edgar_parser:
                 fname)).absolute()
 
     def _parse_annotated_text(
-        self,
-        driver_path: str,
-        highlight: bool = False,
-        save: bool = False,
-        out_path: str = os.path.join(
-            '.',
-            'sample.htm')):
+        self, driver_path: str, **kwargs):
         """
         Parses some documents 2020+ at least
 
@@ -308,37 +303,47 @@ class edgar_parser:
         forbidden = {
             i for i in "\'\" (){}[],./\\-+^*`'`;:<>%#@$"}.union({'', '**'})
 
-        # print('f: \n', len(f))
-        # print('found before forbidden: ', found)
-
         found = [i for i in found if i.text not in forbidden]
         annotation_dict2 = dict()
         for i in found:
             annotation_dict2[i] = annotation_dict[i]
 
-        # print('found: ', found)
-
         table_range = self.find_all_pattern(self.table_search_key, f)
         in_table = self.labels_in_table([i.range for i in found], table_range)
         return found, annotation_dict, in_table
 
-    """
-        Return list of submissions names with annotated 10-Q forms
-    """
+    # TODO make work with 8k
+    def get_annotated_submissions(self, tikr, document_type='all', silent: bool = False) -> list:
+        """
+            Return list of submissions names with annotated 10-Q forms
+        """
+        document_type = DocumentType(document_type);
 
-    def get_annotated_submissions(self, tikr, silent: bool = False):
-        return [i for i in self.metadata[tikr]['submissions']
-                if self._is_10q_annotated(tikr, i, silent=silent)]
+        if document_type == 'all':
+            return self.get_annotated_submissions(tikr=tikr,
+             document_type='10q', silent=silent) + self.get_annotated_submissions(tikr, 
+             document_type='8k', silent=silent)
 
-    """
-        Returns whether given tikr submission has annotated ix elements
-    """
+        submissions = [i for i in self.metadata._get_tikr(tikr)['submissions']]
+        out = list()
+        for submission in submissions:
+            form_type = self.metadata._get_submission(tikr, submission)['attrs']['FORM TYPE']
+            form_type = DocumentType(form_type)
+            if form_type == '10q':
+                if self._is_10q_annotated(tikr=tikr, submission=submission, silent=silent):
+                    out.append(submission);
+            elif form_type == '8k':
+                raise RuntimeWarning("FORM 8K UNIMPLEMENTED FOR SUBMISSION")
+        return out
 
     def _is_10q_annotated(
             self,
             tikr,
             submission,
             silent: bool = False) -> bool:
+        """
+            Returns whether given tikr submission has annotated ix elements
+        """
 
         assert tikr in self.metadata
         assert submission in self.metadata[tikr]['submissions']
@@ -352,9 +357,15 @@ class edgar_parser:
                 tikr, submission, silent=silent)
 
     def _gen_10q_annotated_metadata(
-            self, tikr, submission, silent: bool = False):
+            self, tikr, submission, silent: bool = False, **kwargs):
 
         annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
+
+        document_type = kwargs.get('document_type', None)
+        if document_type is None:
+            document_type = self.metadata._get_submission(
+                tikr, submission)['attrs']['FORM TYPE']
+            document_type = DocumentType(document_type)
 
         _file = None
         files = self.metadata[tikr]['submissions'][submission]['documents']
@@ -384,8 +395,8 @@ class edgar_parser:
         assert _file is not None, 'Missing 10-Q'
 
         data = None
-        fname = os.path.join(self.data_dir, 'processed',
-                             tikr, submission, _file)
+        fname = os.path.join(self.data_dir, DocumentType.EXTRACTED_FILE_DIR_NAME,
+                             tikr, f'{document_type}', submission)
         with open(fname, 'r', encoding = 'utf-8') as f:
             data = f.read()
         for tag in annotated_tag_list:
@@ -683,6 +694,7 @@ class edgar_parser:
             filename: str,
             force: bool = False,
             silent: bool = False,
+            remove_raw: bool = False,
             **kwargs):
         """
 
@@ -701,8 +713,9 @@ class edgar_parser:
                     and abort server query.
         silent: bool default=False
             if (True), then does not print runtime warnings.
-        clean_raw: bool
-                default to be False. If true, the raw data will be cleaned after parsed. 
+        remove_raw: bool
+                default to be False. If true, the raw data will be deleted 
+                    after parsing and caching result.
 
         Returns
         --------
@@ -720,18 +733,38 @@ class edgar_parser:
                 tikr, submission, filename):
             return self.load_processed(tikr, submission, filename)
         else:
+            document_type = self.metadata._get_submission(
+                tikr, submission)['attrs']['FORM TYPE']
+            document_type = DocumentType(document_type)
+
+            if document_type != '10q':
+                raise NotImplementedError("Not implemented for current form type")
+                
             # TODO make process_file detect and work on unannotated files
             if not self._is_10q_annotated(tikr, submission, silent=silent):
                 raise NotImplementedError
             elems, annotation_dict, in_table = self._parse_annotated_text(
-                self.get_driver_path(tikr, submission, filename))
+                pathlib.Path(
+                    os.path.join(
+                        self.data_dir,
+                        DocumentType.EXTRACTED_FILE_DIR_NAME,
+                        tikr,
+                        f'{document_type}',
+                        filename)).absolute())
             features = self.get_annotation_features(
                 elems, annotation_dict, in_table)
             self.save_processed(tikr, submission, filename,
                                 elems, annotation_dict, features)
             self.metadata.save_tikr_metadata(tikr)
-            if kwargs.get('clean_raw', False):
-                os.remove(self.get_driver_path(tikr, submission, filename))
+            if remove_raw:
+                os.remove(
+                    pathlib.Path(
+                        os.path.join(
+                            self.data_dir,
+                            DocumentType.EXTRACTED_FILE_DIR_NAME,
+                            tikr,
+                            f'{document_type}',
+                            filename)).absolute())
             return features
 
     def save_processed(
@@ -742,7 +775,7 @@ class edgar_parser:
             elems,
             annotations: dict,
             features):
-        path = os.path.join(self.data_dir, 'parsed',
+        path = os.path.join(self.data_dir, DocumentType.PARSED_FILE_DIR_NAME,
                             tikr, submission, filename)
         if not os.path.exists(path):
             os.system(f"mkdir -p {path}")
@@ -751,7 +784,7 @@ class edgar_parser:
         self.metadata.file_set_processed(tikr, submission, filename, True)
 
     def load_processed(self, tikr, submission, filename):
-        path = os.path.join(self.data_dir, 'parsed',
+        path = os.path.join(self.data_dir, DocumentType.PARSED_FILE_DIR_NAME,
                             tikr, submission, filename)
         with open(os.path.join(path, 'features.pkl'), 'rb') as f:
             return pkl.load(f)

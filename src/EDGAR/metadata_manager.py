@@ -5,8 +5,7 @@ import warnings
 import urllib.request
 import json
 
-
-import numpy as np
+from .document import DocumentType
 
 
 class metadata_manager(dict):
@@ -16,13 +15,20 @@ class metadata_manager(dict):
         # Always gets the path of the current file
         self.data_dir = data_dir
 
-        self.meta_dir = os.path.join(self.data_dir, 'metadata')
+        self.meta_dir = os.path.join(self.data_dir, DocumentType.META_FILE_DIR_NAME)
         if not os.path.exists(self.meta_dir):
             os.system('mkdir -p ' + self.meta_dir)
 
         # Used by dataloader for API
-        self.keys_path = os.path.join(self.data_dir, 'metadata', '.keys.yaml')
+        self.keys_path = os.path.join(self.data_dir, '.keys.yaml')
         self.keys = None
+
+    def reset(self):
+        for file in os.listdir(self.meta_dir):
+            os.remove(os.path.join(self.meta_dir, file))
+        # Keep API Keys
+        self.save_keys();
+        self.clear();
 
     def load_keys(self):
 
@@ -161,6 +167,29 @@ class metadata_manager(dict):
         assert sequence is not None, "Error: filename not found"
         doc = self[tikr]['submissions'][submission]['documents'][sequence]
         return doc.get('features_pregenerated', False)
+
+    def set_downloaded(self, tikr: str, value: bool=True):
+        self._get_tikr(tikr)['attrs']['downloaded'] = value;
+        self.save_tikr_metadata(tikr)
+    
+    def is_downloaded(self, tikr):
+        """
+            Returns True if TIKR had previous bulk download
+        """
+        return self._get_tikr(tikr)['attrs'].get('downloaded', False)
+    
+    def set_unpacked(self, tikr, document_type, value=True):
+
+        document_type = DocumentType(document_type)
+        self._get_tikr(tikr)['attrs'][f'unpacked_{document_type}'] = value;
+        self.save_tikr_metadata(tikr)
+    
+    def is_unpacked(self, tikr, document_type):
+        """
+            Returns True if TIKR had previous bulk download
+        """
+        document_type = DocumentType(document_type)
+        return self._get_tikr(tikr)['attrs'].get(f'unpacked_{document_type}', False)
 
     def get_tikr_list(self):
         """
