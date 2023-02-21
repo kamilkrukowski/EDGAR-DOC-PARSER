@@ -1,18 +1,18 @@
 name: docs_pages_workflow
- 
+
 # execute this workflow automatically when a we push to master
 on:
   push:
-    branches: [ EDGAR ]
- 
+    branches: [ main ]
+
 jobs:
- 
+
   build_docs_job:
     runs-on: ubuntu-latest
     container: debian:buster-slim
 
     steps:
-    
+
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
 
@@ -23,7 +23,7 @@ jobs:
         apt-get update
         apt-get install -y git
       shell: bash
- 
+
     - name: Execute script to build our documentation and update pages
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
