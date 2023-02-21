@@ -1,4 +1,4 @@
-from secedgar import filings
+from secedgar import filings, FilingType
 from bs4 import BeautifulSoup
 
 
@@ -41,29 +41,29 @@ class Downloader:
         if 'edgar_email' not in self.metadata.keys or (
                 'edgar_agent' not in self.metadata.keys):
             print(
-                ("No API Header detected.\n"
-                 "The SEC requires all EDGAR API users "
-                 "to identify themselves\n\n"))
+                ('No API Header detected.\n'
+                 'The SEC requires all EDGAR API users '
+                 'to identify themselves\n\n'))
             if 'edgar_agent' not in self.metadata.keys:
                 print(
-                    ("The SEC requires a legal name of "
-                     "the user and any organizational affiliation"))
+                    ('The SEC requires a legal name of '
+                     'the user and any organizational affiliation'))
                 answer = 'n'
                 while (answer[0] != 'y' or len(answer) > 4):
-                    self.metadata.keys['edgar_agent'] = input("User(s): ")
+                    self.metadata.keys['edgar_agent'] = input('User(s): ')
                     answer = input(
-                        ("Input User(s) "
+                        ('Input User(s) '
                          f"\'{self.metadata.keys['edgar_agent']}\'\n"
-                         " Is this correct? (y/n)"))
+                         ' Is this correct? (y/n)'))
             if 'edgar_email' not in self.metadata.keys:
-                print("The SEC requires a contact email for the API user")
+                print('The SEC requires a contact email for the API user')
                 answer = 'n'
                 while (answer[0] != 'y' or len(answer) > 4):
-                    self.metadata.keys['edgar_email'] = input("Email: ")
+                    self.metadata.keys['edgar_email'] = input('Email: ')
                     answer = input(
-                        ("Input Email "
+                        ('Input Email '
                          f"\'{self.metadata.keys['edgar_email']}\'\n"
-                         " Is this correct? (y/n)"))
+                         ' Is this correct? (y/n)'))
             self.metadata.save_keys()
 
     def _gen_tikr_metadata(self, tikr: str, documents, key):
@@ -85,7 +85,7 @@ class Downloader:
                 # Sentinel for missing fields in early 2000s
                 if doc2 is None:
                     if nextElem == 'filename':
-                        out[seq][nextElem] = f"{seq}.htm"
+                        out[seq][nextElem] = f'{seq}.htm'
                     else:
                         out[seq][nextElem] = ''
                     continue
@@ -148,10 +148,20 @@ class Downloader:
 
             self.metadata.set_downloaded(tikr, True)
 
-        user_agent = "".join([f"{self.metadata.keys['edgar_agent']}",
+        user_agent = ''.join([f"{self.metadata.keys['edgar_agent']}",
                               f": {self.metadata.keys['edgar_email']}"])
+        document_type = kwargs.get('document_type', '10-Q').replace(
+            '-', '').lower()
+        assert document_type in {'10q', '8k', None}
+
+        if document_type == '10q':
+            filing_type = FilingType.FILING_10Q
+        elif document_type == '8k':
+            filing_type = FilingType.FILING_8K
+        else:
+            filing_type = None
         f = filings(cik_lookup=tikr,
-                    filing_type=kwargs.get('filing_type', None),
+                    filing_type=filing_type,
                     count=kwargs.get('max_num_filings', None),
                     user_agent=user_agent,
                     start_date=kwargs.get('start_date', None),
@@ -206,7 +216,7 @@ class Downloader:
             tikr, document_type=kwargs.get('document_type', '10q'))]
 
     valid_unpack_types = {
-        "FORM 10-Q", "10-Q", "FORM 8-K", "8-K"}
+        'FORM 10-Q', '10-Q', 'FORM 8-K', '8-K'}
 
     def __unpack_doc__(
             self, tikr, submission, doc, document_type, force=True):
@@ -323,7 +333,7 @@ class Downloader:
             p = d.find('ims-document')
             if p is not None:
                 warnings.warn(
-                    "IMS-DOCUMENT skipped during loading", RuntimeWarning)
+                    'IMS-DOCUMENT skipped during loading', RuntimeWarning)
                 if fname not in self.metadata['submissions']:
                     self.metadata.initialize_submission_metadata(tikr, fname)
                 self.metadata._get_submission(tikr, fname)['attrs'][
@@ -352,12 +362,21 @@ class Downloader:
         self.metadata.save_tikr_metadata(tikr)
 
     def _is_10q_unpacked(self, tikr):
+        """
+        doc string 
+        """
         return self.metadata[tikr]['attrs'].get('10q_extracted', False)
 
     def _is_8k_unpacked(self, tikr):
+        """
+        doc string 
+        """
         return self.metadata[tikr]['attrs'].get('8k_extracted', False)
 
     def _is_fully_unpacked(self, tikr):
+        """
+        doc string 
+        """
         return self.metadata[tikr]['attrs'].get('complete_extracted', False)
 
     def unpack_bulk(
@@ -432,6 +451,9 @@ class Downloader:
         self.metadata.save_tikr_metadata(tikr)
 
     def get_dates(self, tikr, **kwargs):
+        """
+        doc string 
+        """
         out = dict()
         for i in self.get_submissions(
             tikr, document_type=kwargs.get(
@@ -490,5 +512,8 @@ class Downloader:
                     return dates[start].split('.txt')[0]
 
     def __del__(self):
+        """
+        doc string 
+        """
         # back to normal
         sys.setrecursionlimit(1000)

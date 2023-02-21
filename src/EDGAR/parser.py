@@ -82,7 +82,7 @@ class Parser:
             attrs = tuple(attrs)
             if not self.tags_opened:  # the first tag
                 if self.count != 0:
-                    raise Exception("multiple root elements")
+                    raise Exception('multiple root elements')
                 self.root_tag = (tag, attrs)
             self.tags_opened += [(tag, attrs)]
 
@@ -110,8 +110,6 @@ class Parser:
                  data_dir: str = 'edgar_data',
                  headless: bool = True):
         """
-
-
         Parameters
         ---------
         metadata: metadata_manager, default=None
@@ -310,7 +308,6 @@ class Parser:
         in_table = self.labels_in_table([i.range for i in found], table_range)
         return found, annotation_dict, in_table
 
-    # TODO make work with 8k
     def get_annotated_submissions(self, tikr,
                                   document_type='all',
                                   silent: bool = False) -> list:
@@ -333,21 +330,20 @@ class Parser:
             form_type = self.metadata._get_submission(
                 tikr, submission)['attrs']['FORM TYPE']
             form_type = DocumentType(form_type)
-            if form_type == '10q' and document_type == '10q':
-                if self._is_10q_annotated(
+            if (form_type == '10q' and document_type == '10q') or (
+                    form_type == '8k' and document_type == '8k'):
+                if self._contains_annotations(
                         tikr=tikr,
                         submission=submission, silent=silent):
 
                     out.append(submission)
-            elif form_type == '8k' and document_type == '8k':
-                raise RuntimeWarning("FORM 8K UNIMPLEMENTED FOR SUBMISSION")
             elif form_type == 'other' and document_type == 'other':
                 raise RuntimeWarning(
                     "FORM TYPE \'OTHER\' UNIMPLEMENTED FOR SUBMISSION")
 
         return out
 
-    def _is_10q_annotated(
+    def _contains_annotations(
             self,
             tikr,
             submission,
@@ -360,14 +356,14 @@ class Parser:
         assert submission in self.metadata[tikr]['submissions']
 
         is_annotated = self.metadata[tikr]['submissions'][submission][
-            'attrs'].get('is_10q_annotated', None)
+            'attrs'].get('is_annotated', None)
         if is_annotated is not None:
             return is_annotated
         else:
-            return self._gen_10q_annotated_metadata(
+            return self._gen_annotated_metadata(
                 tikr, submission, silent=silent)
 
-    def _gen_10q_annotated_metadata(
+    def _gen_annotated_metadata(
             self, tikr, submission, silent: bool = False, **kwargs):
 
         annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
@@ -381,7 +377,7 @@ class Parser:
         _file = None
         files = self.metadata[tikr]['submissions'][submission]['documents']
         for file in files:
-            if files[file]['type'] == '10-Q':
+            if files[file]['type'] == '10-Q' or files[file]['type'] == '8-K':
                 _file = files[file]['filename']
 
         # TODO handle ims-document
@@ -390,20 +386,20 @@ class Parser:
                 return False
             else:
                 warnings.warn(
-                    "Document Encountered without 10-Q", RuntimeWarning)
+                    'Document Encountered without 10-Q or 8-K', RuntimeWarning)
                 for file in files:
                     if files[file].get('is_ims-document', False):
                         self.metadata[tikr]['submissions'][submission][
-                            'attrs']['is_10q_annotated'] = False
+                            'attrs']['is_annotated'] = False
                         warnings.warn(
-                            "Encountered unlabeled IMS-DOCUMENT",
+                            'Encountered unlabeled IMS-DOCUMENT',
                             RuntimeWarning)
                         return False
                 if len(files) == 0:
-                    warnings.warn("No Files under Document", RuntimeWarning)
+                    warnings.warn('No Files under Document', RuntimeWarning)
                     return False
 
-        assert _file is not None, 'Missing 10-Q'
+        assert _file is not None, 'Missing 10-Q or 8-K'
 
         data = None
         fname = os.path.join(self.data_dir,
@@ -420,12 +416,11 @@ class Parser:
                         'is_annotated'] = True
                     return True
         self.metadata._get_submission(tikr, submission)['attrs'][
-            'is_10q_annotated'] = False
+            'is_annotated'] = False
         return False
 
     """
     Parses some documents 2020+ at least
-
         driver_path -- path of file to open, or 'NONE' to keep current file
         highlight -- add red box around detected fields
         save -- save htm copy (with/without highlighting) to out_path
@@ -490,9 +485,9 @@ class Parser:
 
     def get_element_info(self, element: WebElement) -> list():
         return {
-            "text": element.text,
-            "location": element.location,
-            "size": element.size}
+            'text': element.text,
+            'location': element.location,
+            'size': element.size}
 
     def find_page_location(self) -> dict:
         """
@@ -610,24 +605,24 @@ class Parser:
                 set to False.
         """
         COLUMN_NAMES = [
-            "anno_text",
-            "found_index",
-            "span_text",
-            "anno_index",
-            "anno_name",
-            "anno_id",
-            "anno_format",
-            "anno_ix_type",
+            'anno_text',
+            'found_index',
+            'span_text',
+            'anno_index',
+            'anno_name',
+            'anno_id',
+            'anno_format',
+            'anno_ix_type',
             'anno_unitref',
-            "anno_decimals",
-            "anno_contextref",
-            "page_number",
-            "x",
-            "y",
-            "height",
-            "width",
-            "is_annotated",
-            "in_table"]
+            'anno_decimals',
+            'anno_contextref',
+            'page_number',
+            'x',
+            'y',
+            'height',
+            'width',
+            'is_annotated',
+            'in_table']
         df = pd.DataFrame(columns=COLUMN_NAMES)
 
         for i, elem in enumerate(webelements):
@@ -635,16 +630,16 @@ class Parser:
             default_dict = {attribute: None for attribute in COLUMN_NAMES}
             page_num, y = None, None
 
-            default_dict.update({"anno_text": None,
-                                 "found_index": int(i),
-                                 "span_text": elem.text,
-                                 "is_annotated": 0,
-                                 "x": elem.location["x"],
-                                 "y": y,
-                                 "page_number": page_num,
-                                 "height": elem.size["height"],
-                                 "width": elem.size["width"],
-                                 "in_table": int(in_table[i])})
+            default_dict.update({'anno_text': None,
+                                 'found_index': int(i),
+                                 'span_text': elem.text,
+                                 'is_annotated': 0,
+                                 'x': elem.location['x'],
+                                 'y': y,
+                                 'page_number': page_num,
+                                 'height': elem.size['height'],
+                                 'width': elem.size['width'],
+                                 'in_table': int(in_table[i])})
 
             count = 0
 
@@ -653,17 +648,17 @@ class Parser:
                 new_dict = default_dict.copy()
 
                 val = {
-                    "anno_index": j,
-                    "x": annotation.location["x"],
-                    "is_annotated": 1,
-                    "anno_text": annotation.text,
-                    "anno_ix_type": annotation.tag_name}
+                    'anno_index': j,
+                    'x': annotation.location['x'],
+                    'is_annotated': 1,
+                    'anno_text': annotation.text,
+                    'anno_ix_type': annotation.tag_name}
 
-                val["page_number"], val["y"] = None, None
+                val['page_number'], val['y'] = None, None
 
-                for _attr in ["name", "id", "contextref"]:
-                    val[f"anno_{_attr}"] = annotation.get_attribute(_attr)
-                for _size in ["width", "height"]:
+                for _attr in ['name', 'id', 'contextref']:
+                    val[f'anno_{_attr}'] = annotation.get_attribute(_attr)
+                for _size in ['width', 'height']:
                     val[_size] = annotation.size[_size]
 
                 new_dict.update(val)
@@ -682,9 +677,9 @@ class Parser:
                 df = pd.concat([temp_df,df], ignore_index=True)
             """
 
-        df = df.astype({"in_table": bool, "is_annotated": bool})
+        df = df.astype({'in_table': bool, 'is_annotated': bool})
         df.drop_duplicates(
-            subset=["anno_text", "anno_id"], keep="last", inplace=True)
+            subset=['anno_text', 'anno_id'], keep='last', inplace=True)
 
         if (save):
             df.to_csv(out_path)
@@ -738,12 +733,12 @@ class Parser:
             return self.load_processed(tikr, submission,
                                        filename, document_type=document_type)
         else:
-            if document_type != '10q':
+            if document_type != '10q' and document_type != '8k':
                 raise NotImplementedError(
-                    "Not implemented for current form type")
+                    'Not implemented for current form type')
 
             # TODO make process_file detect and work on unannotated files
-            if not self._is_10q_annotated(tikr, submission, silent=silent):
+            if not self._contains_annotations(tikr, submission, silent=silent):
                 raise NotImplementedError
             f_anno_file = pathlib.Path(
                 os.path.join(
@@ -775,7 +770,7 @@ class Parser:
                             tikr, f'{submission}',
                             f'{document_type}', filename)
         if not os.path.exists(path):
-            os.system(f"mkdir -p {path}")
+            os.system(f'mkdir -p {path}')
         with open(os.path.join(path, 'features.pkl'), 'wb') as f:
             pkl.dump(features, f)
         self.metadata.file_set_processed(tikr, submission, filename, True)
