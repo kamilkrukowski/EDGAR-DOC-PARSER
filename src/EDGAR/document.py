@@ -1,6 +1,7 @@
-
-
 class DocumentType:
+    """
+        Object for specifying type of document in download and parse functions.
+    """
 
     RAW_FILE_DIR_NAME = '.rawcache'
     EXTRACTED_FILE_DIR_NAME = 'files'
@@ -10,18 +11,28 @@ class DocumentType:
     # Currently implemented documents, and catcher for 'all'
     valid_types = {'all', '10q', '8k', 'other'}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, dtype='all', **kwargs):
+        """
+            Constructor
 
-        if len(args) == 0:
-            self.dtype = 'all'
-        elif isinstance(args[0], str):
-            self.dtype = DocumentType.parse_string(args[0])
+            Parameters:
+
+            dtype: Union[str, DocumentType]
+                The desired instance of DocumentType
+        """
+        if isinstance(dtype, str):
+            self.dtype = DocumentType.parse_string(dtype)
             if self.dtype not in DocumentType.valid_types:
-                raise RuntimeError("Invalid DocumentType Specified")
-        elif isinstance(args[0], DocumentType):
-            self.dtype = args[0].dtype
+                raise RuntimeError('Invalid DocumentType Specified')
+        elif isinstance(dtype, DocumentType):
+            self.dtype = dtype.dtype
 
     def __contains__(self, item):
+        """
+            Returns whether a target is a DocumentType covered by this instance
+            Notes:
+            Intended for strings
+        """
         if isinstance(item, str):
             item = item.lower().replace('-', '').strip()
             if item in self.valid_types:
@@ -30,6 +41,9 @@ class DocumentType:
 
     @staticmethod
     def parse_string(target):
+        """
+            Converts raw string to correct form for casting as DocumentClass
+        """
         to_remove = {'-', ' ', 'form'}
         target = target.lower()
         for removeable in to_remove:
@@ -38,6 +52,9 @@ class DocumentType:
 
     @staticmethod
     def is_valid_type(target):
+        """
+            Static method for checking whether a string can be cast as a type
+        """
         if isinstance(target, DocumentType):
             return True
         if isinstance(target, str):
@@ -46,10 +63,16 @@ class DocumentType:
         return False
 
     def __repr__(self):
+        """
+            Convert self to a string representation for console output
+        """
         out = self.dtype
         if self.dtype in {'10q', '8k'}:
             return out[:-1] + '-' + out.upper()[-1]
         return out
 
     def __eq__(self, other):
+        """
+            Override for == with DocumentType and Str
+        """
         return self.dtype == other

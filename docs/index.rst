@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pyEDGAR's documentation!
+Welcome to EDGAR-DOC-PARSER's documentation!
 ===================================
 
 About
@@ -21,13 +21,13 @@ Downloading and extracting archives of 10-Q submissions from the SEC API
 
     tikr = 'nflx'
     data_dir = 'data'
-    
+
     loader = EDGAR.downloader(data_dir=data_dir)
     metadata = EDGAR.metadata(data_dir=data_dir)
 
     # Load previous cached information
     metadata.load_tikr_metadata(tikr)
-    
+
     loader.query_server(tikr)
     loader.unpack_bulk(tikr)
 
@@ -41,10 +41,10 @@ Parsing 10-Q submission HTML into featurized pandas DataFrames
     annotated_docs = parser.get_annotated_submissions(tikr)
 
     document = annotated_docs[0]
-    
+
     fname = metadata.get_10q_name(tikr, document)
     # Try load cached, otherwise regenerate new file
-    features = parser.featurize_file(tikr, document, fname) 
+    features = parser.featurize_file(tikr, document, fname)
 
 
 .. toctree::
@@ -55,6 +55,7 @@ Parsing 10-Q submission HTML into featurized pandas DataFrames
    Downloading Documents <downloader>
    Parsing Documents <parser>
    Useful Metadata <metadata_mgr>
+   DocumentType <document_type>
 
 
 
