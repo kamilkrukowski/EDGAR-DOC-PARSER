@@ -3,10 +3,8 @@
 Setup
 ============
 
-We recommend Conda for package management.
+We are available through pip on the test index
 
 .. code-block:: bash
 
-    $ conda create -n edgar -c conda-forge scipy numpy selenium=4.5.0 pyyaml chardet requests lxml pandas
-    $ conda activate edgar
-    $ pip install secedgar==0.4.0 beautifulsoup4 attrs typing-extensions
+    $ pip install -i https://test.pypi.org/simple/ EDGAR-Document-Parser

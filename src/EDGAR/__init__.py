@@ -5,9 +5,15 @@ import warnings
 import os
 import inspect
 
-from . import metadata_manager as edgar_metadata
+from . import metadata_manager as Metadata
 from .downloader import Downloader
 from .parser import Parser
+from .document import DocumentType
+
+Downloader.__module__ = 'EDGAR'
+Parser.__module__ = 'EDGAR'
+Metadata.__module__ = 'EDGAR'
+DocumentType.__module__ = 'EDGAR'
 
 
 def _relative_to_abs_path(relative_p):
@@ -35,11 +41,11 @@ class EDGAR_singleton:
 
         if self.metadatas is None or not reuse:
             self.metadatas = {
-                kwargs['data_dir']: edgar_metadata.metadata_manager(
+                kwargs['data_dir']: _Metadata.metadata_manager(
                     *args, **kwargs)}
             if len(self.metadatas) > 1:
                 warnings.warn(
-                    "multiple data directories passed during initialization",
+                    'multiple data directories passed during initialization',
                     RuntimeWarning)
         return self.metadatas[kwargs['data_dir']]
 
@@ -51,7 +57,7 @@ class EDGAR_singleton:
             kwargs['metadata'] = self._get_metadata(
                 data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
         if self.downloader is None or not reuse:
-            self.downloader = Downloader(*args, **kwargs)
+            self.downloader = _Downloader(*args, **kwargs)
         return self.downloader
 
     def _get_parser(self, reuse: bool = True, *args, **kwargs):
@@ -62,12 +68,12 @@ class EDGAR_singleton:
             kwargs['metadata'] = self._get_metadata(
                 data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
         if self.parser is None or not reuse:
-            self.parser = Parser(*args, **kwargs)
+            self.parser = _Parser(*args, **kwargs)
         return self.parser
 
 
 edgar_global = EDGAR_singleton()
 
-metadata = edgar_global._get_metadata
-downloader = edgar_global._get_downloader
-parser = edgar_global._get_parser
+_Metadata = edgar_global._get_metadata
+_Downloader = edgar_global._get_downloader
+_Parser = edgar_global._get_parser

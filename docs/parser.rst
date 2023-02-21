@@ -5,5 +5,5 @@ Parsing Documents
 
 Parser Class
 ----------------------
-.. automodule:: EDGAR.parser
+.. autoclass:: EDGAR.Parser
     :members:

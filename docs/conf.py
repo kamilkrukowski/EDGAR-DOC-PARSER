@@ -1,12 +1,19 @@
-import os; import sys;
-sys.path.append(os.path.abspath('..'))
-
 import mock
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy', 'torch', 'pandas', 
-                'yaml', 'secedgar', 'selenium', 'selenium.webdriver.common.by', 'selenium.common.exceptions', 'selenium.webdriver.remote.webelement',
-                'pyyaml', 'torch.utils.data', 'bs4', 'tqdm', 'tqdm.auto', 'selenium.webdriver' , 'selenium.webdriver.remote' ,'torch.utils']
+import os
+import sys
+# AUTODOC looks for modules in sys.path, here we add ./src/*
+sys.path.append(os.path.join(os.path.abspath('..'), 'src'))
+
+
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy',
+                'torch', 'pandas', 'yaml', 'secedgar', 'selenium',
+                'selenium.webdriver.common.by', 'selenium.common.exceptions',
+                'selenium.webdriver.remote.webelement', 'pyyaml',
+                'torch.utils.data', 'bs4', 'tqdm', 'tqdm.auto',
+                'selenium.webdriver', 'selenium.webdriver.remote',
+                'torch.utils']
 for mod_name in MOCK_MODULES:
-        sys.modules[mod_name] = mock.Mock()
+    sys.modules[mod_name] = mock.Mock()
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -14,29 +21,32 @@ for mod_name in MOCK_MODULES:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+# https://www.sphinx-doc.org/en/master/usage/
+# configuration.html#project-information
 
-project = 'pyEDGAR'
+project = 'EDGAR-DOC-PARSER'
 copyright = '2022, Kamil Krukowski'
 author = 'Kamil Krukowski'
-release = '0.1'
+release = '0.4'
 
 # -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+# https://www.sphinx-doc.org/en/master/usage/
+# configuration.html#general-configuration
 
 extensions = [
-        'sphinx.ext.githubpages',
-        'sphinx.ext.napoleon',
-        'sphinx.ext.autodoc',
-        'sphinx_rtd_theme'
-        ]
+    'sphinx.ext.githubpages',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc',
+    'sphinx_rtd_theme'
+]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 
 # -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+# https://www.sphinx-doc.org/en/master/usage/
+# configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']

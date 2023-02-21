@@ -7,13 +7,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EDGAR_Document_Parser"
-version = "0.0.3"
+version = "0.0.5"
 authors = [
-  { name="Nachuan Zhao", email="Nachuan.Zhao@tufts.edu" },
-  { name="Yiting Li", email="Yiting.Li@tufts.edu" },
   { name="Kamil Krukowski", email="Kamil.Krukowski@tufts.edu" },
+  { name="Yiting Li", email="Yiting.Li@tufts.edu" },
+  { name="Nachuan Zhao", email="Nachuan.Zhao@tufts.edu" },
   { name="Kelsey Yew", email="Kelsey.Yew@tufts.edu" },
-  
+
 ]
 description = "We aim to democratize access to SEC data through a novel python package pipeline. The pipeline will extract, load, and parse valuable information in the EDGAR database. This will allow downstream NLP tasks to gather meaningful insights."
 readme = "README.md"

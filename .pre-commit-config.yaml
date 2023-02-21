@@ -9,9 +9,9 @@ repos:
         - id: double-quote-string-fixer
         - id: end-of-file-fixer
         - id: trailing-whitespace
-        
+
     - repo: https://github.com/pycqa/flake8
-      rev: 6.0.0  
+      rev: 6.0.0
       hooks:
         -   id: flake8
 

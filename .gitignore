@@ -5,6 +5,7 @@ data/*
 **/geckodriver.log
 outputs/*
 **/test_trainer
+**/.DS_Store
 
 **/_build
 **/lightning_logs
