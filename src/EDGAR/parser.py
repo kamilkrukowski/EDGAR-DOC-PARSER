@@ -106,9 +106,8 @@ class Parser:
             root_element = (self.root_tag, self.span_txt)
             return root_element, self.found_annotation
 
-    def __init__(self, metadata: metadata_manager,
-                 data_dir: str = 'edgar_data',
-                 headless: bool = True):
+    def __init__(self, metadata: metadata_manager = None,
+                 data_dir: str = 'edgar_data'):
         """
         Parameters
         ---------
@@ -116,8 +115,6 @@ class Parser:
             a meta_manager that can process all metadata
         data_dir: str, default = 'edgar_data'
             string for data directory
-         headless: bool, default=True
-            If (True), it will launch browser without UI
 
         Returns
         --------
@@ -128,7 +125,6 @@ class Parser:
         Prser extracts information from HTML documents
         """
         self.driver = None
-        self.headless = headless
 
         self.data_dir = data_dir
 
@@ -308,11 +304,38 @@ class Parser:
         in_table = self.labels_in_table([i.range for i in found], table_range)
         return found, annotation_dict, in_table
 
+    def get_unannotated_submissions(self, tikr,
+                                    document_type='all',
+                                    silent: bool = False) -> list:
+        """
+            Return list of submissions names without annotations
+        """
+        document_type = DocumentType(document_type)
+
+        submissions = [i for i in self.metadata._get_tikr(tikr)['submissions']]
+        out = list()
+        for submission in submissions:
+            if not self._contains_annotations(
+                    tikr=tikr,
+                    submission=submission, silent=silent):
+
+                form_type = self.metadata._get_submission(
+                    tikr, submission)['attrs']['FORM TYPE']
+                form_type = DocumentType(form_type)
+                if (form_type == '10q' and document_type == '10q') or (
+                        form_type == '8k' and document_type == '8k'):
+                    out.append(submission)
+                elif form_type == 'other' and document_type == 'other':
+                    raise RuntimeWarning(
+                        "FORM TYPE \'OTHER\' UNIMPLEMENTED FOR SUBMISSION")
+
+        return out
+
     def get_annotated_submissions(self, tikr,
                                   document_type='all',
                                   silent: bool = False) -> list:
         """
-            Return list of submissions names with annotated 10-Q forms
+            Return list of submissions names with annotations
         """
         document_type = DocumentType(document_type)
 
@@ -327,19 +350,19 @@ class Parser:
         submissions = [i for i in self.metadata._get_tikr(tikr)['submissions']]
         out = list()
         for submission in submissions:
-            form_type = self.metadata._get_submission(
-                tikr, submission)['attrs']['FORM TYPE']
-            form_type = DocumentType(form_type)
-            if (form_type == '10q' and document_type == '10q') or (
-                    form_type == '8k' and document_type == '8k'):
-                if self._contains_annotations(
-                        tikr=tikr,
-                        submission=submission, silent=silent):
+            if self._contains_annotations(
+                    tikr=tikr,
+                    submission=submission, silent=silent):
 
+                form_type = self.metadata._get_submission(
+                    tikr, submission)['attrs']['FORM TYPE']
+                form_type = DocumentType(form_type)
+                if (form_type == '10q' and document_type == '10q') or (
+                        form_type == '8k' and document_type == '8k'):
                     out.append(submission)
-            elif form_type == 'other' and document_type == 'other':
-                raise RuntimeWarning(
-                    "FORM TYPE \'OTHER\' UNIMPLEMENTED FOR SUBMISSION")
+                elif form_type == 'other' and document_type == 'other':
+                    raise RuntimeWarning(
+                        "FORM TYPE \'OTHER\' UNIMPLEMENTED FOR SUBMISSION")
 
         return out
 
@@ -368,12 +391,6 @@ class Parser:
 
         annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
 
-        document_type = kwargs.get('document_type', None)
-        if document_type is None:
-            document_type = self.metadata._get_submission(
-                tikr, submission)['attrs']['FORM TYPE']
-            document_type = DocumentType(document_type)
-
         _file = None
         files = self.metadata[tikr]['submissions'][submission]['documents']
         for file in files:
@@ -400,6 +417,12 @@ class Parser:
                     return False
 
         assert _file is not None, 'Missing 10-Q or 8-K'
+
+        document_type = kwargs.get('document_type', None)
+        if document_type is None:
+            document_type = self.metadata._get_submission(
+                tikr, submission)['attrs']['FORM TYPE']
+            document_type = DocumentType(document_type)
 
         data = None
         fname = os.path.join(self.data_dir,

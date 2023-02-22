@@ -9,7 +9,7 @@ class DocumentType:
     META_FILE_DIR_NAME = '.metadata'
 
     # Currently implemented documents, and catcher for 'all'
-    valid_types = {'all', '10q', '8k', 'other'}
+    valid_types = {'all', '10q', '8k', 'other', 'ims'}
 
     def __init__(self, dtype='all', **kwargs):
         """
