@@ -1,7 +1,6 @@
 from secedgar import filings, FilingType
 from bs4 import BeautifulSoup
 
-
 import os
 import warnings
 import datetime
@@ -9,17 +8,14 @@ import sys
 from tqdm.auto import tqdm
 from time import sleep
 
-
 from .document import DocumentType
 
 
 class Downloader:
-    """
-        Class for querying SEC-EDGAR database for files
-    """
+    """Class for querying SEC-EDGAR database for files."""
 
     def __init__(self, data_dir: str = 'edgar_data', metadata=None):
-
+        """Initialize Downloader."""
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
         sys.setrecursionlimit(10000000)
@@ -67,6 +63,7 @@ class Downloader:
             self.metadata.save_keys()
 
     def _gen_tikr_metadata(self, tikr: str, documents, key):
+        """Generate the metadata for a given tikr."""
         out = dict()
 
         for doc in documents:
@@ -112,28 +109,26 @@ class Downloader:
             self, tikr: str, delay_time: int = 1,
             force: bool = False, **kwargs):
         """
-            Download SEC filings to a local directory for later parsing,
-                by company TIKR
+        Download SEC filings to a local directory for parsing by TIKR.
 
-
-            Parameters
-            ---------
-            tikr: str
-                a company identifier to query
-            force: bool
-                if (True), then ignore locally downloaded files
-                    and overwrite them. Otherwise, attempt to detect
-                        previous download and abort server query.
-            start_date: optional
-                The earliest date to look for filings
-            end_date: optional
-                The latest filing date retrievable
-            max_num_filings:
-                The maximum number of documents to retrieve. Retrieves all
-                    documents if set to `None`.
-            delay_time:
-                The time (in seconds) delayed at the
-                    beginning of this function.
+        Parameters
+        ---------
+        tikr: str
+            a company identifier to query
+        force: bool
+            if (True), then ignore locally downloaded files
+                and overwrite them. Otherwise, attempt to detect
+                    previous download and abort server query.
+        start_date: optional
+            The earliest date to look for filings
+        end_date: optional
+            The latest filing date retrievable
+        max_num_filings:
+            The maximum number of documents to retrieve. Retrieves all
+                documents if set to `None`.
+        delay_time:
+            The time (in seconds) delayed at the
+                beginning of this function.
         """
         sleep(delay_time)
 
@@ -176,15 +171,14 @@ class Downloader:
     def get_unpackable_files(
             self, tikr: str, document_type: str = 'all', **kwargs):
         """
-            Get list of targets for unpack_file func
+        Get list of targets for unpack_file func.
 
-            Parameters
-            ---------
-            tikr: str
-                a company identifier to query
-            document_type: str
-                document type to unpack (10-Q, 8-K, or all)
-
+        Parameters
+        ---------
+        tikr: str
+            a company identifier to query
+        document_type: str
+            document type to unpack (10-Q, 8-K, or all)
         """
         # sec-edgar data save location for documents filing ticker
         document_type = DocumentType(document_type)
@@ -202,14 +196,14 @@ class Downloader:
 
     def get_submissions(self, tikr, **kwargs):
         """
-            Get list of submissions under tikr
+        Get list of submissions under tikr.
 
-            Parameters
-            ---------
-            tikr: str
-                a company identifier to query
-            document_type: str
-                document type to unpack (10-Q, 8-K, or all)
+        Parameters
+        ---------
+        tikr: str
+            a company identifier to query
+        document_type: str
+            document type to unpack (10-Q, 8-K, or all)
         """
         # sec-edgar data save location for filing ticker
         return [i.split('.txt')[0] for i in self.get_unpackable_files(
@@ -221,17 +215,16 @@ class Downloader:
     def __unpack_doc__(
             self, tikr, submission, doc, document_type, force=True):
         """
-            Private utility, parses SEC submission dump into components
+        Private utility, parses SEC submission dump into components.
 
-            Parameters
-            ----------
-            tikr: str
-                the company the document belongs to
-            submission: str
-                the submission the document is from
-            doc: str
+        Parameters
+        ----------
+        tikr: str
+            the company the document belongs to
+        submission: str
+            the submission the document is from
+        doc: str
         """
-
         submission = submission.split('.')[0]
 
         metadata = self.metadata._get_submission(tikr, submission)['documents']
@@ -295,28 +288,28 @@ class Downloader:
     def unpack_file(self, tikr, file, document_type='all',
                     force=True, remove_raw=False, **kwargs):
         """
-            Processes raw data from one filing at one company;
-                See utility function for getting file names;
+        Process raw data from one filing at one company.
 
-            Parameters
-            ---------
-            tikr: str
-                company ticker associated with unpacking
-            filename: str
-                filing submission to unpack
-            complete: bool
-                If False, only unpacks 10-Q, otherwise all documents.
-            document_type: str
-                document type to unpack (10-Q, 8-K, or all)
-            force: bool
-                if (True), then ignore locally downloaded files and
-                    overwrite them. Otherwise, attempt to detect
-                    previous download and abort server query.
-            clean_raw: bool
-                default to be true. If true, the raw data will be
-                    cleaned after parsed.
+            See utility function for getting file names.
+
+        Parameters
+        ---------
+        tikr: str
+            company ticker associated with unpacking
+        filename: str
+            filing submission to unpack
+        complete: bool
+            If False, only unpacks 10-Q, otherwise all documents.
+        document_type: str
+            document type to unpack (10-Q, 8-K, or all)
+        force: bool
+            if (True), then ignore locally downloaded files and
+                overwrite them. Otherwise, attempt to detect
+                previous download and abort server query.
+        clean_raw: bool
+            default to be true. If true, the raw data will be
+                cleaned after parsed.
         """
-
         # sec-edgar data save location for documents filing ticker
         document_type = DocumentType(document_type)
 
@@ -362,21 +355,16 @@ class Downloader:
         self.metadata.save_tikr_metadata(tikr)
 
     def _is_10q_unpacked(self, tikr):
-        """
-        doc string 
-        """
+        """Check if 10-Q has been unpacked."""
         return self.metadata[tikr]['attrs'].get('10q_extracted', False)
 
     def _is_8k_unpacked(self, tikr):
-        """
-        doc string 
-        """
+        """Check if 8-K has been unpacked."""
         return self.metadata[tikr]['attrs'].get('8k_extracted', False)
 
+    # TODO: Is this function used/necessary?
     def _is_fully_unpacked(self, tikr):
-        """
-        doc string 
-        """
+        """Check if all documents have been unpacked."""
         return self.metadata[tikr]['attrs'].get('complete_extracted', False)
 
     def unpack_bulk(
@@ -384,19 +372,20 @@ class Downloader:
             desc='Inflating HTM', remove_raw=False,
             document_type='all', silent=False):
         """
-            Processes all raw data from one company
+        Process all raw data from one company.
 
-            Parameters
-            ---------
-            tikr: str
-                company ticker associated with unpacking
-            force: bool
-                if (True), then ignore locally downloaded files and
-                    overwrite them. Otherwise, attempt to detect
-                    previous download and abort server query.
-            loading__bar: bool:
-                if True, will time and show progress
-            document_type:
+        Parameters
+        ---------
+        tikr: str
+            company ticker associated with unpacking
+        force: bool
+            if (True), then ignore locally downloaded files and
+                overwrite them. Otherwise, attempt to detect
+                previous download and abort server query.
+        loading__bar: bool:
+            if True, will time and show progress
+        document_type: str
+            document type to unpack (10-Q, 8-K, or all)
 
         """
         document_type = DocumentType(document_type)
@@ -451,9 +440,7 @@ class Downloader:
         self.metadata.save_tikr_metadata(tikr)
 
     def get_dates(self, tikr, **kwargs):
-        """
-        doc string 
-        """
+        """Return the filing submission txt closest to provided date."""
         out = dict()
         for i in self.get_submissions(
             tikr, document_type=kwargs.get(
@@ -465,14 +452,10 @@ class Downloader:
             out[datetime.datetime.strptime(date_str, '%Y%m%d')] = i
         return out
 
-    """
-        Return the filing submission txt closest to provided date
-    """
-
     def get_nearest_date_filename(
             self, tikr, date, return_date=False, prefer_recent=True, **kwargs):
         """
-        Gets the nearest date of the filename
+        Get the nearest date of the filename.
 
         Parameters
         ---------
@@ -512,8 +495,6 @@ class Downloader:
                     return dates[start].split('.txt')[0]
 
     def __del__(self):
-        """
-        doc string 
-        """
+        """Set recursion limit."""
         # back to normal
         sys.setrecursionlimit(1000)
