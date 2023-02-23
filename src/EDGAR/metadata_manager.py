@@ -1,4 +1,5 @@
 import os
+import pathlib
 import pickle as pkl
 from yaml import load, CLoader as Loader, dump, CDumper as Dumper
 import warnings
@@ -81,7 +82,7 @@ class metadata_manager(dict):
 
     def get_doctype(self, tikr, submission, filename):
         sequence = self.find_sequence_of_file(
-                        tikr=tikr, submission=submission, filename=filename)
+            tikr=tikr, submission=submission, filename=filename)
         form_type = self._get_submission(tikr, submission)['documents']
         form_type = form_type[sequence]['type']
 
@@ -226,3 +227,37 @@ class metadata_manager(dict):
         with open(tikr_fpath) as json_file:
             data = json.load(json_file)
         return [data[i]['ticker'] for i in data]
+
+    def offload_submission_file(self, tikr, submission):
+
+        document_type = self._get_submission(
+            tikr, submission)['attrs']['FORM TYPE']
+        spath = pathlib.Path(
+            os.path.join(
+                self.data_dir,
+                DocumentType.EXTRACTED_FILE_DIR_NAME,
+                tikr,
+                f'{document_type}',
+                submission)).absolute()
+        if os.path.exists(spath):
+            for file in os.listdir(spath):
+                os.remove(os.path.join(spath, file))
+            os.rmdir(spath)
+
+        self._get_tikr(tikr)['submissions'].pop(submission)
+        self.save_tikr_metadata(tikr)
+
+        # Check delete parents
+        doctype_dir = pathlib.Path(os.path.normpath(
+            os.path.join(spath, os.pardir))).absolute()
+        if os.path.exists(doctype_dir) and len(os.listdir(doctype_dir)) == 0:
+            os.rmdir(doctype_dir)
+            tikr_dir = pathlib.Path(os.path.normpath(
+                os.path.join(doctype_dir, os.pardir))).absolute()
+            if os.path.exists(tikr_dir) and len(os.listdir(tikr_dir)) == 0:
+                os.rmdir(tikr_dir)
+                extraction_dir = pathlib.Path(os.path.normpath(
+                    os.path.join(tikr_dir, os.pardir))).absolute()
+                if os.path.exists(extraction_dir) and len(
+                        os.listdir(extraction_dir)) == 0:
+                    os.rmdir(extraction_dir)

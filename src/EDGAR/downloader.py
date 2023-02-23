@@ -161,9 +161,9 @@ class Downloader:
         document_type = DocumentType(document_type)
 
         filing_type = None
-        if document_type.dtype == '10q':
+        if document_type.dtype == '10-Q':
             filing_type = FilingType.FILING_10Q
-        elif document_type.dtype == '8k':
+        elif document_type.dtype == '8-K':
             filing_type = FilingType.FILING_8K
         else:
             raise NotImplementedError('Query does not support this doctype')
@@ -208,9 +208,9 @@ class Downloader:
 
         if document_type == 'all':
             return self.get_unpackable_files(
-                tikr=tikr, document_type='10q',
+                tikr=tikr, document_type='10-Q',
                 **kwargs) + self.get_unpackable_files(
-                tikr=tikr, document_type='8k', **kwargs)
+                tikr=tikr, document_type='8-K', **kwargs)
 
         d_dir = os.path.join(self.raw_dir, f'{tikr}', f'{document_type}')
         if not os.path.exists(d_dir):
@@ -230,7 +230,7 @@ class Downloader:
         """
         # sec-edgar data save location for filing ticker
         return [i.split('.txt')[0] for i in self.get_unpackable_files(
-            tikr, document_type=kwargs.get('document_type', '10q'))]
+            tikr, document_type=kwargs.get('document_type', '10-Q'))]
 
     valid_unpack_types = {
         'FORM 10-Q', '10-Q', 'FORM 8-K', '8-K'}
@@ -291,16 +291,18 @@ class Downloader:
             os.mkdir(ensure_path)
 
         out_path = None
-        if form_type == '10q':
-            if document_type == 'all' or document_type == '10q':
+        if form_type == '10-Q':
+            if document_type == 'all' or document_type == '10-Q':
                 out_path = os.path.join(
                     self.data_dir, DocumentType.EXTRACTED_FILE_DIR_NAME,
                     f'{tikr}', f'{document_type}')
-        elif form_type == '8k':
-            if document_type == 'all' or document_type == '8k':
+        elif form_type == '8-K':
+            if document_type == 'all' or document_type == '8-K':
                 out_path = os.path.join(self.data_dir,
                                         DocumentType.EXTRACTED_FILE_DIR_NAME,
                                         f'{tikr}', f'{document_type}')
+        else:
+            raise NotImplementedError
 
         with open(
                 os.path.join(out_path, submission, filename),
@@ -424,10 +426,10 @@ class Downloader:
         if document_type == 'all':
             self.unpack_bulk(tikr, force=force, loading_bar=False,
                              desc=desc, remove_raw=remove_raw,
-                             document_type='10q', silent=silent)
+                             document_type='10-Q', silent=silent)
             self.unpack_bulk(tikr, force=force, loading_bar=False,
                              desc=desc, remove_raw=remove_raw,
-                             document_type='8k', silent=silent)
+                             document_type='8-K', silent=silent)
             return
 
         if force_remove_raw:
@@ -454,12 +456,6 @@ class Downloader:
                 silent=silent,
                 remove_raw=remove_raw)
 
-        # TODO if we unpack 10-q then 8-k we should have all unpacked
-        self.metadata.set_unpacked(
-            tikr, document_type=document_type, value=True)
-
-        self.metadata.save_tikr_metadata(tikr)
-
         # Delete raw files if desired
         d_dir = os.path.join(self.raw_dir, f'{tikr}', f'{document_type}')
 
@@ -478,6 +474,12 @@ class Downloader:
                 os.rmdir(parent_dir)
                 if len(os.listdir(self.raw_dir)) == 0:
                     os.rmdir(self.raw_dir)
+
+        # TODO if we unpack 10-q then 8-k we should have all unpacked
+        self.metadata.set_unpacked(
+            tikr, document_type=document_type, value=True)
+
+        self.metadata.save_tikr_metadata(tikr)
 
     def get_dates(self, tikr, **kwargs):
         """

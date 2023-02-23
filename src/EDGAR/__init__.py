@@ -205,7 +205,8 @@ def load_files(tikrs: str, data_dir: str = DEFAULT_DATA_DIR,
         if not metadata.is_unpacked(tikr, document_type=document_type):
             if not metadata.is_downloaded(tikr):
                 loader.query_server(tikr, force=force,
-                                    document_type=document_type)
+                                    document_type=document_type,
+                                    silent=silent)
 
             loader.unpack_bulk(
                 tikr,

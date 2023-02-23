@@ -206,8 +206,6 @@ class Parser:
             a list of boolean values
         """
 
-        # print('child_span:', child_span)
-
         child_in_parent = np.zeros(len(child_span))
         l_p = 0
         t_p = 0
@@ -312,6 +310,14 @@ class Parser:
         """
         document_type = DocumentType(document_type)
 
+        if document_type == 'all':
+            return self.get_annotated_submissions(
+                tikr=tikr,
+                document_type='10q',
+                silent=silent) + self.get_annotated_submissions(
+                    tikr,
+                    document_type='8k', silent=silent)
+
         submissions = [i for i in self.metadata._get_tikr(tikr)['submissions']]
         out = list()
         for submission in submissions:
@@ -322,8 +328,8 @@ class Parser:
                 form_type = self.metadata._get_submission(
                     tikr, submission)['attrs']['FORM TYPE']
                 form_type = DocumentType(form_type)
-                if (form_type == '10q' and document_type == '10q') or (
-                        form_type == '8k' and document_type == '8k'):
+                if (form_type == '10-Q' and document_type == '10-Q') or (
+                        form_type == '8-K' and document_type == '8-K'):
                     out.append(submission)
                 elif form_type == 'other' and document_type == 'other':
                     raise RuntimeWarning(
@@ -357,8 +363,8 @@ class Parser:
                 form_type = self.metadata._get_submission(
                     tikr, submission)['attrs']['FORM TYPE']
                 form_type = DocumentType(form_type)
-                if (form_type == '10q' and document_type == '10q') or (
-                        form_type == '8k' and document_type == '8k'):
+                if (form_type == '10-Q' and document_type == '10-Q') or (
+                        form_type == '8-K' and document_type == '8-K'):
                     out.append(submission)
                 elif form_type == 'other' and document_type == 'other':
                     raise RuntimeWarning(
@@ -756,13 +762,13 @@ class Parser:
             return self.load_processed(tikr, submission,
                                        filename, document_type=document_type)
         else:
-            if document_type != '10q' and document_type != '8k':
+            if document_type != '10-Q' and document_type != '8-K':
                 raise NotImplementedError(
-                    'Not implemented for current form type')
+                    f'Not implemented for current form type {document_type}')
 
             # TODO make process_file detect and work on unannotated files
             if not self._contains_annotations(tikr, submission, silent=silent):
-                raise NotImplementedError
+                raise NotImplementedError("Not annotated")
             f_anno_file = pathlib.Path(
                 os.path.join(
                     self.data_dir,
@@ -771,6 +777,9 @@ class Parser:
                     f'{document_type}',
                     submission,
                     filename)).absolute()
+            if not (os.path.exists(f_anno_file)):
+                warnings.warn("No such file exists", RuntimeWarning)
+                return
             elems, annotation_dict, in_table = self._parse_annotated_text(
                 f_anno_file)
             features = self.get_annotation_features(
@@ -778,8 +787,24 @@ class Parser:
             self.save_processed(tikr, submission, filename,
                                 document_type, features)
             self.metadata.save_tikr_metadata(tikr)
+
+            # Try remove file
             if remove_raw and os.path.exists(f_anno_file):
-                os.remove(pathlib.Path(f_anno_file))
+                os.remove(f_anno_file)
+                parent_dir = pathlib.Path(
+                    os.path.normpath(
+                        os.path.join(f_anno_file, os.pardir))).absolute()
+                # Try remove documentType/file
+                if os.path.exists(parent_dir) and len(
+                        os.listdir(parent_dir)) == 0:
+                    os.remove(parent_dir)
+                    parent_dir = pathlib.Path(
+                        os.path.normpath(
+                            os.path.join(f_anno_file, os.pardir))).absolute()
+                    # Try remove EXTRACTION_DIR/documentType/file
+                    if os.path.exists(parent_dir) and len(
+                            os.listdir(parent_dir)) == 0:
+                        os.remove(parent_dir)
             return features
 
     def save_processed(

@@ -9,7 +9,8 @@ class DocumentType:
     META_FILE_DIR_NAME = '.metadata'
 
     # Currently implemented documents, and catcher for 'all'
-    valid_types = {'all', '10q', '8k', 'other', 'ims'}
+    valid_types = {'all', '10-Q', '8-K', 'other', 'IMS'}
+    parse_mapping = {i.lower().replace('-', ''): i for i in valid_types}
 
     def __init__(self, dtype='all', **kwargs):
         """
@@ -21,9 +22,10 @@ class DocumentType:
                 The desired instance of DocumentType
         """
         if isinstance(dtype, str):
-            self.dtype = DocumentType.parse_string(dtype)
-            if self.dtype not in DocumentType.valid_types:
+            parsed = DocumentType.parse_string(dtype)
+            if parsed not in DocumentType.parse_mapping:
                 raise RuntimeError('Invalid DocumentType Specified')
+            self.dtype = DocumentType.parse_mapping[parsed]
         elif isinstance(dtype, DocumentType):
             self.dtype = dtype.dtype
 
@@ -59,7 +61,7 @@ class DocumentType:
             return True
         if isinstance(target, str):
             return DocumentType.parse_string(
-                target) in DocumentType.valid_types
+                target) in DocumentType.parse_mapping
         return False
 
     def __repr__(self):
