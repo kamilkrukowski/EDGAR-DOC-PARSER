@@ -1,6 +1,8 @@
 import os; import sys;
 sys.path.append(os.path.abspath('..'))
 
+sys.path.append(os.path.abspath(os.path.join('..','src')))
+
 import mock
 MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy', 'torch', 'pandas', 
                 'yaml', 'secedgar', 'selenium', 'selenium.webdriver.common.by', 'selenium.common.exceptions', 'selenium.webdriver.remote.webelement',

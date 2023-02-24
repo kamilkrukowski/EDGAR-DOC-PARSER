@@ -29,17 +29,18 @@ class edgar_parser:
 
             Parameters
             --------------
-            info: a set in structure ((tag, attributes),data, range) that contains information of the element.
-                        Attributes is in a format of list of set : `[(attr, value)]`
+            info: a set in structure ((tag, attributes),data, range) that contains information of the element. Attributes is in a format of list of set : `[(attr, value)]`
 
-            attributes
-            ----------
-            text
-            tag_name
+            Attributes
+            --------------
+            text: str
+            tag_name: str
+                
 
-            method
-            ------
-            get_attribute(attr): attr as a string
+            Methods
+            --------------
+            get_attribute(attr): str
+                get the corresponding attribute of the element
         """
 
         def __init__(self, info):
@@ -62,11 +63,17 @@ class edgar_parser:
         """
             Class that handles the a string of span element
             It can also be used on unannotated documents, and only the first output is used.
-
-            return
+            The class inheri from `html.parser`. See references
+            
+            Example
             -------
-            root_element: the out most element's tag, attr, and text
-            found_annotation: a list of annotated documents
+            >>> elem_parser = self.Span_Parser()
+            >>> elem_parser.feed(element_string)
+            >>> root, annot = elem_parser.wrapper()
+            
+            References
+            -----------
+            .. [1] "html.parser", https://docs.python.org/3/library/html.parser.html
         """
 
         def __init__(self):
@@ -96,10 +103,16 @@ class edgar_parser:
             if self.tags_opened[-1][0] in annot_tag:  # in annotation element
                 self.found_annotation += [(self.tags_opened[-1],
                                            data.replace('\n', '').strip() + ' ')]
-
-        # wrap things up into an element, and a list of elements of annotation
-        # elements
         def wrapper(self):
+            """
+            Return
+            -------
+            Element
+                the root element of the feeded string
+            List
+                a list of ((tag, attr), data) containing the info of annotation
+            
+            """
             root_element = (self.root_tag, self.span_txt)
             return root_element, self.found_annotation
 
@@ -138,9 +151,12 @@ class edgar_parser:
 
         self._annotation_preparation()
 
-    # generate search keys from tag name
 
     def _annotation_preparation(self):
+        """
+        given the tags for annotation, text, table, generate search keys for the use of `parser.span_parser` and `parser.find_all_pattern`
+        
+        """
         # the list of known tags
         global annot_tag
         annot_tag = ['ix:nonnumeric', 'ix:nonfraction']
@@ -163,21 +179,24 @@ class edgar_parser:
         self.annot_search_pattern = annot_search_pattern
         self.unannot_search_pattern = unannot_search_pattern
 
-    """
-        helper function that finds element with given tags
-
-        Parameters
-        ---------
-        pattern -- a list of two strings, corresponding to start and end of an element,
-                        ex. '['<span', '</span>']'. The tags to be find and extract
-        txt -- the string taht containing some html code
-
-        Returns
-        --------
-        A list of set of two numbers, representing the begining and end positon of an element.
-    """
+        
     @staticmethod
     def find_all_pattern(pattern, txt):
+        """
+            helper function that finds element with given tags
+
+            Parameters
+            ---------
+            pattern: list
+                Each element contains two stringscorresponding to start and end of an element, ex. '['<span', '</span>']'. The tags to be find and extract
+            txt: str
+                the string that containing some html code
+
+            Returns
+            --------
+            list
+                list of set of two numbers, representing the begining and end positon of an element.
+        """
         starts = list(re.finditer(pattern[0], txt))
         ends = list(re.finditer(pattern[1], txt))
         tag_finds = sorted(starts + ends, key=lambda x: x.span()[0])
@@ -194,20 +213,25 @@ class edgar_parser:
         result1 = [(i[0].span()[0], i[1].span()[1]) for i in result]
         return result1
 
-    """
-    check whether strings in child_span is in any of the parent_span
+
+    @staticmethod
+    def labels_in_table(child_span, parent_span):
+        """
+        
+        check whether strings in child_span is in any of the parent_span
+        
         Parameters
         ---------
-        child_span, parent_span: a list of spans
+        child_span: list of set
+            the spans of string in the file for child element
+        parent_span: list of set
+            the spans of string in the file for parent element
 
         Returns
         --------
-        a list of boolean values
-    """
-    @staticmethod
-    def labels_in_table(child_span, parent_span):
-
-        # print('child_span:', child_span)
+        list
+            a list of booleans indicate wheather corresponding element in `child_span` is in any of the parent element
+        """
 
         child_in_parent = np.zeros(len(child_span))
         l_p = 0
