@@ -11,7 +11,7 @@ MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy',
                 'selenium.webdriver.remote.webelement', 'pyyaml',
                 'torch.utils.data', 'bs4', 'tqdm', 'tqdm.auto',
                 'selenium.webdriver', 'selenium.webdriver.remote',
-                'torch.utils']
+                'torch.utils', 'secedgar', 'secedgar.exceptions']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
@@ -50,3 +50,13 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
+
+def setup(app):
+    import EDGAR
+    # need to assign the names here, otherwise autodoc won't document these classes,
+    # and will instead just say 'alias of ...'
+    EDGAR.Downloader = EDGAR._Downloader
+    EDGAR.Parser = EDGAR._Parser
+    EDGAR.Metadata = EDGAR._Metadata
+    EDGAR.Metadata.__name__ = 'Metadata'

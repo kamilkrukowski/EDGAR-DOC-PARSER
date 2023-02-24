@@ -4,15 +4,19 @@
 import os
 import inspect
 
-from .metadata_manager import metadata_manager as Metadata
-from .downloader import Downloader
-from .parser import Parser
+from .metadata_manager import metadata_manager as _Metadata
+from .downloader import Downloader as _Downloader
+from .parser import Parser as _Parser
 from .document import DocumentType
+from .pipeline import Pipeline
 
-Downloader.__module__ = 'EDGAR'
-Parser.__module__ = 'EDGAR'
-Metadata.__module__ = 'EDGAR'
+_Downloader.__module__ = 'EDGAR'
+_Parser.__module__ = 'EDGAR'
+_Metadata.__module__ = 'EDGAR'
 DocumentType.__module__ = 'EDGAR'
+Pipeline.__module__ = 'EDGAR'
+
+__version__ = '0.0.5'
 
 DEFAULT_DATA_DIR = 'edgar_data'
 
@@ -52,7 +56,7 @@ class Pipeline:
         """
         kwargs['data_dir'] = _relative_to_abs_path(data_dir)
         if self.metadata is None or not reuse:
-            self.metadata = Metadata(*args, **kwargs)
+            self.metadata = _Metadata(*args, **kwargs)
         return self.metadata
 
     def _get_downloader(self, data_dir: str = DEFAULT_DATA_DIR,
@@ -73,7 +77,7 @@ class Pipeline:
             kwargs['metadata'] = self._get_metadata(
                 data_dir=data_dir, reuse=reuse)
         if self.downloader is None or not reuse:
-            self.downloader = Downloader(**kwargs)
+            self.downloader = _Downloader(**kwargs)
         return self.downloader
 
     def _get_parser(self, data_dir: str = DEFAULT_DATA_DIR,
@@ -88,14 +92,13 @@ class Pipeline:
         reuse: bool, Optional
             If False, re-initializes the class if an instance already exists
         """
-        kwargs['data_dir'] = _relative_to_abs_path(
-            kwargs.get('data_dir', DEFAULT_DATA_DIR))
+        kwargs['data_dir'] = _relative_to_abs_path(data_dir)
 
         if 'metadata' not in kwargs:
             kwargs['metadata'] = self._get_metadata(
                 data_dir=kwargs.get('data_dir', 'data'), reuse=reuse)
         if self.parser is None or not reuse:
-            self.parser = Parser(**kwargs)
+            self.parser = _Parser(**kwargs)
         return self.parser
 
 
@@ -232,6 +235,6 @@ def load_files(tikrs: str, data_dir: str = DEFAULT_DATA_DIR,
 
 edgar_global = EDGAR_singleton()
 
-_Metadata = edgar_global._get_metadata
-_Downloader = edgar_global._get_downloader
-_Parser = edgar_global._get_parser
+Metadata = edgar_global._get_metadata
+Downloader = edgar_global._get_downloader
+Parser = edgar_global._get_parser
