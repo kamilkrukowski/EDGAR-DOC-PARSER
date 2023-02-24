@@ -6,8 +6,8 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "EDGAR_Document_Parser"
-version = "0.0.5"
+name = "EDGAR_Doc_Parser"
+version = "0.0.7"
 authors = [
   { name="Kamil Krukowski", email="Kamil.Krukowski@tufts.edu" },
   { name="Yiting Li", email="Yiting.Li@tufts.edu" },

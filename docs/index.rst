@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to EDGAR-DOC-PARSER's documentation!
-===================================
+===========================================
 
 About
 -------------------
@@ -56,7 +56,6 @@ Parsing 10-Q submission HTML into featurized pandas DataFrames
    Parsing Documents <parser>
    Useful Metadata <metadata_mgr>
    DocumentType <document_type>
-
 
 
 
