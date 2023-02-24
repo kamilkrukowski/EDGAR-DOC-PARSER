@@ -331,11 +331,11 @@ class Downloader:
                 if (True), then ignore locally downloaded files and
                     overwrite them. Otherwise, attempt to detect
                     previous download and abort server query.
-            clean_raw: bool
-                default to be true. If true, the raw data will be
+            remove_raw: bool
+                defaults True. If true, the raw data will be
                     cleaned after parsed.
         """
-        # sec-edgar data save location for documents filing ticker
+
         document_type = DocumentType(document_type)
 
         d_dir = os.path.join(self.raw_dir, f'{tikr}', f'{document_type}')
@@ -378,6 +378,8 @@ class Downloader:
         if remove_raw:
             os.remove(os.path.join(d_dir, file))
             self.metadata.set_downloaded(tikr, False)
+            self.metadata._gen_submission_metadata(tikr, file.replace(
+                '.txt', ''))
 
         self.metadata.save_tikr_metadata(tikr)
 
@@ -489,7 +491,7 @@ class Downloader:
         for i in self.get_submissions(
             tikr, document_type=kwargs.get(
                 'document_type', 'all')):
-            date_str = self.metadata[tikr]['submissions'][i]['attrs'].get(
+            date_str = self.metadata._get_submission(tikr, i)['attrs'].get(
                 'FILED AS OF DATE', None)
             if date_str is None:
                 print('broken')

@@ -8,13 +8,11 @@ from .metadata_manager import metadata_manager as _Metadata
 from .downloader import Downloader as _Downloader
 from .parser import Parser as _Parser
 from .document import DocumentType
-from .pipeline import Pipeline
 
 _Downloader.__module__ = 'EDGAR'
 _Parser.__module__ = 'EDGAR'
 _Metadata.__module__ = 'EDGAR'
 DocumentType.__module__ = 'EDGAR'
-Pipeline.__module__ = 'EDGAR'
 
 __version__ = '0.0.5'
 

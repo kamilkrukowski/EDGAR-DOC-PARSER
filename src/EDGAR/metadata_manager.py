@@ -1,4 +1,5 @@
 import os
+import re
 import pathlib
 import pickle as pkl
 from yaml import load, CLoader as Loader, dump, CDumper as Dumper
@@ -35,7 +36,7 @@ class metadata_manager(dict):
     def load_keys(self):
 
         if not os.path.exists(self.keys_path):
-            warnings.warn("No .keys.yaml located", RuntimeWarning)
+            warnings.warn('No .keys.yaml located', RuntimeWarning)
             self.keys = dict()
             return
         self.keys = load(open(self.keys_path, 'r'), Loader=Loader)
@@ -46,7 +47,7 @@ class metadata_manager(dict):
 
     def load_tikr_metadata(self, tikr):
 
-        data_path = os.path.join(self.meta_dir, f"{tikr}.pkl")
+        data_path = os.path.join(self.meta_dir, f'{tikr}.pkl')
         if os.path.exists(data_path):
 
             with open(data_path, 'rb') as f:
@@ -61,7 +62,7 @@ class metadata_manager(dict):
 
         self.initialize_tikr_metadata(tikr)
 
-        data_path = os.path.join(self.meta_dir, f"{tikr}.pkl")
+        data_path = os.path.join(self.meta_dir, f'{tikr}.pkl')
 
         with open(data_path, 'wb') as f:
             pkl.dump(self.get(tikr), f)
@@ -139,7 +140,7 @@ class metadata_manager(dict):
         tikr_data = self._get_tikr(tikr)['submissions']
         if submission not in tikr_data:
             raise NameError(
-                f"{submission} for {tikr} not found in {self.data_dir}")
+                f'{submission} for {tikr} not found in {self.data_dir}')
         return tikr_data[submission]
 
     def get_submissions(self, tikr):
@@ -173,13 +174,14 @@ class metadata_manager(dict):
             filename: str,
             val: bool):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
-        assert sequence is not None, "Error: filename not found"
+        assert sequence is not None, 'Error: filename not found'
         self._get_submission(tikr, submission)['documents'][sequence][
             'features_pregenerated'] = val
+        self.save_tikr_metadata(tikr)
 
     def file_was_processed(self, tikr: str, submission: str, filename: str):
         sequence = self.find_sequence_of_file(tikr, submission, filename)
-        assert sequence is not None, "Error: filename not found"
+        assert sequence is not None, 'Error: filename not found'
         doc = self[tikr]['submissions'][submission]['documents'][sequence]
         return doc.get('features_pregenerated', False)
 
@@ -220,10 +222,10 @@ class metadata_manager(dict):
         """
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
-        tikr_fpath = os.path.join(self.data_dir, "company_tickers.json")
+        tikr_fpath = os.path.join(self.data_dir, 'company_tickers.json')
         if not os.path.isfile(tikr_fpath):
             urllib.request.urlretrieve(
-                "https://www.sec.gov/files/company_tickers.json", tikr_fpath)
+                'https://www.sec.gov/files/company_tickers.json', tikr_fpath)
         with open(tikr_fpath) as json_file:
             data = json.load(json_file)
         return [data[i]['ticker'] for i in data]
@@ -261,3 +263,72 @@ class metadata_manager(dict):
                 if os.path.exists(extraction_dir) and len(
                         os.listdir(extraction_dir)) == 0:
                     os.rmdir(extraction_dir)
+
+    def _gen_submission_metadata(
+            self, tikr, submission, silent: bool = False, **kwargs):
+        """
+            Generate attrs for a filing submission
+
+            Parameters
+            ----------
+            tikr: str
+                Represent Company to query submission
+            submission: str
+                The filing to generate metadata attrs for
+            silent: bool
+                if True, does not display warnings
+        """
+
+        annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
+
+        _file = None
+        files = self._get_submission(tikr, submission)['documents']
+        for file in files:
+            # We hope these are mutually exclusive
+            if files[file]['type'] == '10-Q' or files[file]['type'] == '8-K':
+                _file = files[file]['filename']
+
+        # TODO handle ims-document
+        if _file is None:
+            if silent:
+                return False
+            else:
+                warnings.warn(
+                    'Document Encountered without 10-Q or 8-K', RuntimeWarning)
+                for file in files:
+                    if files[file].get('is_ims-document', False):
+                        self.metadata[tikr]['submissions'][submission][
+                            'attrs']['is_annotated'] = False
+                        warnings.warn(
+                            'Encountered unlabeled IMS-DOCUMENT',
+                            RuntimeWarning)
+                        return False
+                if len(files) == 0:
+                    warnings.warn('No Files under Document', RuntimeWarning)
+                    return False
+
+        assert _file is not None, 'Missing 10-Q or 8-K'
+
+        document_type = kwargs.get('document_type', None)
+        if document_type is None:
+            document_type = self._get_submission(
+                tikr, submission)['attrs']['FORM TYPE']
+            document_type = DocumentType(document_type)
+
+        data = None
+        fname = os.path.join(self.data_dir,
+                             DocumentType.EXTRACTED_FILE_DIR_NAME,
+                             tikr, f'{document_type}', submission)
+        files = os.listdir(fname)
+
+        for file in files:
+            with open(os.path.join(fname, file), 'r', encoding='utf-8') as f:
+                data = f.read()
+            for tag in annotated_tag_list:
+                if re.search(tag, data):
+                    self._get_submission(tikr, submission)['attrs'][
+                        'is_annotated'] = True
+                    return True
+        self._get_submission(tikr, submission)['attrs'][
+            'is_annotated'] = False
+        return False

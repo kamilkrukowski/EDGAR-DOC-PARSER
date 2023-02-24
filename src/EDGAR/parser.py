@@ -389,64 +389,8 @@ class Parser:
         if is_annotated is not None:
             return is_annotated
         else:
-            return self._gen_annotated_metadata(
+            return self.metadata._gen_submission_metadata(
                 tikr, submission, silent=silent)
-
-    def _gen_annotated_metadata(
-            self, tikr, submission, silent: bool = False, **kwargs):
-
-        annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}
-
-        _file = None
-        files = self.metadata[tikr]['submissions'][submission]['documents']
-        for file in files:
-            if files[file]['type'] == '10-Q' or files[file]['type'] == '8-K':
-                _file = files[file]['filename']
-
-        # TODO handle ims-document
-        if _file is None:
-            if silent:
-                return False
-            else:
-                warnings.warn(
-                    'Document Encountered without 10-Q or 8-K', RuntimeWarning)
-                for file in files:
-                    if files[file].get('is_ims-document', False):
-                        self.metadata[tikr]['submissions'][submission][
-                            'attrs']['is_annotated'] = False
-                        warnings.warn(
-                            'Encountered unlabeled IMS-DOCUMENT',
-                            RuntimeWarning)
-                        return False
-                if len(files) == 0:
-                    warnings.warn('No Files under Document', RuntimeWarning)
-                    return False
-
-        assert _file is not None, 'Missing 10-Q or 8-K'
-
-        document_type = kwargs.get('document_type', None)
-        if document_type is None:
-            document_type = self.metadata._get_submission(
-                tikr, submission)['attrs']['FORM TYPE']
-            document_type = DocumentType(document_type)
-
-        data = None
-        fname = os.path.join(self.data_dir,
-                             DocumentType.EXTRACTED_FILE_DIR_NAME,
-                             tikr, f'{document_type}', submission)
-        files = os.listdir(fname)
-
-        for file in files:
-            with open(os.path.join(fname, file), 'r', encoding='utf-8') as f:
-                data = f.read()
-            for tag in annotated_tag_list:
-                if re.search(tag, data):
-                    self.metadata._get_submission(tikr, submission)['attrs'][
-                        'is_annotated'] = True
-                    return True
-        self.metadata._get_submission(tikr, submission)['attrs'][
-            'is_annotated'] = False
-        return False
 
     """
     Parses some documents 2020+ at least
@@ -756,11 +700,23 @@ class Parser:
         Documents without annotations receive entries in the dataframe
             The sentinel column ``is_annotated`` set to False.
         """
+        out = None
         document_type = self.metadata.get_doctype(tikr, submission, filename)
+        f_anno_file = pathlib.Path(
+            os.path.join(
+                self.data_dir,
+                DocumentType.EXTRACTED_FILE_DIR_NAME,
+                tikr,
+                f'{document_type}',
+                submission,
+                filename)).absolute()
+
+        # Try to load from cache
         if not force and self.metadata.file_was_processed(
                 tikr, submission, filename):
-            return self.load_processed(tikr, submission,
-                                       filename, document_type=document_type)
+            out = self.load_processed(tikr, submission,
+                                      filename, document_type=document_type)
+        # Regenerate data
         else:
             if document_type != '10-Q' and document_type != '8-K':
                 raise NotImplementedError(
@@ -768,17 +724,9 @@ class Parser:
 
             # TODO make process_file detect and work on unannotated files
             if not self._contains_annotations(tikr, submission, silent=silent):
-                raise NotImplementedError("Not annotated")
-            f_anno_file = pathlib.Path(
-                os.path.join(
-                    self.data_dir,
-                    DocumentType.EXTRACTED_FILE_DIR_NAME,
-                    tikr,
-                    f'{document_type}',
-                    submission,
-                    filename)).absolute()
+                raise NotImplementedError('Not annotated')
             if not (os.path.exists(f_anno_file)):
-                warnings.warn("No such file exists", RuntimeWarning)
+                warnings.warn('File not loaded locally', RuntimeWarning)
                 return
             elems, annotation_dict, in_table = self._parse_annotated_text(
                 f_anno_file)
@@ -787,25 +735,47 @@ class Parser:
             self.save_processed(tikr, submission, filename,
                                 document_type, features)
             self.metadata.save_tikr_metadata(tikr)
+            out = features
 
-            # Try remove file
-            if remove_raw and os.path.exists(f_anno_file):
+        if remove_raw:
+            # Try remove the file
+            if os.path.exists(f_anno_file):
                 os.remove(f_anno_file)
-                parent_dir = pathlib.Path(
-                    os.path.normpath(
-                        os.path.join(f_anno_file, os.pardir))).absolute()
-                # Try remove documentType/file
-                if os.path.exists(parent_dir) and len(
-                        os.listdir(parent_dir)) == 0:
-                    os.remove(parent_dir)
-                    parent_dir = pathlib.Path(
-                        os.path.normpath(
-                            os.path.join(f_anno_file, os.pardir))).absolute()
-                    # Try remove EXTRACTION_DIR/documentType/file
-                    if os.path.exists(parent_dir) and len(
-                            os.listdir(parent_dir)) == 0:
-                        os.remove(parent_dir)
-            return features
+
+            # Try remove documentType/submission/file
+            parent_dir = pathlib.Path(
+                os.path.normpath(
+                    os.path.join(f_anno_file, os.pardir))).absolute()
+            if os.path.exists(parent_dir) and len(
+                    os.listdir(parent_dir)) == 0:
+                os.rmdir(parent_dir)
+
+            # Try remove documentType/submission/file
+            parent_dir = pathlib.Path(
+                os.path.normpath(
+                    os.path.join(parent_dir, os.pardir))).absolute()
+            if os.path.exists(parent_dir) and len(
+                    os.listdir(parent_dir)) == 0:
+                os.rmdir(parent_dir)
+
+            # Try remove tikr/documentType/submission/file
+            parent_dir = pathlib.Path(
+                os.path.normpath(
+                    os.path.join(parent_dir, os.pardir))).absolute()
+            if os.path.exists(parent_dir) and len(
+                    os.listdir(parent_dir)) == 0:
+                os.rmdir(parent_dir)
+
+            # Try remove DocumentType.EXTRACTION_DIR/tikr/
+            #   documentType/submission/file
+
+            parent_dir = pathlib.Path(
+                os.path.normpath(
+                    os.path.join(parent_dir, os.pardir))).absolute()
+            if os.path.exists(parent_dir) and len(
+                    os.listdir(parent_dir)) == 0:
+                os.rmdir(parent_dir)
+        return out
 
     def save_processed(
             self,
