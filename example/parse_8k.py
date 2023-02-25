@@ -35,6 +35,7 @@ silent = True
 remove = False
 
 
+
 if args.demo:
     tikrs = ['aapl']
 
@@ -42,18 +43,25 @@ for tikr in tqdm(tikrs, desc='Processing...',  position=0):
     # if no submissions, download data from edagr database
     if len(parser.metadata._get_tikr(tikr)['submissions']) == 0:
         EDGAR.load_files(
-            tikr, document_type='8k', force_remove_raw=False,
+            tikr, document_type='8k', force_remove_raw=remove,
             silent=silent, data_dir=DATA_DIR)
+    # find all the submission based on tikr
+
+ 
     submissions = loader.get_submissions(tikr,document_type=document_type)
-    print(submissions)
+    
     if args.demo:
         submissions = [submissions[0]]
 
+    # each submission is a raw file
     for submission in tqdm(submissions, 'reading submission...', position=1):
-        text = parser.parse_all_text_8k(
+        # parse each raw file to get the text attr
+        text = parser.parse_all_text(
             tikr=tikr,
             submission=submission,
             document_type=document_type
             )
-        print(text)
+        date = loader.metadata._get_submission(tikr, submission)['attrs'].get(
+                'FILED AS OF DATE', None)
+        print(date)
 
