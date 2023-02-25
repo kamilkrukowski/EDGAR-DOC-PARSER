@@ -1,4 +1,61 @@
 """
+    preprocess_all.py
+    This file will downloads and parses financial data from the SEC EDGAR database for a list of companies specified in the "tickers.txt" file.
+    TThe data is then processed and saved as a tokenizer and raw data file in the current directory.
+"""
+
+import sys
+import os
+sys.path.append(os.path.join('..', 'src', 'EDGAR'))
+sys.path.append(os.path.join('..', 'src'))
+import EDGAR
+import torch
+import numpy as np
+# from transformers import BertTokenizerFast
+from tqdm.auto import tqdm
+# import os
+import time
+import itertools
+import argparse
+
+
+
+
+
+# SETTINGS
+DATA_DIR = os.path.join("..", "data")#'data'
+N_TIKRS = 15
+
+loader = EDGAR.Downloader(data_dir=DATA_DIR)
+parser = EDGAR.Parser(data_dir=DATA_DIR)
+
+tikrs = ['aapl', 'msft', 'amzn', 'tsla', 'googl', 'goog',  'unh', 'jnj', 'xom']
+
+document_type = EDGAR.DocumentType('8k')
+
+force = False
+silent = True
+remove = False
+
+for tikr in tqdm(tikrs, desc='Processing...'):
+    print(tikr)
+    if len(parser.metadata._get_tikr(tikr)['submissions']) == 0:
+        EDGAR.load_files(
+            tikr, document_type='8k', force_remove_raw=remove,
+            silent=silent, data_dir=DATA_DIR)
+
+    annotated_subs = parser.get_annotated_submissions(tikr, silent=silent)
+
+
+    for submission in annotated_subs:
+        fname = parser.metadata.get_8k_name(tikr, submission)
+        if not parser.metadata.file_was_processed(tikr, submission, fname):
+            EDGAR.load_files(
+                tikr, document_type='8k', force_remove_raw=remove,
+                silent=silent, data_dir=DATA_DIR)
+
+    
+"""
 `data` folder placed under EDFAR-DOC-PARSER
 
 """
