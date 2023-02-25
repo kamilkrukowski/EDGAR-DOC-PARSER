@@ -1,3 +1,8 @@
+"""
+`data` folder placed under EDFAR-DOC-PARSER
+
+"""
+
 import sys
 import os
 import argparse
@@ -36,7 +41,7 @@ remove = False
 
 
 if args.demo:
-    tikrs = ['aapl']
+    tikrs = ['goog']
 
 for tikr in tqdm(tikrs, desc='Processing...',  position=0):
     # if no submissions, download data from edagr database
