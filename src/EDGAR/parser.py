@@ -795,10 +795,18 @@ class Parser:
                 f'{submission}.txt')).absolute()
         with open(d_dir, encoding='utf-8') as file:
             f = file.read()
-        
-        return f
+        return self.extract_8k_text(f)
 
-       
+    @staticmethod
+    def extract_8k_text(f):
+        """
+        Given a string of html, return the raw text part of the string
+        """
+        a = f.lower()
+        a = re.sub('<document>.*?<type>graphic.*?</document>', ' ', a, flags = re.DOTALL)
+        b = re.sub('<.*?>', ' ', a, flags = re.DOTALL)
+        c = re.sub('&nbsp;', " ", b)
+        return re.sub(r"&[a-z0-9#]+;", "", c)
 
 
         
