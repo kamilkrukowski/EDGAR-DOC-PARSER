@@ -777,7 +777,7 @@ class Parser:
                 os.rmdir(parent_dir)
         return out
 
-    def parse_all_text(
+    def parse_all_text_8k(
             self,
             tikr: str,
             submission: str,
