@@ -777,7 +777,7 @@ class Parser:
                 os.rmdir(parent_dir)
         return out
 
-    def parse_all_text_8k(
+    def parse_all_text(
             self,
             tikr: str,
             submission: str,
@@ -795,6 +795,7 @@ class Parser:
                 f'{submission}.txt')).absolute()
         with open(d_dir, encoding='utf-8') as file:
             f = file.read()
+        
         return f
 
        
