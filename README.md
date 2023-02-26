@@ -8,12 +8,14 @@ We have a Test Server PyPi Page hosted [here.](https://test.pypi.org/project/EDG
 
 ## About
 
-A package for downloading, extracting, parsing, and processing data from SEC-EDGAR, a public online database of all documents filed with the USA's Securities and Exchange Commission
+A package for downloading, extracting, parsing, and processing data from SEC-EDGAR, a public online database of all documents filed with the USA's Securities and Exchange Commission.
 
 ## Currently Support Filing Types
 
 10-Q
+
 8-K
+
 We plan on expanding the list in future releases
 
 ## Dependencies
