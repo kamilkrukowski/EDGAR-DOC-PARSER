@@ -1,4 +1,4 @@
-.. _metadata_mgr:
+.. _metadata:
 
 Cached Information
 ===================

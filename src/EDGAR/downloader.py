@@ -123,18 +123,18 @@ class Downloader:
             a company identifier to query
         force: bool
             if (True), then ignore locally downloaded files
-                and overwrite them. Otherwise, attempt to detect
-                    previous download and abort server query.
+            and overwrite them. Otherwise, attempt to detect
+            previous download and abort server query.
         start_date: optional
             The earliest date to look for filings
         end_date: optional
             The latest filing date retrievable
         max_num_filings:
             The maximum number of documents to retrieve. Retrieves all
-                documents if set to `None`.
+            documents if set to `None`.
         delay_time:
             The time (in seconds) delayed at the
-                beginning of this function.
+            beginning of this function.
         """
         sleep(delay_time)
 
@@ -388,7 +388,7 @@ class Downloader:
         """
         return self.metadata._get_tikr(tikr)['attrs'].get(
             f'{document_type}_extracted', False)
-            
+
     def _is_10q_unpacked(self, tikr):
         """Check if 10-Q has been unpacked."""
         return self.metadata[tikr]['attrs'].get('10q_extracted', False)
@@ -417,21 +417,8 @@ class Downloader:
             company ticker associated with unpacking
         force: bool
             if (True), then ignore locally downloaded files and
-                overwrite them. Otherwise, attempt to detect
-                previous download and abort server query.
-        loading__bar: bool:
-            if True, will time and show progress
-        document_type: str
-            document type to unpack (10-Q, 8-K, or all)
-
-        Parameters
-        ---------
-        tikr: str
-            company ticker associated with unpacking
-        force: bool
-            if (True), then ignore locally downloaded files and
-                overwrite them. Otherwise, attempt to detect
-                previous download and abort server query.
+            overwrite them. Otherwise, attempt to detect
+            previous download and abort server query.
         loading_bar: bool
             if True, will time and show progress
         document_type: str or DocumentType
