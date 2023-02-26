@@ -19,31 +19,29 @@ Downloading and extracting archives of 10-Q submissions from the SEC API
 
     import EDGAR
 
-    tikr = 'nflx'
     data_dir = 'data'
+    tikr = 'nflx'
+    tikrs = [tikrs]
 
-    loader = EDGAR.downloader(data_dir=data_dir)
-    metadata = EDGAR.metadata(data_dir=data_dir)
+    metadata = EDGAR.Metadata(data_dir=data_dir)
 
-    # Load previous cached information
-    metadata.load_tikr_metadata(tikr)
-
-    loader.query_server(tikr)
-    loader.unpack_bulk(tikr)
+    EDGAR.load_files(tikrs=tikrs, data_dir=data_dir, document_type='10-Q')
 
 Parsing 10-Q submission HTML into featurized pandas DataFrames
 
 .. code-block:: python
 
-    parser = EDGAR.parser(data_dir=data_dir)
+    parser = EDGAR.Parser(data_dir=data_dir)
 
-    metadata.load_tikr_metadata(tikr)
+    # We check the annotated documents for nflx
     annotated_docs = parser.get_annotated_submissions(tikr)
 
+    # We only load the first document
     document = annotated_docs[0]
 
+    # Each submission has both supplementary files and a primary file
     fname = metadata.get_10q_name(tikr, document)
-    # Try load cached, otherwise regenerate new file
+    # Generate the features for that file.
     features = parser.featurize_file(tikr, document, fname)
 
 
@@ -54,7 +52,7 @@ Parsing 10-Q submission HTML into featurized pandas DataFrames
    core
    Downloading Documents <downloader>
    Parsing Documents <parser>
-   Useful Metadata <metadata_mgr>
+   Useful Metadata <metadata>
    DocumentType <document_type>
 
 

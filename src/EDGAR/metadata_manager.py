@@ -26,11 +26,19 @@ class metadata_manager(dict):
         self.keys_path = os.path.join(self.data_dir, '.keys.yaml')
         self.keys = None
 
-    def reset(self):
+    def reset(self, keep_api_header: bool = True):
+        """
+        Delete stored metadata about investigated companies
+
+        Parameters:
+        keep_api_header: Bool, default True
+            If True, then does not delete api-header information.
+        """
         for file in os.listdir(self.meta_dir):
             os.remove(os.path.join(self.meta_dir, file))
         # Keep API Keys
-        self.save_keys()
+        if keep_api_header:
+            self.save_keys()
         self.clear()
 
     def load_keys(self):
@@ -106,8 +114,8 @@ class metadata_manager(dict):
 
         Returns
         --------
-        filename: str
-            The name of the 10-q file associated with the submission, or None
+        filename: str, None
+            The name of the submission's 10-Q file, or None
         """
         files = self._get_submission(tikr, submission)['documents']
         for file in files:
@@ -122,13 +130,12 @@ class metadata_manager(dict):
         tikr: str
             a company identifier to query
         submission:
-            the associated company filing for which to find a 10-Q form
-
+            the associated company filing for which to find a 8-K form
 
         Returns
         --------
-        filename: str
-            The name of the 8-k file associated with the submission, or None
+        filename: str, None
+            The name of the submission's 8-K file, or None
         """
         files = self._get_submission(tikr, submission)['documents']
         for file in files:
@@ -189,9 +196,9 @@ class metadata_manager(dict):
         self._get_tikr(tikr)['attrs']['downloaded'] = value
         self.save_tikr_metadata(tikr)
 
-    def is_downloaded(self, tikr):
+    def is_downloaded(self, tikr: str):
         """
-            Returns True if TIKR had previous bulk download
+        Returns True if TIKR had previous bulk download
         """
         return self._get_tikr(tikr)['attrs'].get('downloaded', False)
 
@@ -201,9 +208,15 @@ class metadata_manager(dict):
         self._get_tikr(tikr)['attrs'][f'unpacked_{document_type}'] = value
         self.save_tikr_metadata(tikr)
 
-    def is_unpacked(self, tikr, document_type):
+    def is_unpacked(self, tikr: str, document_type: str):
         """
-            Returns True if TIKR had previous bulk download
+        Returns True if TIKR had previously unpacked all instances of
+        this document type
+
+        Parameters
+        ------------
+        document_type: str or DocumentType
+            The document type in question
         """
         document_type = DocumentType(document_type)
         return self._get_tikr(tikr)['attrs'].get(
@@ -211,14 +224,13 @@ class metadata_manager(dict):
 
     def get_tikr_list(self):
         """
-        Download tikr list if not exist to the data folder.
-            Parse into list of tickers
+        Download list of all companies in the SEC database if not already
+        present. Return list of valid company ticker targets for download.
 
         Returns
         --------
-        tikr : list
-            a list of string tickers
-
+        tikr : list[str]
+            All SEC filing company public stock tickers.
         """
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
@@ -267,16 +279,16 @@ class metadata_manager(dict):
     def _gen_submission_metadata(
             self, tikr, submission, silent: bool = False, **kwargs):
         """
-            Generate attrs for a filing submission
+        Generate attrs for a filing submission
 
-            Parameters
-            ----------
-            tikr: str
-                Represent Company to query submission
-            submission: str
-                The filing to generate metadata attrs for
-            silent: bool
-                if True, does not display warnings
+        Parameters
+        ----------
+        tikr: str
+            Represent Company to query submission
+        submission: str
+            The filing to generate metadata attrs for
+        silent: bool
+            if True, does not display warnings
         """
 
         annotated_tag_list = {'ix:nonnumeric', 'ix:nonfraction'}

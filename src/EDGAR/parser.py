@@ -680,25 +680,25 @@ class Parser:
             The name of the file to featurize
         force: bool, default=False
             if (True), then ignore locally downloaded files and
-                overwrite them. Otherwise, attempt to detect previous download
-                    and abort server query.
+            overwrite them. Otherwise, attempt to detect previous download
+            and abort server query.
         silent: bool default=False
             if (True), then does not print runtime warnings.
         remove_raw: bool
-                default to be False. If true, the raw data will be deleted
-                    after parsing and caching result.
+                if (True), the packed data will be deleted after extraction
 
         Returns
         --------
-        DataFrame
-            Each row corresponds to one text field. Rows are not unique,
-             one is generated for each iXBRL annotation on that text field.
+        Pandas.DataFrame
 
 
         Notes
         ------
-        Documents without annotations receive entries in the dataframe
+            Documents without annotations receive entries in the dataframe
             The sentinel column ``is_annotated`` set to False.
+
+            Each row corresponds to one text field. Rows are not unique,
+            one is generated for each iXBRL annotation on that text field.
         """
         out = None
         document_type = self.metadata.get_doctype(tikr, submission, filename)
