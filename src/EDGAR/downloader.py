@@ -42,31 +42,35 @@ class Downloader:
         # Generate new API Header if missing
         if 'edgar_email' not in self.metadata.keys or (
                 'edgar_agent' not in self.metadata.keys):
+            self.generate_api_header()
+
+    def generate_api_header(self):
+        """Generate API key from commandline user input prompts"""
+        print(
+            ('No API Header detected.\n'
+                'The SEC requires all EDGAR API users '
+                'to identify themselves\n\n'))
+        if 'edgar_agent' not in self.metadata.keys:
             print(
-                ('No API Header detected.\n'
-                 'The SEC requires all EDGAR API users '
-                 'to identify themselves\n\n'))
-            if 'edgar_agent' not in self.metadata.keys:
-                print(
-                    ('The SEC requires a legal name of '
-                     'the user and any organizational affiliation'))
-                answer = 'n'
-                while (answer[0] != 'y' or len(answer) > 4):
-                    self.metadata.keys['edgar_agent'] = input('User(s): ')
-                    answer = input(
-                        ('Input User(s) '
-                         f"\'{self.metadata.keys['edgar_agent']}\'\n"
-                         ' Is this correct? (y/n)'))
-            if 'edgar_email' not in self.metadata.keys:
-                print('The SEC requires a contact email for the API user')
-                answer = 'n'
-                while (answer[0] != 'y' or len(answer) > 4):
-                    self.metadata.keys['edgar_email'] = input('Email: ')
-                    answer = input(
-                        ('Input Email '
-                         f"\'{self.metadata.keys['edgar_email']}\'\n"
-                         ' Is this correct? (y/n)'))
-            self.metadata.save_keys()
+                ('The SEC requires a legal name of '
+                    'the user and any organizational affiliation'))
+            answer = 'n'
+            while (answer[0] != 'y' or len(answer) > 4):
+                self.metadata.keys['edgar_agent'] = input('User(s): ')
+                answer = input(
+                    ('Input User(s) '
+                        f"\'{self.metadata.keys['edgar_agent']}\'\n"
+                        ' Is this correct? (y/n)'))
+        if 'edgar_email' not in self.metadata.keys:
+            print('The SEC requires a contact email for the API user')
+            answer = 'n'
+            while (answer[0] != 'y' or len(answer) > 4):
+                self.metadata.keys['edgar_email'] = input('Email: ')
+                answer = input(
+                    ('Input Email '
+                        f"\'{self.metadata.keys['edgar_email']}\'\n"
+                        ' Is this correct? (y/n)'))
+        self.metadata.save_keys()
 
     def _gen_tikr_metadata(self, tikr: str, documents, key):
         """Generate the metadata for a given tikr."""
@@ -388,7 +392,7 @@ class Downloader:
         """
         return self.metadata._get_tikr(tikr)['attrs'].get(
             f'{document_type}_extracted', False)
-            
+
     def _is_10q_unpacked(self, tikr):
         """Check if 10-Q has been unpacked."""
         return self.metadata[tikr]['attrs'].get('10q_extracted', False)
