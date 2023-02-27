@@ -1,3 +1,4 @@
+"""Module for querying SEC-EDGAR database remotely and saving locally."""
 from secedgar import filings, FilingType
 from secedgar.exceptions import NoFilingsError
 from bs4 import BeautifulSoup
@@ -45,7 +46,7 @@ class Downloader:
             self.generate_api_header()
 
     def generate_api_header(self):
-        """Generate API key from commandline user input prompts"""
+        """Generate API key from commandline user input prompts."""
         print(
             ('No API Header detected.\n'
                 'The SEC requires all EDGAR API users '
@@ -232,7 +233,8 @@ class Downloader:
         'FORM 10-Q', '10-Q', 'FORM 8-K', '8-K'}
 
     def __unpack_doc__(
-            self, tikr, submission, doc, document_type, force=True):
+            self, tikr, submission, doc, document_type, force=True,
+            include_supplementary: bool = False):
         """
         Private utility, parses SEC submission dump into components.
 
@@ -259,7 +261,7 @@ class Downloader:
             return
 
         form_type = metadata[sequence]['type']
-        if document_type != 'all':
+        if document_type != 'all' and not include_supplementary:
             if not DocumentType.is_valid_type(form_type):
                 return
             form_type = DocumentType(form_type)
@@ -296,6 +298,10 @@ class Downloader:
                 out_path = os.path.join(self.data_dir,
                                         DocumentType.EXTRACTED_FILE_DIR_NAME,
                                         f'{tikr}', f'{document_type}')
+        elif form_type == 'other':
+            out_path = os.path.join(self.data_dir,
+                                    DocumentType.EXTRACTED_FILE_DIR_NAME,
+                                    f'{tikr}', f'{document_type}')
         else:
             raise NotImplementedError
 
@@ -307,7 +313,8 @@ class Downloader:
             metadata[sequence]['extracted'] = True
 
     def unpack_file(self, tikr, file, document_type='all',
-                    force=True, remove_raw=False, **kwargs):
+                    force=True, remove_raw=False,
+                    include_supplementary: bool = False, **kwargs):
         """
         Process raw data from one filing at one company.
 
@@ -325,11 +332,12 @@ class Downloader:
             document type to unpack (10-Q, 8-K, or all)
         force: bool
             if (True), then ignore locally downloaded files and
-                overwrite them. Otherwise, attempt to detect
-                previous download and abort server query.
-        clean_raw: bool
-            default to be true. If true, the raw data will be
-                cleaned after parsed.
+            overwrite them. Otherwise, attempt to detect
+            previous download and abort server query.
+        remove_raw: bool = False
+            If (True), the raw data will be deleted after parsing.
+        include_supplementary: bool = False
+            If (True), unpacks all supplementary documents to the main one.
         """
         # sec-edgar data save location for documents filing ticker
         document_type = DocumentType(document_type)
@@ -381,7 +389,7 @@ class Downloader:
 
     def _are_filings_unpacked(self, tikr: str, document_type: str):
         """
-        Get whether filings for a given company have been unpacked
+        Get whether filings for a given company have been unpacked.
 
         Parameters
         ----------
@@ -411,7 +419,7 @@ class Downloader:
             desc='Inflating HTM', remove_raw=False,
             force_remove_raw=False,
             document_type='all', silent=False,
-            mp2=False):
+            include_supplementary=False):
         """
         Process all raw data from one company.
 
@@ -432,15 +440,19 @@ class Downloader:
         force_remove_raw: bool, Optional
             If True, will delete all files in the unpacking directory
             even if some are not unpacked.
+        include_supplementary: bool = False
+            If (True), then load all supplementary material as well.
         """
         document_type = DocumentType(document_type)
         if document_type == 'all':
             self.unpack_bulk(tikr, force=force, loading_bar=False,
                              desc=desc, remove_raw=remove_raw,
-                             document_type='10-Q', silent=silent)
+                             document_type='10-Q', silent=silent,
+                             include_supplementary=include_supplementary)
             self.unpack_bulk(tikr, force=force, loading_bar=False,
                              desc=desc, remove_raw=remove_raw,
-                             document_type='8-K', silent=silent)
+                             document_type='8-K', silent=silent,
+                             include_supplementary=include_supplementary)
             return
 
         if force_remove_raw:
@@ -465,7 +477,8 @@ class Downloader:
                 document_type=document_type,
                 force=force,
                 silent=silent,
-                remove_raw=remove_raw)
+                remove_raw=remove_raw,
+                include_supplementary=True)
 
         # Delete raw files if desired
         d_dir = os.path.join(self.raw_dir, f'{tikr}', f'{document_type}')
