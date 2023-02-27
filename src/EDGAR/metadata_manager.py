@@ -1,4 +1,5 @@
 """The Metadata class tracks the attributes of files as they are parsed."""
+
 import os
 import re
 import pathlib
@@ -42,7 +43,8 @@ class metadata_manager(dict):
         """
         Delete stored metadata about investigated companies.
 
-        Parameters:
+        Parameters
+        ---------
         keep_api_header: Bool, default True
             If True, then does not delete api-header information.
         """
@@ -130,7 +132,8 @@ class metadata_manager(dict):
         """
         Get the name of the primary document in a submission.
 
-        Parameters:
+        Parameters
+        ----------
         tikr: str
             a company identifier to query
         submission: str
