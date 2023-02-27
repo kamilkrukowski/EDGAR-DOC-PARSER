@@ -245,9 +245,9 @@ class Downloader:
         submission: str
             the submission the document is from
         doc: str
+            the html document being parsed
         """
         submission = submission.split('.')[0]
-
         metadata = self.metadata._get_submission(tikr, submission)['documents']
 
         seq = doc.find('sequence')
@@ -257,21 +257,25 @@ class Downloader:
         sequence = seq.text[:i].split('\n')[0]
 
         # Do not repeat work unless forcing
-        if metadata[sequence]['extracted'] and not force:
+        if metadata[sequence].get('extracted', False) and not force:
             return
 
         form_type = metadata[sequence]['type']
-        if document_type != 'all' and not include_supplementary:
-            if not DocumentType.is_valid_type(form_type):
-                return
-            form_type = DocumentType(form_type)
-        else:
+        if document_type == 'all' or include_supplementary:
             if DocumentType.is_valid_type(form_type):
                 form_type = DocumentType(form_type)
             else:
                 form_type = 'other'
+        else:
+            if not DocumentType.is_valid_type(form_type):
+                return
+            form_type = DocumentType(form_type)
 
         filename = metadata[sequence]['filename']
+
+        if '.jpg' in filename:
+            warnings.warn('Images not yet supported', RuntimeWarning)
+            return
 
         ensure_path = os.path.join(
             self.data_dir, DocumentType.EXTRACTED_FILE_DIR_NAME)
@@ -377,7 +381,8 @@ class Downloader:
 
         for doc in documents:
             self.__unpack_doc__(
-                tikr, fname, doc, document_type=document_type, force=force)
+                tikr, fname, doc, document_type=document_type, force=force,
+                include_supplementary=include_supplementary)
 
         if remove_raw:
             os.remove(os.path.join(d_dir, file))

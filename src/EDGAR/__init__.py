@@ -152,9 +152,8 @@ class EDGAR_singleton:
         """
         data_dir = _relative_to_abs_path(data_dir)
 
-        if self.pipelines is None:
-            self.pipelines = {
-                data_dir: Pipeline(data_dir=data_dir,  **kwargs)}
+        if data_dir not in self.pipelines:
+            self.pipelines[data_dir] = Pipeline(data_dir=data_dir,  **kwargs)
         return self.pipelines[data_dir]._get_downloader(
             data_dir=data_dir, reuse=reuse, **kwargs)
 
@@ -172,9 +171,8 @@ class EDGAR_singleton:
         """
         data_dir = _relative_to_abs_path(data_dir)
 
-        if self.pipelines is None:
-            self.pipelines = {
-                data_dir: Pipeline(data_dir=data_dir,  **kwargs)}
+        if data_dir not in self.pipelines:
+            self.pipelines[data_dir] = Pipeline(data_dir=data_dir,  **kwargs)
         return self.pipelines[data_dir]._get_parser(
             data_dir=data_dir, reuse=reuse, **kwargs)
 
