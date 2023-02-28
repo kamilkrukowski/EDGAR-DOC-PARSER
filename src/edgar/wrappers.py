@@ -122,7 +122,7 @@ def read_file(tikr: str, submission: str, file: str = None,
     return out_text
 
 def get_files(tikrs: list[str], submissions: list[str] = None,
-              data_dir: str = DEFAULT_DATA_DIR, metadata=None) -> list[str]:
+              data_dir: str = DEFAULT_DATA_DIR, metadata=None):
     """
     Get a list of all the locally loaded files under a company or specific\
     submission.
