@@ -1,10 +1,10 @@
-.. pyEDGAR documentation master file, created by
+.. edgar-doc-parser documentation master file, created by
    sphinx-quickstart on Fri Nov 18 16:56:37 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
 Welcome to EDGAR-DOC-PARSER's documentation!
-===========================================
+============================================
 
 About
 -------------------
@@ -17,21 +17,21 @@ Downloading and extracting archives of 10-Q submissions from the SEC API
 
 .. code-block:: python
 
-    import EDGAR
+    import edgar
 
     data_dir = 'data'
     tikr = 'nflx'
     tikrs = [tikrs]
 
-    metadata = EDGAR.Metadata(data_dir=data_dir)
+    metadata = edgar.Metadata(data_dir=data_dir)
 
-    EDGAR.load_files(tikrs=tikrs, data_dir=data_dir, document_type='10-Q')
+    edgar.load_files(tikrs=tikrs, data_dir=data_dir, document_type='10-Q')
 
 Parsing 10-Q submission HTML into featurized pandas DataFrames
 
 .. code-block:: python
 
-    parser = EDGAR.Parser(data_dir=data_dir)
+    parser = edgar.Parser(data_dir=data_dir)
 
     # We check the annotated documents for nflx
     annotated_docs = parser.get_annotated_submissions(tikr)

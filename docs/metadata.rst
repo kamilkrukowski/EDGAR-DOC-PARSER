@@ -5,5 +5,5 @@ Cached Information
 
 Metadata Class
 ----------------------
-.. autoclass:: EDGAR.Metadata
+.. autoclass:: edgar.Metadata
     :members:

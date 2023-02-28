@@ -83,6 +83,10 @@ class Downloader:
             i = 20
             while ('\n') not in seq.text[:i]:
                 i += 20
+                if i > 600:
+                    print(f"\'{seq.text[:i]}\'")
+                    print(doc.text[:100])
+                    raise RuntimeError
 
             seq = seq.text[:i].split('\n')[0]
             out[seq] = dict()
@@ -98,10 +102,21 @@ class Downloader:
                         out[seq][nextElem] = ''
                     continue
 
+                skip = False
                 i = 20
                 while ('\n') not in doc2.text[:i]:
                     i += 20
-                out[seq][nextElem] = doc2.text[:i].split('\n')[0]
+                    if i > 600:
+                        skip = True
+                        # type: GRAPHIC elements have no <description>
+                        # after <filename>
+                        if nextElem != 'description' and out[seq][
+                                'type'] != 'GRAPHIC':
+                            raise RuntimeError
+                        break
+
+                if not skip:
+                    out[seq][nextElem] = doc2.text[:i].split('\n')[0]
 
             out[seq]['extracted'] = False
 
@@ -245,9 +260,14 @@ class Downloader:
         submission: str
             the submission the document is from
         doc: str
+            the html document being parsed
+
+        Returns
+        -------
+        success: bool
+            If the document is properly supported and succesfully extracted.
         """
         submission = submission.split('.')[0]
-
         metadata = self.metadata._get_submission(tikr, submission)['documents']
 
         seq = doc.find('sequence')
@@ -257,21 +277,31 @@ class Downloader:
         sequence = seq.text[:i].split('\n')[0]
 
         # Do not repeat work unless forcing
-        if metadata[sequence]['extracted'] and not force:
+        if metadata[sequence].get('extracted', False) and not force:
             return
 
         form_type = metadata[sequence]['type']
-        if document_type != 'all' and not include_supplementary:
-            if not DocumentType.is_valid_type(form_type):
-                return
-            form_type = DocumentType(form_type)
-        else:
+        if document_type == 'all' or include_supplementary:
             if DocumentType.is_valid_type(form_type):
                 form_type = DocumentType(form_type)
             else:
                 form_type = 'other'
+        else:
+            if not DocumentType.is_valid_type(form_type):
+                return
+            form_type = DocumentType(form_type)
 
         filename = metadata[sequence]['filename']
+
+        if '.htm' not in filename:
+            if '.jpg' in filename or '.png' in filename:
+                warnings.warn('Images not yet supported', RuntimeWarning)
+            elif '.txt' in filename:
+                warnings.warn('Pure .TXT not yet supported', RuntimeWarning)
+            else:
+                warnings.warn('Non HTML documents are not yet supported',
+                              RuntimeWarning)
+            return False
 
         ensure_path = os.path.join(
             self.data_dir, DocumentType.EXTRACTED_FILE_DIR_NAME)
@@ -311,6 +341,8 @@ class Downloader:
 
             f.write(doc.prettify())
             metadata[sequence]['extracted'] = True
+
+        return True
 
     def unpack_file(self, tikr, file, document_type='all',
                     force=True, remove_raw=False,
@@ -364,7 +396,10 @@ class Downloader:
                     'FORM TYPE'] = 'IMS'
                 return
         d = p
-        assert d is not None, 'No sec-document tag found in submission'
+        if d is None:
+            warnings.warn('No sec-document tag found in submission',
+                          RuntimeWarning)
+            return
 
         documents = d.find_all('document', recursive=False)
 
@@ -375,15 +410,21 @@ class Downloader:
         attrs = {i.split(':')[0]: i.split(':')[1] for i in sec_header}
         self.metadata._get_tikr(tikr)['submissions'][fname]['attrs'] = attrs
 
+        # We track whether any submission is succesfully unpacked
+        non_empty = False
         for doc in documents:
-            self.__unpack_doc__(
-                tikr, fname, doc, document_type=document_type, force=force)
+            non_empty = non_empty or self.__unpack_doc__(
+                tikr, fname, doc, document_type=document_type, force=force,
+                include_supplementary=include_supplementary)
 
         if remove_raw:
             os.remove(os.path.join(d_dir, file))
             self.metadata.set_downloaded(tikr, False)
-            self.metadata._gen_submission_metadata(tikr, file.replace(
-                '.txt', ''))
+
+            # Metadata only exists for submission that has entries unpacked
+            if non_empty:
+                self.metadata._gen_submission_metadata(tikr, file.replace(
+                    '.txt', ''))
 
         self.metadata.save_tikr_metadata(tikr)
 

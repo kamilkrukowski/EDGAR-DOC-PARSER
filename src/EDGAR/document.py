@@ -1,3 +1,7 @@
+"""Unified struct for implemented document parsing types and \
+    package constants."""
+
+
 class DocumentType:
     """
         Object for specifying type of document in download and parse functions.
@@ -7,6 +11,7 @@ class DocumentType:
     EXTRACTED_FILE_DIR_NAME = 'files'
     PARSED_FILE_DIR_NAME = 'parsed'
     META_FILE_DIR_NAME = '.metadata'
+    DEFAULT_DATA_DIR = 'data'
 
     # Currently implemented documents, and catcher for 'all'
     valid_types = {'all', '10-Q', '8-K', 'other', 'IMS'}

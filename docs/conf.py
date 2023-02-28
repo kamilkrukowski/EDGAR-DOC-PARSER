@@ -27,7 +27,7 @@ for mod_name in MOCK_MODULES:
 project = 'EDGAR-DOC-PARSER'
 copyright = '2022, Kamil Krukowski'
 author = 'Kamil Krukowski'
-release = '0.4'
+release = '0.2.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/
@@ -53,10 +53,10 @@ html_static_path = ['_static']
 
 
 def setup(app):
-    import EDGAR
+    import edgar
     # need to assign the names here, otherwise autodoc won't document these classes,
     # and will instead just say 'alias of ...'
-    EDGAR.Downloader = EDGAR._Downloader
-    EDGAR.Parser = EDGAR._Parser
-    EDGAR.Metadata = EDGAR._Metadata
-    EDGAR.Metadata.__name__ = 'Metadata'
+    edgar.Downloader = edgar._Downloader
+    edgar.Parser = edgar._Parser
+    edgar.Metadata = edgar._Metadata
+    edgar.Metadata.__name__ = 'Metadata'
