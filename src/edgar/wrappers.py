@@ -11,6 +11,7 @@ from .document import DocumentType
 
 DEFAULT_DATA_DIR = DocumentType.DEFAULT_DATA_DIR
 
+
 def _relative_to_abs_path(relative_p):
     """
     Find the path to the module calling the caller of this function.
@@ -67,7 +68,8 @@ def load_files(tikrs: str, data_dir: str = DEFAULT_DATA_DIR,
 #    parser = edgar_global._get_parser(data_dir=data_dir)
 
     for tikr in tikrs:
-        if force or not metadata.is_unpacked(tikr, document_type=document_type):
+        if force or not metadata.is_unpacked(tikr,
+                                             document_type=document_type):
             if force or not metadata.is_downloaded(tikr):
                 loader.query_server(tikr, force=force,
                                     document_type=document_type,
@@ -121,7 +123,8 @@ def read_file(tikr: str, submission: str, file: str = None,
 
     return out_text
 
-def get_files(tikrs: list[str], submissions: list[str] = None,
+
+def get_files(tikrs, submissions=None,
               data_dir: str = DEFAULT_DATA_DIR, metadata=None):
     """
     Get a list of all the locally loaded files under a company or specific\
