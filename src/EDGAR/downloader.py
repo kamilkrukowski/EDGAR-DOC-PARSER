@@ -299,7 +299,7 @@ class Downloader:
             elif '.txt' in filename:
                 warnings.warn('Pure .TXT not yet supported', RuntimeWarning)
             else:
-                warnings.warn("Non HTML documents are not yet supported",
+                warnings.warn('Non HTML documents are not yet supported',
                               RuntimeWarning)
             return False
 

@@ -114,12 +114,12 @@ def read_file(tikr: str, submission: str, file: str = None,
 
     if not os.path.exists(path):
         raise FileNotFoundError(f'{path}')
-    
+
     out_text = None
     with open(path, 'r') as f:
         out_text = f.read()
 
-    return out_text 
+    return out_text
 
 def get_files(tikrs: list[str], submissions: list[str] = None,
               data_dir: str = DEFAULT_DATA_DIR, metadata=None) -> list[str]:

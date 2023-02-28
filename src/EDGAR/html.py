@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 def clean_text(text: str):
     """
-    Remove all HTML tags and compress whitespace. 
+    Remove all HTML tags and compress whitespace.
     Removes improperly formatted tags
 
     Notes
@@ -17,7 +17,7 @@ def clean_text(text: str):
     Result is a string of words separated by single spaces.
     """
     if text is None:
-        raise RuntimeError("text is None!")
+        raise RuntimeError('text is None!')
     text = BeautifulSoup(text, features='lxml')
 
     #Get BeautifulSoup.body.text safely
@@ -55,4 +55,4 @@ def split_pages(htmltext: str) -> list[str]:
 
 def remove_tables(htlmtext: str) -> str:
     """Delete all <table></table> entries in html."""
-    return re.sub("<table(.|\n)*?</table>", '', string=htlmtext, flags=re.I)
+    return re.sub('<table(.|\n)*?</table>', '', string=htlmtext, flags=re.I)

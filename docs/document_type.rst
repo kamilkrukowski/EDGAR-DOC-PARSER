@@ -1,12 +1,12 @@
 .. _document_type:
 
 DocumentType Object
-=================
+===================
 
 DocumentType
 ----------------------
-.. autoclass:: EDGAR.DocumentType
+.. autoclass:: edgar.DocumentType
     :members:
 
-.. automethod:: EDGAR.DocumentType.is_valid_type
+.. automethod:: edgar.DocumentType.is_valid_type
     :noindex:

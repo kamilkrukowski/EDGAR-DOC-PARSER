@@ -14,5 +14,5 @@ In order to edit these values after initialization, visit ``metadata/.keys.yaml`
 
 Downloader Class
 ----------------------
-.. autoclass:: EDGAR.Downloader
+.. autoclass:: edgar.Downloader
     :members:

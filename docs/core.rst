@@ -3,11 +3,11 @@
 Core Functions
 ---------------
 
-.. automethod:: EDGAR.parser.Parser.featurize_file
+.. automethod:: edgar.parser.Parser.featurize_file
     :noindex:
 
-.. automethod:: EDGAR.downloader.Downloader.query_server
+.. automethod:: edgar.downloader.Downloader.query_server
     :noindex:
 
-.. automethod:: EDGAR.downloader.Downloader.unpack_bulk
+.. automethod:: edgar.downloader.Downloader.unpack_bulk
     :noindex:
