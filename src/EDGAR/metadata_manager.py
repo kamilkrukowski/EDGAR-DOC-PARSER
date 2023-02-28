@@ -89,12 +89,6 @@ class metadata_manager(dict):
         with open(data_path, 'wb') as f:
             pkl.dump(self.get(tikr), f)
 
-    def _get_tikr(self, tikr):
-        """Safe get function for company entries in metadata."""
-        if tikr not in self:
-            self.load_tikr_metadata(tikr)
-        return self[tikr]
-
     def initialize_tikr_metadata(self, tikr):
         """Generate a company entry in metadata if not yet present."""
         if tikr not in self:
@@ -187,6 +181,12 @@ class metadata_manager(dict):
             if files[file]['type'] in ['8-K', 'FORM 8-K', '8K']:
                 return files[file]['filename']
         return None
+    
+    def _get_tikr(self, tikr):
+        """Safe get function for company entries in metadata."""
+        if tikr not in self:
+            self.load_tikr_metadata(tikr)
+        return self[tikr]
 
     def _get_submission(self, tikr: str, submission: str) -> dict:
         """Safe get function for submission under a company."""
@@ -195,6 +195,20 @@ class metadata_manager(dict):
             raise NameError(
                 f'{submission} for {tikr} not found in {self.data_dir}')
         return tikr_data[submission]
+    
+    def _get_file(self, tikr: str, submission: str, filename: str) -> dict:
+        """
+        Safe get function for file under company submission
+        
+        Returns
+        -------
+        file_metadata: dict or None
+        """
+        sub = self._get_submission(tikr, submission)
+        docs = sub['documents']
+        seq = self.find_sequence_of_file(tikr, submission, filename)
+        return docs.get(seq, None)
+        
 
     def get_submissions(self, tikr):
         """

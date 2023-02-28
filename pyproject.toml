@@ -1,19 +1,22 @@
 [build-system]
 requires = [
     "setuptools>=42",
-    "wheel"
+    "wheel",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "EDGAR_Doc_Parser"
-version = "0.1.0"
+version = "0.1.8"
 authors = [
   { name="Kamil Krukowski", email="Kamil.Krukowski@tufts.edu" },
   { name="Yiting Li", email="Yiting.Li@tufts.edu" },
   { name="Nachuan Zhao", email="Nachuan.Zhao@tufts.edu" },
   { name="Kelsey Yew", email="Kelsey.Yew@tufts.edu" },
 
+]
+maintainers = [
+  { name="Kamil Krukowski", email="Kamil.Krukowski@tufts.edu" },
 ]
 description = "Download, extraction, and parsing of documents available through the Securities and Trade Comission's EDGAR database"
 readme = "README.md"
