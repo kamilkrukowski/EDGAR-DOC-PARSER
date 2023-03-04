@@ -2,8 +2,6 @@
 """Manipulate and clean html strings."""
 import re
 
-from bs4 import BeautifulSoup
-
 
 def clean_text(text: str):
     """
@@ -14,30 +12,37 @@ def clean_text(text: str):
     -----
     Result is a string of words separated by single spaces.
     """
-    if text is None:
-        raise RuntimeError('text is None!')
-    text = BeautifulSoup(text, features='lxml')
+    text = remove_tags(text)  # Remove html <> tags
+    text = remove_htmlbytes(text)
+    text = re.sub('[\n\t]', ' ', text)  # Remove newlines / tabs
+    text = compress_spaces(text)
+    return text
 
-    # Get BeautifulSoup.body.text safely
-    body = text.body
-    if body is None:
-        return ''
-    text = body.text
 
-    text = re.sub(' +', ' ', text.replace(
-        ',', ' ').replace('\n', ' ').replace('\t', ' ')).strip()
-    return re.sub('\xa0', '', text)
+def remove_htmlbytes(text: str):
+    """Remove formatted bytes from html strings."""
+    text = re.sub('[(\xa0)(\x91)(\x92)(\x93)(\x94)]', ' ', text)
+    return text
 
 
 def remove_tags(htmltext: str) -> str:
     """Remove all HTML tags from text."""
-    return re.sub(' +', ' ', htmltext.replace(
-        ',', ' ').replace('\n', ' ').replace('\t', ' ')).strip()
+    return re.sub('<.*?>', ' ', htmltext, flags=re.DOTALL)
 
 
 def compress_spaces(text: str) -> str:
     """Replace multiple instances of spaces with one."""
     return re.sub(' +', ' ', text)
+
+
+def remove_newlines(text: str) -> str:
+    r"""Replace newlines with \' \'."""
+    return re.sub('\n', ' ', text)
+
+
+def remove_tabs(text: str) -> str:
+    r"""Replace \t with \' \'."""
+    return re.sub('\t', ' ', text)
 
 
 def split_pages(htmltext: str) -> list[str]:
