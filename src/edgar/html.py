@@ -19,6 +19,11 @@ def clean_text(text: str):
     return text
 
 
+def remove_fileheader(htmltext: str):
+    """Remove the <document> <sequence> <description> tags from html doc."""
+    raise NotImplementedError();
+
+
 def remove_htmlbytes(text: str):
     """Remove formatted bytes from html strings."""
     text = re.sub('[(\xa0)(\x91)(\x92)(\x93)(\x94)]', ' ', text)
