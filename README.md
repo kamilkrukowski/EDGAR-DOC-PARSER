@@ -1,14 +1,19 @@
 # EDGAR-DOC-PARSER
 
-## Documentation
+## Installation Guide
 
-For more information read our documentation hosted [here.](https://kamilkrukowski.github.io/EDGAR-DOC-PARSER)
-
-We have a Test Server PyPi Page hosted [here.](https://test.pypi.org/project/EDGAR-Doc-Parser/)
+We are available through [pip.](https://pypi.org/project/edgar-doc-parser/)
+```
+pip install edgar-doc-parser
+```
 
 ## About
 
 A package for downloading, extracting, parsing, and processing data from SEC-EDGAR, a public online database of all documents filed with the USA's Securities and Exchange Commission.
+
+## Documentation
+
+For more information read our documentation hosted [here.](https://kamilkrukowski.github.io/EDGAR-DOC-PARSER)
 
 ## Quick Start Guide
 
