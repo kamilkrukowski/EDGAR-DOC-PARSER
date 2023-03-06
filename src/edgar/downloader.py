@@ -46,7 +46,7 @@ class Downloader:
             self.generate_api_header()
 
     def generate_api_header(self):
-        """Generate API key from commandline user input prompts."""
+        """Generate API key from command-line user input prompts."""
         print(
             ('No API Header detected.\n'
                 'The SEC requires all EDGAR API users '
