@@ -1,11 +1,12 @@
 import re
 import sys
 from bs4 import BeautifulSoup
+import tqdm
 
 sys.path.append('src')
-import edgar
-import edgar.html as html
-from edgar.subheader_parser_8k import Parser_8K 
+import EDGAR as edgar
+import EDGAR.html as html
+from EDGAR.subheader_parser_8k import Parser_8K 
 
 DATA_DIR = '8kdata'
 DELETE_RAW = False
@@ -53,24 +54,36 @@ items = ['termination of a material definitive agreement',
 
 data = []
 f = None
-for tikr in tikrs:
-    print(tikr)
+error_list = []
+for tikr in tqdm.tqdm(tikrs, desc = 'loading...', position = 0):
     edgar.load_files(tikr, data_dir=DATA_DIR, document_type='8-K',
                      include_supplementary=False, force_remove_raw=DELETE_RAW)
 
     submissions = metadata.get_submissions(tikr)
-    for sub in submissions:
+    for sub in tqdm.tqdm(submissions, desc = f'{tikr}:', position = 1):
         files = edgar.get_files(tikrs=tikr, submissions=sub, metadata=metadata)
 
         # Store consecutive supplementary file contents as text stream to
         # concatenate later.
         out = []
+
+        has_section = False
         for file in files:
             # Skip unextracted files
             if not metadata._get_file(tikr, sub, file).get('extracted', False):
                 continue
 
-            f1 = edgar.read_file(tikr, sub, file, document_type='8-K',
+            f = edgar.read_file(tikr, sub, file, document_type='8-K',
                                  data_dir=DATA_DIR)
             
-            kparser.get_sections(f)
+            text_sec ,list_section = kparser.get_sections(f, True)
+
+            if(len(text_sec)  > 0 ):
+                has_section = True
+
+        if(has_section == 0):
+            print(tikr, sub, 'no section')
+            error_list += [(tikr, sub, 'no section')]
+            continue
+     
+
