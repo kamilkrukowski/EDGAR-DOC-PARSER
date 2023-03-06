@@ -1,6 +1,3 @@
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.remote.webelement import WebElement
 import pandas as pd
 import numpy as np
 
@@ -18,9 +15,7 @@ from .document import DocumentType
 
 class Parser:
     """
-
-        Main class for extracting information from HTML documents
-
+    Main class for extracting information from HTML documents.
     """
 
     class Element:
@@ -124,8 +119,6 @@ class Parser:
         ------
         Prser extracts information from HTML documents
         """
-        self.driver = None
-
         self.data_dir = data_dir
 
         if metadata is None:
@@ -250,13 +243,15 @@ class Parser:
 
         return found
 
-    """
-        Get a driver filename uri path from data identifiers
-    """
+    def get_driver_path(self, tikr, submission, fname, partition='files'):
+        """
+        Get absolute path of file.
 
-    def get_driver_path(self, tikr, submission, fname, partition):
-        # return pathlib.Path(os.path.join(self.data_dir, partition, tikr,
-        # submission, fname)).absolute().as_uri()
+        Parameters
+        ----------
+        fname: str
+            The file to get the path for.
+        """
         return pathlib.Path(
             os.path.join(
                 self.data_dir,
@@ -306,7 +301,7 @@ class Parser:
                                     document_type='all',
                                     silent: bool = False) -> list:
         """
-            Return list of submissions names without annotations
+        Get list of submissions names without annotations.
         """
         document_type = DocumentType(document_type)
 
@@ -341,7 +336,7 @@ class Parser:
                                   document_type='all',
                                   silent: bool = False) -> list:
         """
-            Return list of submissions names with annotations
+        Get list of submissions names with annotations.
         """
         document_type = DocumentType(document_type)
 
@@ -378,7 +373,7 @@ class Parser:
             submission,
             silent: bool = False) -> bool:
         """
-            Returns whether given tikr submission has annotated ix elements
+        Return bool whether given tikr submission has annotated ix elements
         """
 
         assert tikr in self.metadata
@@ -391,123 +386,6 @@ class Parser:
         else:
             return self.metadata._gen_submission_metadata(
                 tikr, submission, silent=silent)
-
-    """
-    Parses some documents 2020+ at least
-        driver_path -- path of file to open, or 'NONE' to keep current file
-        highlight -- add red box around detected fields
-        save -- save htm copy (with/without highlighting) to out_path
-    """
-
-    def parse_annotated_tables(
-            self,
-            driver_path: str,
-            save: bool = False):
-
-        # If path is None, stay on current document
-        if driver_path is not None:
-            self._get_driver().get(driver_path)
-
-        found_table = self._get_driver().find_elements(By.TAG_NAME, 'table')
-
-        # 0: numerical, 1: non-numerical, 2: unannotated
-        table_is_numeric = np.zeros_like(found_table, 'int')
-        for i in range(len(found_table)):
-            table_is_numeric[i] = 2
-
-            # If a table has both non-numeric and non-fraction, the
-            # non-fraction takes precedence
-
-            # TODO convert to regex on inner text
-
-            try:
-                found_numeric = found_table[i].find_element(
-                    By.TAG_NAME, 'ix:nonfraction')
-                if found_numeric:
-                    table_is_numeric[i] = 0
-                continue
-
-            except NoSuchElementException:
-                pass
-
-            try:
-                found_numeric = found_table[i].find_element(
-                    By.TAG_NAME, 'ix:nonnumeric')
-                if found_numeric:
-                    table_is_numeric[i] = 1
-
-            except NoSuchElementException:
-                pass
-
-        for i in range(len(found_table)):
-            if table_is_numeric[i] == 0:
-
-                self._draw_border(found_table[i], 'green')
-            elif table_is_numeric[i] == 1:
-                self._draw_border(found_table[i], 'yellow')
-            else:
-                self._draw_border(found_table[i], 'pink')
-
-        return found_table, table_is_numeric
-
-    def get_annotation_info(self, elem: WebElement):
-        return {
-            'value': elem.text,
-            'name': elem.get_attribute('name'),
-            'id': elem.get_attribute('id')}
-
-    def get_element_info(self, element: WebElement) -> list():
-        return {
-            'text': element.text,
-            'location': element.location,
-            'size': element.size}
-
-    def find_page_location(self) -> dict:
-        """
-
-
-        Parameters
-        ---------
-
-        Returns
-        --------
-        Dictionary
-            a dictionary based on page number. The value of the dictionary
-                    is the y-coordinates of the corresponding page.
-
-
-        Notes
-        ------
-
-        """
-        return None
-
-    def get_page_number(self, page_location: dict, element: WebElement) -> int:
-        """
-
-
-        Parameters
-        ---------
-        page_location: dict
-            a dictionary based on page number. The value is
-                the y-coordinates of the corresponding page.
-        element: WebElement
-            a WebElement to query
-
-        Returns
-        --------
-        integer
-            page number
-        integer
-            new y-coordinate of the webelement relative
-                to the y-coordinate of the page
-
-        Notes
-        ------
-
-        """
-        if page_location is None:
-            return None, None
 
     # -----------get attribute-----------------------------------------------#
     """
@@ -668,7 +546,7 @@ class Parser:
             remove_raw: bool = False,
             **kwargs):
         """
-
+        Load featurized dataframe with extracted annotations from file.
 
         Parameters
         ---------
@@ -694,11 +572,11 @@ class Parser:
 
         Notes
         ------
-            Documents without annotations receive entries in the dataframe
-            The sentinel column ``is_annotated`` set to False.
+        Documents without annotations receive entries in the dataframe
+        The sentinel column ``is_annotated`` set to False.
 
-            Each row corresponds to one text field. Rows are not unique,
-            one is generated for each iXBRL annotation on that text field.
+        Each row corresponds to one text field. Rows are not unique,
+        one is generated for each iXBRL annotation on that text field.
         """
         out = None
         document_type = self.metadata.get_doctype(tikr, submission, filename)
@@ -798,7 +676,3 @@ class Parser:
                             tikr, submission, f'{document_type}', filename)
         with open(os.path.join(path, 'features.pkl'), 'rb') as f:
             return pkl.load(f)
-
-    def __del__(self):
-        if self.driver is not None:
-            self._get_driver().quit()
