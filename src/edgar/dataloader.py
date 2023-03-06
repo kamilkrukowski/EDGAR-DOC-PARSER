@@ -1,7 +1,7 @@
 """Iterable string dataloaders for contents of SEC submissions."""
 import os
 import inspect
-from collections.abc import Callable
+from typing import Callable
 
 
 from tqdm.auto import tqdm
