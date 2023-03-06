@@ -1,6 +1,7 @@
 """The Metadata class tracks the attributes of files as they are parsed."""
 
 import os
+from typing import List
 import re
 import pathlib
 import pickle as pkl
@@ -38,6 +39,10 @@ class metadata_manager(dict):
         # Used by dataloader for API
         self.keys_path = os.path.join(self.data_dir, '.keys.yaml')
         self.keys = None
+
+        self.file2sub = {}
+        self.sub2tikr = {}
+        self.file2tikr = {}
 
     def reset(self, keep_api_header: bool = True):
         """
@@ -198,7 +203,7 @@ class metadata_manager(dict):
 
     def _get_file(self, tikr: str, submission: str, filename: str) -> dict:
         """
-        Safe get function for file under company submission
+        Safe get function for file under company submission.
 
         Returns
         -------
@@ -208,7 +213,6 @@ class metadata_manager(dict):
         docs = sub['documents']
         seq = self.find_sequence_of_file(tikr, submission, filename)
         return docs.get(seq, None)
-
 
     def get_submissions(self, tikr):
         """
@@ -359,7 +363,7 @@ class metadata_manager(dict):
                         os.listdir(extraction_dir)) == 0:
                     os.rmdir(extraction_dir)
 
-    def _gen_submission_metadata(
+    def _gen_submission_attrs(
             self, tikr, submission, silent: bool = False, **kwargs):
         """
         Generate attrs for a filing submission.
@@ -391,7 +395,7 @@ class metadata_manager(dict):
                     'Document Encountered without 10-Q or 8-K', RuntimeWarning)
                 for file in files:
                     if files[file].get('is_ims-document', False):
-                        self.metadata[tikr]['submissions'][submission][
+                        self[tikr]['submissions'][submission][
                             'attrs']['is_annotated'] = False
                         warnings.warn(
                             'Encountered unlabeled IMS-DOCUMENT',
@@ -426,3 +430,60 @@ class metadata_manager(dict):
         self._get_submission(tikr, submission)['attrs'][
             'is_annotated'] = False
         return False
+
+    def _gen_submission_doc_attrs(
+            self, tikr: str, submission: str, documents: List[str]):
+        """Generate the document metadata for a submission under company."""
+        out = dict()
+
+        for doc in documents:
+
+            seq = doc.find('sequence')
+            i = 20
+            while ('\n') not in seq.text[:i]:
+                i += 20
+                if i > 600:
+                    raise RuntimeError('No <sequence> in document')
+
+            seq = seq.text[:i].split('\n')[0]
+            out[seq] = dict()
+
+            for nextElem in ['type', 'filename', 'description']:
+                doc2 = doc.find(nextElem)
+
+                # Sentinel for missing fields in early 2000s
+                if doc2 is None:
+                    if nextElem == 'filename':
+                        out[seq][nextElem] = f'h{seq}_{hash(doc)}.htm'
+                    else:
+                        out[seq][nextElem] = ''
+                    continue
+
+                skip = False
+                i = 20
+                while ('\n') not in doc2.text[:i]:
+                    i += 20
+                    if i > 600:
+                        skip = True
+                        # type: GRAPHIC elements have no <description>
+                        # after <filename>
+                        if nextElem != 'description' and out[seq][
+                                'type'] != 'GRAPHIC':
+                            raise RuntimeError
+                        break
+
+                if not skip:
+                    out[seq][nextElem] = doc2.text[:i].split('\n')[0]
+
+            out[seq]['extracted'] = False
+
+        # Extend existing tikr metadata with new results,
+        #   or start with empty dict and add new results
+        self.initialize_tikr_metadata(tikr)
+
+        # Extending documents in existing submission or start new one
+        self.initialize_submission_metadata(tikr, submission)
+
+        # Add documents to submission of tikr
+        self[tikr]['submissions'][submission]['documents'] = \
+            dict(out, **self[tikr]['submissions'][submission]['documents'])

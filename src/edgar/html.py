@@ -1,6 +1,7 @@
 #!/usr/bin/env python # [1]
 """Manipulate and clean html strings."""
 import re
+from typing import List
 
 
 def clean_text(text: str):
@@ -50,7 +51,7 @@ def remove_tabs(text: str) -> str:
     return re.sub('\t', ' ', text)
 
 
-def split_pages(htmltext: str) -> list[str]:
+def split_pages(htmltext: str) -> List[str]:
     """
     Return html text split along pagebreaks. Keeps some HTML tags.
 
