@@ -36,8 +36,8 @@ for text_8k in dataloader:
 
 To create conda environment for local
 ```
-conda create -n edgar -c conda-forge -c anaconda python=3.10 scipy numpy selenium=4.5.0 pyyaml chardet requests lxml pandas
+conda create -n edgar -c conda-forge -c anaconda python=3.10 scipy numpy pyyaml pandas
 conda activate edgar
-pip install secedgar==0.4.0 beautifulsoup4 attrs typing-extensions
+pip install secedgar==0.4.0
 ```
 
