@@ -8,41 +8,37 @@ Welcome to EDGAR-DOC-PARSER's documentation!
 
 About
 -------------------
-A package for downloading, extracting, parsing, and processing data from SEC-EDGAR, a public online database of all documents filed with the USA's Securities and Exchange Commission.
+A package for downloading, extracting, parsing, and processing data from
+SEC-EDGAR, a public online database of all documents filed with the USA's
+Securities and Exchange Commission.
 
 Core Functionality
 --------------------
 
-Downloading and extracting archives of 10-Q submissions from the SEC API
+Dataloader for clean text from SEC forms
 
 .. code-block:: python
 
-    import edgar
+    from edgar import DataLoader
+
+    dataloader = DataLoader(tikrs=['nflx'], document_type='8-K',
+                            data_dir='data')
+
+    for text in dataloader:
+        # Do Stuff
+        pass
+
+Downloading and extracting archives of supported submissions from the SEC API.
+
+.. code-block:: python
+
+    from edgar import load_files
 
     data_dir = 'data'
     tikr = 'nflx'
     tikrs = [tikrs]
 
-    metadata = edgar.Metadata(data_dir=data_dir)
-
-    edgar.load_files(tikrs=tikrs, data_dir=data_dir, document_type='10-Q')
-
-Parsing 10-Q submission HTML into featurized pandas DataFrames
-
-.. code-block:: python
-
-    parser = edgar.Parser(data_dir=data_dir)
-
-    # We check the annotated documents for nflx
-    annotated_docs = parser.get_annotated_submissions(tikr)
-
-    # We only load the first document
-    document = annotated_docs[0]
-
-    # Each submission has both supplementary files and a primary file
-    fname = metadata.get_10q_name(tikr, document)
-    # Generate the features for that file.
-    features = parser.featurize_file(tikr, document, fname)
+    load_files(tikrs=tikrs, data_dir=data_dir, document_type='10-Q')
 
 
 .. toctree::
@@ -50,6 +46,7 @@ Parsing 10-Q submission HTML into featurized pandas DataFrames
 
    setup
    core
+   Dataloader <dataloader>
    Downloading Documents <downloader>
    Parsing Documents <parser>
    Useful Metadata <metadata>
