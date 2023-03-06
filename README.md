@@ -18,6 +18,19 @@ A package for downloading, extracting, parsing, and processing data from SEC-EDG
 
 We plan on expanding the list in future releases
 
+## Quick Start Guide
+
+```
+import edgar
+
+dataloader = edgar.Dataloader(tikrs=['nflx'], document_type='8-K', data_dir='data')
+
+for text_8k in dataloader:
+  #dostuff
+  print(text_8k)
+  break
+```
+
 ## Dependencies
 ### Conda
 
