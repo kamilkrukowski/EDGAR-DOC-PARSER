@@ -22,7 +22,7 @@ class Downloader:
         """Initialize Downloader."""
         # our HTML files are so big and nested that the standard
         #   1000 limit is too small.
-        sys.setrecursionlimit(10000000)
+        sys.setrecursionlimit(100000)
 
         # Always gets the path of the current file
         self.data_dir = data_dir
@@ -46,7 +46,7 @@ class Downloader:
             self.generate_api_header()
 
     def generate_api_header(self):
-        """Generate API key from commandline user input prompts."""
+        """Generate API key from command-line user input prompts."""
         print(
             ('No API Header detected.\n'
                 'The SEC requires all EDGAR API users '
@@ -72,64 +72,6 @@ class Downloader:
                         f"\'{self.metadata.keys['edgar_email']}\'\n"
                         ' Is this correct? (y/n)'))
         self.metadata.save_keys()
-
-    def _gen_tikr_metadata(self, tikr: str, documents, key):
-        """Generate the metadata for a given tikr."""
-        out = dict()
-
-        for doc in documents:
-
-            seq = doc.find('sequence')
-            i = 20
-            while ('\n') not in seq.text[:i]:
-                i += 20
-                if i > 600:
-                    print(f"\'{seq.text[:i]}\'")
-                    print(doc.text[:100])
-                    raise RuntimeError
-
-            seq = seq.text[:i].split('\n')[0]
-            out[seq] = dict()
-
-            for nextElem in ['type', 'filename', 'description']:
-                doc2 = doc.find(nextElem)
-
-                # Sentinel for missing fields in early 2000s
-                if doc2 is None:
-                    if nextElem == 'filename':
-                        out[seq][nextElem] = f'{seq}.htm'
-                    else:
-                        out[seq][nextElem] = ''
-                    continue
-
-                skip = False
-                i = 20
-                while ('\n') not in doc2.text[:i]:
-                    i += 20
-                    if i > 600:
-                        skip = True
-                        # type: GRAPHIC elements have no <description>
-                        # after <filename>
-                        if nextElem != 'description' and out[seq][
-                                'type'] != 'GRAPHIC':
-                            raise RuntimeError
-                        break
-
-                if not skip:
-                    out[seq][nextElem] = doc2.text[:i].split('\n')[0]
-
-            out[seq]['extracted'] = False
-
-        # Extend existing tikr metadata with new results,
-        #   or start with empty dict and add new results
-        self.metadata.initialize_tikr_metadata(tikr)
-
-        # Extending documents in existing submission or start new one
-        self.metadata.initialize_submission_metadata(tikr, key)
-
-        # Add documents to submission of tikr
-        self.metadata[tikr]['submissions'][key]['documents'] = \
-            dict(out, **self.metadata[tikr]['submissions'][key]['documents'])
 
     def query_server(
             self, tikr: str, document_type: str = 'all', delay_time: int = 1,
@@ -243,9 +185,6 @@ class Downloader:
         # sec-edgar data save location for filing ticker
         return [i.split('.txt')[0] for i in self.get_unpackable_files(
             tikr, document_type=kwargs.get('document_type', '10-Q'))]
-
-    valid_unpack_types = {
-        'FORM 10-Q', '10-Q', 'FORM 8-K', '8-K'}
 
     def __unpack_doc__(
             self, tikr, submission, doc, document_type, force=True,
@@ -381,18 +320,18 @@ class Downloader:
 
         d = BeautifulSoup(content, features='lxml').body
 
-        fname = file.split('.txt')[0]
+        subname = file.split('.txt')[0]
         p = d.find('sec-document')
         if p is None:
             p = d.find('ims-document')
             if p is not None:
                 warnings.warn(
                     'IMS-DOCUMENT skipped during loading', RuntimeWarning)
-                if fname not in self.metadata._get_tikr(tikr)['submissions']:
-                    self.metadata.initialize_submission_metadata(tikr, fname)
-                self.metadata._get_submission(tikr, fname)['attrs'][
+                if subname not in self.metadata._get_tikr(tikr)['submissions']:
+                    self.metadata.initialize_submission_metadata(tikr, subname)
+                self.metadata._get_submission(tikr, subname)['attrs'][
                     'is_ims-document'] = True
-                self.metadata._get_submission(tikr, fname)['attrs'][
+                self.metadata._get_submission(tikr, subname)['attrs'][
                     'FORM TYPE'] = 'IMS'
                 return
         d = p
@@ -403,19 +342,22 @@ class Downloader:
 
         documents = d.find_all('document', recursive=False)
 
-        self._gen_tikr_metadata(tikr, documents, fname)
+        self.metadata._gen_submission_doc_attrs(tikr, subname, documents)
 
+        # SET Submission ATTRS in Metadata
         sec_header = d.find('sec-header').text.replace('\t', '').split('\n')
         sec_header = [i for i in sec_header if ':' in i]
         attrs = {i.split(':')[0]: i.split(':')[1] for i in sec_header}
-        self.metadata._get_tikr(tikr)['submissions'][fname]['attrs'] = attrs
+        self.metadata._get_tikr(tikr)['submissions'][subname]['attrs'] = attrs
 
         # We track whether any submission is succesfully unpacked
         non_empty = False
         for doc in documents:
-            non_empty = non_empty or self.__unpack_doc__(
-                tikr, fname, doc, document_type=document_type, force=force,
+            succesfully_unpacked = self.__unpack_doc__(
+                tikr, subname, doc, document_type=document_type, force=force,
                 include_supplementary=include_supplementary)
+
+            non_empty = non_empty or succesfully_unpacked
 
         if remove_raw:
             os.remove(os.path.join(d_dir, file))
@@ -423,7 +365,7 @@ class Downloader:
 
             # Metadata only exists for submission that has entries unpacked
             if non_empty:
-                self.metadata._gen_submission_metadata(tikr, file.replace(
+                self.metadata._gen_submission_attrs(tikr, file.replace(
                     '.txt', ''))
 
         self.metadata.save_tikr_metadata(tikr)
@@ -441,19 +383,6 @@ class Downloader:
         """
         return self.metadata._get_tikr(tikr)['attrs'].get(
             f'{document_type}_extracted', False)
-
-    def _is_10q_unpacked(self, tikr):
-        """Check if 10-Q has been unpacked."""
-        return self.metadata[tikr]['attrs'].get('10q_extracted', False)
-
-    def _is_8k_unpacked(self, tikr):
-        """Check if 8-K has been unpacked."""
-        return self.metadata[tikr]['attrs'].get('8k_extracted', False)
-
-    # TODO: Is this function used/necessary?
-    def _is_fully_unpacked(self, tikr):
-        """Check if all documents have been unpacked."""
-        return self.metadata[tikr]['attrs'].get('complete_extracted', False)
 
     def unpack_bulk(
             self, tikr, force=False, loading_bar=False,

@@ -1,7 +1,7 @@
 """Iterable string dataloaders for contents of SEC submissions."""
 import os
 import inspect
-from collections.abc import Callable
+from typing import Callable
 
 
 from tqdm.auto import tqdm
@@ -33,15 +33,15 @@ def _relative_to_abs_path(relative_p):
 
 
 class DataLoader:
-    """Master class for iterating through clean text of filing submissions."""
+    """Master class for iterating through parsed text of filing submissions."""
 
-    def __init__(self, tikrs: str, document_type: DocumentType,
+    def __init__(self, tikrs: str, document_type: str,
                  data_dir: str = DocumentType.DEFAULT_DATA_DIR,
                  force_remove_raw: bool = False,
-                 clean_func: Callable[[str], str] = clean_text,
+                 parser: Callable[[str], str] = clean_text,
                  loading_bar: bool = True):
         """
-        Construct class instance.
+        Construct desired dataloading pipeline.
 
         Parameters
         ----------
@@ -49,8 +49,8 @@ class DataLoader:
             A set of companies to load documents for.
         document_type: DocumentType or str
             The submission type to load documents for.
-        clean_func: Callable[[str], str]
-            A function to apply to every raw document string.
+        parser: Callable[[str], str]
+            A function that turns a raw document into cleaned output.
         loading_bar: bool = True
             if True, will display a tqdm loading bar while downloading files.
 
@@ -63,7 +63,7 @@ class DataLoader:
 
         self.DATA_DIR = _relative_to_abs_path(data_dir)
         self.metadata = Metadata(data_dir=self.DATA_DIR)
-        self.clean_func = clean_func
+        self.clean_func = parser
 
         if type(tikrs) is str:
             tikrs = [tikrs]
@@ -84,16 +84,17 @@ class DataLoader:
                        include_supplementary=False,
                        force_remove_raw=force_remove_raw)
 
-        submissions = self.metadata.get_submissions(tikr)
-        for sub in submissions:
-            files = get_files(tikrs=tikr, submissions=sub,
-                              metadata=self.metadata)
-            for file in files:
-                if self.metadata._get_file(tikr, sub,
-                                           file).get('extracted', False):
-                    self.files.append(file)
-                    self.sub_lookup[file] = sub
-                    self.tikr_lookup[sub] = tikr
+            submissions = self.metadata.get_submissions(tikr)
+            for sub in submissions:
+                files = get_files(tikrs=tikr, submissions=sub,
+                                  metadata=self.metadata)
+                for file in files:
+                    if self.metadata._get_file(
+                      tikr, sub, file).get('extracted', False):
+
+                        self.files.append(file)
+                        self.sub_lookup[file] = sub
+                        self.tikr_lookup[sub] = tikr
 
         self.idx = 0
         self.end = len(self) - 1

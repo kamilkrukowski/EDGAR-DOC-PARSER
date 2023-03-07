@@ -4,27 +4,28 @@
 
 For more information read our documentation hosted [here.](https://kamilkrukowski.github.io/EDGAR-DOC-PARSER)
 
-We have a Test Server PyPi Page hosted [here.](https://test.pypi.org/project/EDGAR-Doc-Parser/)
+## Installation Guide
 
-## About
+We are available through [pip.](https://pypi.org/project/edgar-doc-parser/)
+```
+pip install edgar-doc-parser
+```
 
-A package for downloading, extracting, parsing, and processing data from SEC-EDGAR, a public online database of all documents filed with the USA's Securities and Exchange Commission.
+## Quick Start Guide
+
+### DataLoader
+```
+from edgar import DataLoader
+
+dataloader = edgar.DataLoader(tikrs=['nflx'], document_type='8-K', data_dir='data')
+
+for text_8k in dataloader[:3]:
+  print(text_8k)
+```
 
 ## Currently Support Filing Types
 
-10-Q
-
-8-K
+* 10-Q
+* 8-K
 
 We plan on expanding the list in future releases
-
-## Dependencies
-### Conda
-
-To create conda environment for local
-```
-conda create -n edgar -c conda-forge -c anaconda python=3.10 scipy numpy selenium=4.5.0 pyyaml chardet requests lxml pandas
-conda activate edgar
-pip install secedgar==0.4.0 beautifulsoup4 attrs typing-extensions
-```
-
