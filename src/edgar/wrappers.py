@@ -118,7 +118,7 @@ def read_file(tikr: str, submission: str, file: str = None,
         raise FileNotFoundError(f'{path}')
 
     out_text = None
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding = 'utf-8') as f:
         out_text = f.read()
 
     return out_text
