@@ -5,7 +5,7 @@ from .parser import Parser as _Parser
 from .document import DocumentType
 from .wrappers import load_files, get_files, read_file
 from . import pipeline
-from .dataloader import DataLoader
+from .dataloader import DataLoader, DataLoaderConfig
 
 module_name = 'edgar'
 
@@ -14,6 +14,8 @@ _Parser.__module__ = module_name
 _Metadata.__module__ = module_name
 DocumentType.__module__ = module_name
 DataLoader.__module__ = module_name
+DataLoaderConfig.__module__ = module_name
+
 
 _, _, _ = load_files, get_files, read_file
 
