@@ -141,10 +141,11 @@ class Parser_8K(Parser):
         for section in Parser_8K.sections:
             curr = self.get_section(doctext, section)
             if curr is not None:
-                _return_types += [section]
-
                 if not keep_multi and self.get_num_occurrence(doctext, section) > 1:
                     continue
+                _return_types += [section]
+
+               
                 out += [curr]
 
         if return_types:
