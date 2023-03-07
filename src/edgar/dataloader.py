@@ -84,16 +84,17 @@ class DataLoader:
                        include_supplementary=False,
                        force_remove_raw=force_remove_raw)
 
-        submissions = self.metadata.get_submissions(tikr)
-        for sub in submissions:
-            files = get_files(tikrs=tikr, submissions=sub,
-                              metadata=self.metadata)
-            for file in files:
-                if self.metadata._get_file(tikr, sub,
-                                           file).get('extracted', False):
-                    self.files.append(file)
-                    self.sub_lookup[file] = sub
-                    self.tikr_lookup[sub] = tikr
+            submissions = self.metadata.get_submissions(tikr)
+            for sub in submissions:
+                files = get_files(tikrs=tikr, submissions=sub,
+                                  metadata=self.metadata)
+                for file in files:
+                    if self.metadata._get_file(
+                      tikr, sub, file).get('extracted', False):
+
+                        self.files.append(file)
+                        self.sub_lookup[file] = sub
+                        self.tikr_lookup[sub] = tikr
 
         self.idx = 0
         self.end = len(self) - 1
