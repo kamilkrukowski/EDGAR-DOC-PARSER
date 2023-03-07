@@ -22,7 +22,7 @@ def clean_text(text: str):
 
 def remove_fileheader(htmltext: str):
     """Remove the <document> <sequence> <description> tags from html doc."""
-    raise NotImplementedError()
+    raise NotImplementedError();
 
 
 def remove_htmlbytes(text: str):
