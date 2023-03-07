@@ -32,13 +32,43 @@ def _relative_to_abs_path(relative_p):
     return relative_p
 
 
+class DataLoaderConfig:
+    """Hyperparameter Configuration for DataLoader."""
+
+    def __init__(self, force_remove_raw: bool = True,
+                 include_supplementary: bool = False,
+                 return_submission: bool = False,
+                 return_tikr: bool = False):
+        """
+        Set up parameters for DataLoader.
+
+        Parameters
+        ----------
+        force_remove_raw: bool = True
+            If documents are not available locally, when downloading documents,
+            will delete raw files after extraction.
+        include_supplementary: bool = False,
+            If documents are not available locally, when extracting documents
+            from raw source, will also extract supplementary files.
+        return_submission: bool = False
+            If true, will return (submission_name, clean_text)
+        return_tikr: bool = False
+            If true, will return (company ticker name, clean_text). Can be used
+            alongside return_submission in form (ticker, submission, text).
+        """
+        self.force_remove_raw = force_remove_raw
+        self.include_supplementary = include_supplementary
+        self.return_submission = return_submission
+        self.return_tikr = return_tikr
+
+
 class DataLoader:
     """Master class for iterating through parsed text of filing submissions."""
 
     def __init__(self, tikrs: str, document_type: str,
                  data_dir: str = DocumentType.DEFAULT_DATA_DIR,
-                 force_remove_raw: bool = False,
                  parser: Callable[[str], str] = clean_text,
+                 config: DataLoaderConfig = None,
                  loading_bar: bool = True):
         """
         Construct desired dataloading pipeline.
@@ -65,6 +95,8 @@ class DataLoader:
         self.metadata = Metadata(data_dir=self.DATA_DIR)
         self.clean_func = parser
 
+        self.config = config if config is not None else DataLoaderConfig()
+
         if type(tikrs) is str:
             tikrs = [tikrs]
 
@@ -81,8 +113,8 @@ class DataLoader:
         for tikr in itera:
             load_files(tikr, data_dir=self.DATA_DIR,
                        document_type=self.document_type,
-                       include_supplementary=False,
-                       force_remove_raw=force_remove_raw)
+                       include_supplementary=self.config.include_supplementary,
+                       force_remove_raw=self.config.force_remove_raw)
 
             submissions = self.metadata.get_submissions(tikr)
             for sub in submissions:
@@ -134,7 +166,15 @@ class DataLoader:
         tikr = self.tikr_lookup[sub]
         f = read_file(tikr, sub, file, document_type=self.document_type,
                       data_dir=self.DATA_DIR)
-        return self.clean_func(f)
+        f = self.clean_func(f)
+
+        if self.config.return_tikr:
+            if self.config.return_submission:
+                return (tikr, sub, f)
+            return (tikr, f)
+        if self.config.return_submission:
+            return (sub, f)
+        return f
 
     def __setitem__(self, idx: int):
         """Warn users if they attempt unsupported behaviour."""
