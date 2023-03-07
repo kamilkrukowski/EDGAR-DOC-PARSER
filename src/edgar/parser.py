@@ -655,6 +655,41 @@ class Parser:
                 os.rmdir(parent_dir)
         return out
 
+    def parse_all_text_8k(
+            self,
+            tikr: str,
+            submission: str,
+            document_type: str
+            ):
+        if  document_type != '8-K':
+            raise NotImplementedError(
+                f'Not implemented for current form type {document_type}')
+        d_dir = pathlib.Path(
+                os.path.join(
+                self.data_dir,
+                DocumentType.RAW_FILE_DIR_NAME,
+                tikr,
+                f'{document_type}',
+                f'{submission}.txt')).absolute()
+        with open(d_dir, encoding='utf-8') as file:
+            f = file.read()
+        return self.extract_8k_text(f)
+
+    @staticmethod
+    def extract_8k_text(f):
+        """
+        Given a string of html, return the raw text part of the string
+        """
+        a = f.lower()
+        a = re.sub('<document>.*?<type>graphic.*?</document>', ' ', a, flags = re.DOTALL)
+        b = re.sub('<.*?>', ' ', a, flags = re.DOTALL)
+        c = re.sub('&nbsp;', " ", b)
+        return re.sub(r"&[a-z0-9#]+;", "", c)
+
+
+        
+
+
     def save_processed(
             self,
             tikr: str,
