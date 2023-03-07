@@ -9,81 +9,45 @@ import EDGAR.html as html
 from EDGAR.subheader_parser_8k import Parser_8K 
 
 DATA_DIR = '8kdata'
-DELETE_RAW = False
 
 tikrs = ['aapl', 'msft', 'amzn', 'tsla', 'googl', 'goog',  'unh', 'jnj', 'cvx',
          'jpm', 'hd', 'v', 'pg']
 metadata = edgar.Metadata(data_dir=DATA_DIR)
-kparser = Parser_8K();
+kparser = Parser_8K()
 
-items = ['termination of a material definitive agreement',
-         'change in credit enhancement or other external support',
-         'shareholder director nominations',
-         'acquisition or disposition of assets',
-         'unregistered sales of equity securities',
-         'material impairments',
-         "resignations of registrant's directors",
-         'changes in control of registrant',
-         "amendment to registrant's code of ethics, or waiver of a provision of the code of ethics",
-         'regulation fd disclosure',
-         'completion of acquisition or disposition of assets',
-         'triggering events that accelerate or increase a direct financial obligation or an obligation under an off-balance sheet arrangement',
-         'non-reliance on previously issued financial statements or a related audit report or completed interim review',
-         "changes in registrant's certifying accountant",
-         'material modifications to rights of security holders',
-         'departure of directors or certain officers; election of directors; appointment of certain officers; compensatory arrangements of certain officers',
-         'other events',
-         'change of servicer or trustee',
-         'failure to make a required distribution',
-         'material modification to rights of security holders',
-         'cost associated with exit or disposal activities',
-         'securities act updating disclosure',
-         'financial statements and exhibits',
-         'results of operations and financial condition',
-         'abs informational and computational material',
-         'entry into a material definitive agreement',
-         'notice of delisting or failure to satisfy a continued listing rule or standard; transfer of listing',
-         'creation of a direct financial obligation or an obligation under an off-balance sheet arrangement of a registrant',
-         'amendments to articles of incorporation or bylaws; change in fiscal year',
-         'mine safety - reporting of shutdowns and patterns of violations',
-         'change in shell company status',
-         'submission of matters to a vote of security holders',
-         'bankruptcy or receivership',
-         "temporary suspension of trading under registrant's employee benefit plans",
-         "amendments to the registrant's code of ethics, or waiver of a provision of the code of ethics"]
+dataloader = edgar.DataLoader(tikrs=tikrs, document_type='8-K',
+                              data_dir=DATA_DIR)
+count_multi = 0
+tikrs, submission,files, sections, texts, max_occurrence = [],[],[],[],[],[]
 
-data = []
-f = None
-error_list = []
-for tikr in tqdm.tqdm(tikrs, desc = 'loading...', position = 0):
-    edgar.load_files(tikr, data_dir=DATA_DIR, document_type='8-K',
-                     include_supplementary=False, force_remove_raw=DELETE_RAW)
+for idx, text in enumerate(dataloader):
+    text_sec ,list_section = kparser.get_sections(text, True)
 
-    submissions = metadata.get_submissions(tikr)
-    for sub in tqdm.tqdm(submissions, desc = f'{tikr}:', position = 1):
-        files = edgar.get_files(tikrs=tikr, submissions=sub, metadata=metadata)
+    filename = dataloader.files[idx]
+    #submission, tikr are not easily available
+    sub = dataloader.sub_lookup[filename]
+    tikr = dataloader.tikr_lookup[sub]
 
-        # Store consecutive supplementary file contents as text stream to
-        # concatenate later.
-        out = []
+    if(len(text_sec)  == 0 ):
+        print(tikr, sub ,filename, 'no section')
+        continue
+    max_occur = 0
+    # check max occurrence of the specified section
+    for i, s in enumerate(list_section):
+        curr_occur = kparser.get_num_occurrence(text, s)
+        tikrs += [tikr]
+        submission += [sub]
+        files += [filename] 
+        sections += [s]
+        texts += [text_sec[i]]
+        max_occurrence += [curr_occur]
+        if curr_occur > max_occur:
+            max_occur = curr_occur
+    if max_occur > 1:
+        count_multi += 1
+print('number of files:',len(dataloader))
+print("there are ", count_multi, "files has section name occur more than 1 time.")
 
-        has_section = False
-        for file in files:
-            # Skip unextracted files
-            if not metadata._get_file(tikr, sub, file).get('extracted', False):
-                continue
-
-            f = edgar.read_file(tikr, sub, file, document_type='8-K',
-                                 data_dir=DATA_DIR)
-            
-            text_sec ,list_section = kparser.get_sections(f, True)
-
-            if(len(text_sec)  > 0 ):
-                has_section = True
-
-        if(has_section == 0):
-            print(tikr, sub, 'no section')
-            error_list += [(tikr, sub, 'no section')]
-            continue
-     
-
+with open("file.txt","w") as f:
+    for (tikr, sub,file, section, t, occur) in zip(tikrs, submission,files, sections, texts, max_occurrence):
+        f.write("{0},{1},{2},{3},{4},{5}\n".format(tikr, sub,file, section, t, occur))
