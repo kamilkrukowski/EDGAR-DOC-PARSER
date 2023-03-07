@@ -120,7 +120,7 @@ class Parser_8K(Parser):
 
         return f
 
-    def get_sections(self, doctext: str, return_types: bool = False) -> list:
+    def get_sections(self, doctext: str, return_types: bool = False, keep_multi: bool = True) -> list:
         """
         Extract all subsets of html corresponding to parsing sections.
 
@@ -130,6 +130,8 @@ class Parser_8K(Parser):
             The 8-K raw document to be searched
         return_types: bool = False
             if True, then returns a tuple (section_texts, section_headers)
+        keep_multi: bool = True
+            if False, only return section that has one occurrence.
         """
 
         doctext = self.clean_text(doctext)
@@ -140,12 +142,46 @@ class Parser_8K(Parser):
             curr = self.get_section(doctext, section)
             if curr is not None:
                 _return_types += [section]
+
+                if not keep_multi and self.get_num_occurrence(doctext, section) > 1:
+                    continue
                 out += [curr]
 
         if return_types:
             return out, _return_types
         else:
             return out
+
+
+    def get_num_occurrence(self, doctext:  str, section_type: str) -> int:
+        """
+        Count the occurrence of the specified section in the HTML.
+
+        Parameters
+        ----------
+        htmltext: str
+            The 8-K raw document to be searched
+        section_type: str
+            One of '1.01','1.02','','','','' from Parser_8K.sections
+
+        Notes
+        -----
+        
+        """
+
+        doctext = self.clean_text(doctext)
+
+        assert section_type in Parser_8K.sections, 'Invalid section selection'
+        # create a pattern to search for section header
+        pattern = f'{self.section_names[section_type]}'
+        pattern = re.sub(' ',r'[ ]*',pattern)
+        pattern = re.compile(pattern, re.IGNORECASE)
+        # check if section exist
+        if not self.section_exists(doctext, section_type):
+            return 0
+
+        return len(pattern.findall(doctext))
+
 
     def get_section(self, doctext: str, section_type: str) -> str:
         """
