@@ -21,7 +21,7 @@ count_multi = 0
 tikrs, submission,files, sections, texts, max_occurrence = [],[],[],[],[],[]
 
 for idx, text in enumerate(dataloader):
-    text_sec ,list_section = kparser.get_sections(text, True)
+    text_sec ,list_section = kparser.get_sections(text, True, False)
 
     filename = dataloader.files[idx]
     #submission, tikr are not easily available
@@ -49,5 +49,5 @@ print('number of files:',len(dataloader))
 print("there are ", count_multi, "files has section name occur more than 1 time.")
 
 with open("file.txt","w") as f:
-    for (tikr, sub,file, section, t, occur) in zip(tikrs, submission,files, sections, texts, max_occurrence):
+    for (tikr, sub, file, section, t, occur) in zip(tikrs, submission,files, sections, texts, max_occurrence):
         f.write("{0},{1},{2},{3},{4},{5}\n".format(tikr, sub,file, section, t, occur))

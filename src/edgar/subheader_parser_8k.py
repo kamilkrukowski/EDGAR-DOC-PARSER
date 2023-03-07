@@ -123,6 +123,9 @@ class Parser_8K(Parser):
                 if not keep_multi and self._get_num_occurrence(
                                                 doctext, section) > 1:
                     continue
+                _return_types += [section]
+
+               
                 out += [curr]
 
         if return_types:
