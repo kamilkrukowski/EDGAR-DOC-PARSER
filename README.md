@@ -13,15 +13,14 @@ pip install edgar-doc-parser
 
 ## Quick Start Guide
 
+### DataLoader
 ```
-import edgar
+from edgar import DataLoader
 
-dataloader = edgar.Dataloader(tikrs=['nflx'], document_type='8-K', data_dir='data')
+dataloader = edgar.DataLoader(tikrs=['nflx'], document_type='8-K', data_dir='data')
 
-for text_8k in dataloader:
-  #dostuff
+for text_8k in dataloader[:3]:
   print(text_8k)
-  break
 ```
 
 ## Currently Support Filing Types
