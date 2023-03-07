@@ -18,7 +18,7 @@ authors = [
 maintainers = [
   { name="Kamil Krukowski", email="Kamil.Krukowski@tufts.edu" },
 ]
-description = "Download, extraction, and parsing of documents available through the Securities and Trade Comission's EDGAR database"
+description = "Download, extraction, and parsing of documents available through the Securities and Trade Commission's EDGAR database"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
