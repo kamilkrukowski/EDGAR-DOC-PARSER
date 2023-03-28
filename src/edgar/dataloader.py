@@ -2,6 +2,8 @@
 import os
 import inspect
 from typing import Callable
+from aiohttp.client_exceptions import ClientResponseError
+import warnings
 
 
 from tqdm.auto import tqdm
@@ -106,15 +108,24 @@ class DataLoader:
         self.sub_lookup = {}
         self.tikr_lookup = {}
 
+        self.errors = []
+
         itera = tikrs
         if loading_bar:
             itera = tqdm(tikrs, desc='Loading Files', leave=False)
 
         for tikr in itera:
-            load_files(tikr, data_dir=self.DATA_DIR,
-                       document_type=self.document_type,
-                       include_supplementary=self.config.include_supplementary,
-                       force_remove_raw=self.config.force_remove_raw)
+            try:
+                load_files(
+                    tikr, data_dir=self.DATA_DIR,
+                    document_type=self.document_type,
+                    include_supplementary=self.config.include_supplementary,
+                    force_remove_raw=self.config.force_remove_raw)
+            except ClientResponseError as error:
+                self.errors.append((tikr, error.status, error.message))
+                if len(self.errors == 1):
+                    warnings.warn(
+                        f'Server Reponse {error.status} to at least one tikr')
 
             submissions = self.metadata.get_submissions(tikr)
             for sub in submissions:
@@ -122,11 +133,14 @@ class DataLoader:
                                   metadata=self.metadata)
                 for file in files:
                     if self.metadata._get_file(
-                      tikr, sub, file).get('extracted', False):
+                            tikr, sub, file).get('extracted', False):
 
                         self.files.append(file)
                         self.sub_lookup[file] = sub
                         self.tikr_lookup[sub] = tikr
+
+        if len(self.errors) != 0:
+            warnings.warn(f'{len(self.errors)} Failed TIKR downloads')
 
         self.idx = 0
         self.end = len(self) - 1

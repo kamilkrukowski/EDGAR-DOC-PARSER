@@ -1,6 +1,4 @@
-"""
-High level wrappers of functionality in common use cases
-"""
+"""High level wrappers of functionality in common use cases."""
 import os
 import pathlib
 import inspect
@@ -57,6 +55,13 @@ def load_files(tikrs: str, data_dir: str = DEFAULT_DATA_DIR,
         even if some are not unpacked.
     silent: bool, Optional
         If True, will silence all warnings
+
+    Notes
+    -----
+    Will throw ClientReponseError if SEC.gov reponse status code is not 200.
+
+    Will throw ConnectionError if internet access is interrupted,
+    or SEC.gov goes down
     """
     data_dir = _relative_to_abs_path(data_dir)
     if type(tikrs) is str:
