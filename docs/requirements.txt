@@ -173,7 +173,7 @@ QtAwesome==1.1.1
 qtconsole==5.2.2
 QtPy==2.0.0
 reportlab==3.6.8
-requests==2.25.1
+requests==2.31.0
 requests-file==1.5.1
 requests-oauthlib==1.3.1
 roman==3.3
