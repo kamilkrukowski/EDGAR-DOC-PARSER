@@ -133,7 +133,7 @@ pycurl==7.44.1
 pydocstyle==6.1.1
 pyelftools==0.27
 pyflakes==2.4.0
-Pygments==2.11.2
+Pygments==2.15.0
 PyGObject==3.42.1
 PyICU==2.8.1
 pyinotify==0.9.6
