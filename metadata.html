@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cached Information &mdash; EDGAR-DOC-PARSER 0.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DocumentType Object" href="document_type.html" />
+    <link rel="prev" title="Parsing Documents" href="parser.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> EDGAR-DOC-PARSER
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataloader.html">Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloader.html">Downloading Documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parser.html">Parsing Documents</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Useful Metadata</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#metadata-class">Metadata Class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#edgar.Metadata"><code class="docutils literal notranslate"><span class="pre">Metadata</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.file_set_processed"><code class="docutils literal notranslate"><span class="pre">Metadata.file_set_processed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.file_was_processed"><code class="docutils literal notranslate"><span class="pre">Metadata.file_was_processed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.find_sequence_of_file"><code class="docutils literal notranslate"><span class="pre">Metadata.find_sequence_of_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.get_10q_name"><code class="docutils literal notranslate"><span class="pre">Metadata.get_10q_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.get_8k_name"><code class="docutils literal notranslate"><span class="pre">Metadata.get_8k_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.get_doctype"><code class="docutils literal notranslate"><span class="pre">Metadata.get_doctype()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.get_primary_doc_name"><code class="docutils literal notranslate"><span class="pre">Metadata.get_primary_doc_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.get_submissions"><code class="docutils literal notranslate"><span class="pre">Metadata.get_submissions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.get_tikr_list"><code class="docutils literal notranslate"><span class="pre">Metadata.get_tikr_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.initialize_submission_metadata"><code class="docutils literal notranslate"><span class="pre">Metadata.initialize_submission_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.initialize_tikr_metadata"><code class="docutils literal notranslate"><span class="pre">Metadata.initialize_tikr_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.is_downloaded"><code class="docutils literal notranslate"><span class="pre">Metadata.is_downloaded()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.is_unpacked"><code class="docutils literal notranslate"><span class="pre">Metadata.is_unpacked()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.load_keys"><code class="docutils literal notranslate"><span class="pre">Metadata.load_keys()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.load_tikr_metadata"><code class="docutils literal notranslate"><span class="pre">Metadata.load_tikr_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.offload_submission_file"><code class="docutils literal notranslate"><span class="pre">Metadata.offload_submission_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.reset"><code class="docutils literal notranslate"><span class="pre">Metadata.reset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.save_keys"><code class="docutils literal notranslate"><span class="pre">Metadata.save_keys()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.save_tikr_metadata"><code class="docutils literal notranslate"><span class="pre">Metadata.save_tikr_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.set_downloaded"><code class="docutils literal notranslate"><span class="pre">Metadata.set_downloaded()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Metadata.set_unpacked"><code class="docutils literal notranslate"><span class="pre">Metadata.set_unpacked()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="document_type.html">DocumentType</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EDGAR-DOC-PARSER</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Cached Information</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/metadata.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cached-information">
+<span id="metadata"></span><h1>Cached Information<a class="headerlink" href="#cached-information" title="Permalink to this heading"></a></h1>
+<section id="metadata-class">
+<h2>Metadata Class<a class="headerlink" href="#metadata-class" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="edgar.Metadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">edgar.</span></span><span class="sig-name descname"><span class="pre">Metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Track the application of EDGAR functions, and hold the metadata    attributes of files as they are accessed.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.file_set_processed">
+<span class="sig-name descname"><span class="pre">file_set_processed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.file_set_processed" title="Permalink to this definition"></a></dt>
+<dd><p>Set the status for file_was_processed function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.file_was_processed">
+<span class="sig-name descname"><span class="pre">file_was_processed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.file_was_processed" title="Permalink to this definition"></a></dt>
+<dd><p>Return True if file has a loaded copy available locally.</p>
+<p class="rubric">Notes</p>
+<p>This indicates whether there is any extra information available
+for download from the SEC EDGAR database, but does not track
+new releases.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.find_sequence_of_file">
+<span class="sig-name descname"><span class="pre">find_sequence_of_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.find_sequence_of_file" title="Permalink to this definition"></a></dt>
+<dd><p>Return the Official SEC numerical indexing for a submitted file.</p>
+<p class="rubric">Notes</p>
+<p>Each submission has an associated collection of documents that are
+identified by their sequence.</p>
+<p>Sequence counts upwards from 1, but may skip numbers. It is typical
+but not guaranteed that the primary file has sequence 1 and the
+supplementary materials ascend in sequence.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.get_10q_name">
+<span class="sig-name descname"><span class="pre">get_10q_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.get_10q_name" title="Permalink to this definition"></a></dt>
+<dd><p>Get the primary document name of an 10-Q filing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – a company identifier to query</p></li>
+<li><p><strong>submission</strong> – the associated company filing for which to find a 10-Q form</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>filename</strong> – The name of the submission’s 10-Q file, or None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str, None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.get_8k_name">
+<span class="sig-name descname"><span class="pre">get_8k_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.get_8k_name" title="Permalink to this definition"></a></dt>
+<dd><p>Get the primary document name of an 8-K filing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – a company identifier to query</p></li>
+<li><p><strong>submission</strong> – the associated company filing for which to find a 8-K form</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>filename</strong> – The name of the submission’s 8-K file, or None</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str, None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.get_doctype">
+<span class="sig-name descname"><span class="pre">get_doctype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.get_doctype" title="Permalink to this definition"></a></dt>
+<dd><p>Return the document type of a file.</p>
+<p class="rubric">Notes</p>
+<p>While a 10-Q filing has a 10-Q file associated, a 10-Q filing may have
+several supplementary materials included of different document types.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.get_primary_doc_name">
+<span class="sig-name descname"><span class="pre">get_primary_doc_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.get_primary_doc_name" title="Permalink to this definition"></a></dt>
+<dd><p>Get the name of the primary document in a submission.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – a company identifier to query</p></li>
+<li><p><strong>submission</strong> (<em>str</em>) – The associated company filing to find the primary form for.</p></li>
+<li><p><strong>implemented</strong> (<em>TODO not</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.get_submissions">
+<span class="sig-name descname"><span class="pre">get_submissions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.get_submissions" title="Permalink to this definition"></a></dt>
+<dd><p>Get a list of filing submissions under a company.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tikr</strong> (<em>str</em>) – a company identifier to query</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.get_tikr_list">
+<span class="sig-name descname"><span class="pre">get_tikr_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.get_tikr_list" title="Permalink to this definition"></a></dt>
+<dd><p>Download list of all companies in the SEC database if not already         present. Return list of valid company ticker targets for download.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>tikr</strong> – All SEC filing company public stock tickers.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.initialize_submission_metadata">
+<span class="sig-name descname"><span class="pre">initialize_submission_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.initialize_submission_metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a submission entry for a company tikr if not present.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.initialize_tikr_metadata">
+<span class="sig-name descname"><span class="pre">initialize_tikr_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.initialize_tikr_metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a company entry in metadata if not yet present.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.is_downloaded">
+<span class="sig-name descname"><span class="pre">is_downloaded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.is_downloaded" title="Permalink to this definition"></a></dt>
+<dd><p>Return True if TIKR has local results of bulk download.</p>
+<p class="rubric">Notes</p>
+<p>This indicates whether there is any extra information available
+for download from the SEC EDGAR database, but does not track
+new releases.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.is_unpacked">
+<span class="sig-name descname"><span class="pre">is_unpacked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.is_unpacked" title="Permalink to this definition"></a></dt>
+<dd><p>Return True if TIKR had previously unpacked all instances of         this document type, and they are present locally.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>document_type</strong> (<em>str</em><em> or </em><a class="reference internal" href="document_type.html#edgar.DocumentType" title="edgar.DocumentType"><em>DocumentType</em></a>) – The document type in question</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.load_keys">
+<span class="sig-name descname"><span class="pre">load_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.load_keys" title="Permalink to this definition"></a></dt>
+<dd><p>Load APIKEYs from local directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.load_tikr_metadata">
+<span class="sig-name descname"><span class="pre">load_tikr_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.load_tikr_metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Load previously generated metadata and add to current.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.offload_submission_file">
+<span class="sig-name descname"><span class="pre">offload_submission_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.offload_submission_file" title="Permalink to this definition"></a></dt>
+<dd><p>Delete submission from local dataset, removing it from disk.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_api_header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.reset" title="Permalink to this definition"></a></dt>
+<dd><p>Delete stored metadata about investigated companies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>keep_api_header</strong> (<em>Bool</em><em>, </em><em>default True</em>) – If True, then does not delete api-header information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.save_keys">
+<span class="sig-name descname"><span class="pre">save_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.save_keys" title="Permalink to this definition"></a></dt>
+<dd><p>Save current APIKEYs to local directory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.save_tikr_metadata">
+<span class="sig-name descname"><span class="pre">save_tikr_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.save_tikr_metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Offload metadata to file, for later loading.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.set_downloaded">
+<span class="sig-name descname"><span class="pre">set_downloaded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.set_downloaded" title="Permalink to this definition"></a></dt>
+<dd><p>Set the status for is_downloaded function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Metadata.set_unpacked">
+<span class="sig-name descname"><span class="pre">set_unpacked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Metadata.set_unpacked" title="Permalink to this definition"></a></dt>
+<dd><p>Set the status for is_unpacked function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="parser.html" class="btn btn-neutral float-left" title="Parsing Documents" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="document_type.html" class="btn btn-neutral float-right" title="DocumentType Object" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Kamil Krukowski.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

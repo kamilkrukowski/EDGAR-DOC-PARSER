@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parsing Documents &mdash; EDGAR-DOC-PARSER 0.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Cached Information" href="metadata.html" />
+    <link rel="prev" title="Downloading Files" href="downloader.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> EDGAR-DOC-PARSER
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataloader.html">Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloader.html">Downloading Documents</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Parsing Documents</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#parser-class">Parser Class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#edgar.Parser"><code class="docutils literal notranslate"><span class="pre">Parser</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Parser.featurize_file"><code class="docutils literal notranslate"><span class="pre">Parser.featurize_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Parser.get_annotated_submissions"><code class="docutils literal notranslate"><span class="pre">Parser.get_annotated_submissions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Parser.get_driver_path"><code class="docutils literal notranslate"><span class="pre">Parser.get_driver_path()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Parser.get_unannotated_submissions"><code class="docutils literal notranslate"><span class="pre">Parser.get_unannotated_submissions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Parser.labels_in_table"><code class="docutils literal notranslate"><span class="pre">Parser.labels_in_table()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Useful Metadata</a></li>
+<li class="toctree-l1"><a class="reference internal" href="document_type.html">DocumentType</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EDGAR-DOC-PARSER</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Parsing Documents</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/parser.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="parsing-documents">
+<span id="parser"></span><h1>Parsing Documents<a class="headerlink" href="#parsing-documents" title="Permalink to this heading"></a></h1>
+<section id="parser-class">
+<h2>Parser Class<a class="headerlink" href="#parser-class" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="edgar.Parser">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">edgar.</span></span><span class="sig-name descname"><span class="pre">Parser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="metadata.html#edgar.Metadata" title="edgar.metadata_manager"><span class="pre">metadata_manager</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'edgar_data'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Parser" title="Permalink to this definition"></a></dt>
+<dd><p>Main class for extracting information from HTML documents.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Parser.featurize_file">
+<span class="sig-name descname"><span class="pre">featurize_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_raw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Parser.featurize_file" title="Permalink to this definition"></a></dt>
+<dd><p>Load featurized dataframe with extracted annotations from file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – a company identifier to query</p></li>
+<li><p><strong>submission</strong> (<em>str</em>) – The filing to access the file from</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – The name of the file to featurize</p></li>
+<li><p><strong>force</strong> (<em>bool</em><em>, </em><em>default=False</em>) – if (True), then ignore locally downloaded files and
+overwrite them. Otherwise, attempt to detect previous download
+and abort server query.</p></li>
+<li><p><strong>silent</strong> (<em>bool default=False</em>) – if (True), then does not print runtime warnings.</p></li>
+<li><p><strong>remove_raw</strong> (<em>bool</em>) – if (True), the packed data will be deleted after extraction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Pandas.DataFrame</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Documents without annotations receive entries in the dataframe
+The sentinel column <code class="docutils literal notranslate"><span class="pre">is_annotated</span></code> set to False.</p>
+<p>Each row corresponds to one text field. Rows are not unique,
+one is generated for each iXBRL annotation on that text field.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Parser.get_annotated_submissions">
+<span class="sig-name descname"><span class="pre">get_annotated_submissions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#edgar.Parser.get_annotated_submissions" title="Permalink to this definition"></a></dt>
+<dd><p>Get list of submissions names with annotations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Parser.get_driver_path">
+<span class="sig-name descname"><span class="pre">get_driver_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submission</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'files'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Parser.get_driver_path" title="Permalink to this definition"></a></dt>
+<dd><p>Get absolute path of file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fname</strong> (<em>str</em>) – The file to get the path for.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Parser.get_unannotated_submissions">
+<span class="sig-name descname"><span class="pre">get_unannotated_submissions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#edgar.Parser.get_unannotated_submissions" title="Permalink to this definition"></a></dt>
+<dd><p>Get list of submissions names without annotations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Parser.labels_in_table">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels_in_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">child_span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent_span</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Parser.labels_in_table" title="Permalink to this definition"></a></dt>
+<dd><dl>
+<dt>check whether strings in child_span is in any of the parent_span</dt><dd><p>child_span, parent_span: a list of spans</p>
+<p>a list of boolean values</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="downloader.html" class="btn btn-neutral float-left" title="Downloading Files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="metadata.html" class="btn btn-neutral float-right" title="Cached Information" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Kamil Krukowski.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

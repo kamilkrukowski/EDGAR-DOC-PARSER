@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Downloading Files &mdash; EDGAR-DOC-PARSER 0.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Parsing Documents" href="parser.html" />
+    <link rel="prev" title="DataLoader Class" href="dataloader.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> EDGAR-DOC-PARSER
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataloader.html">Dataloader</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Downloading Documents</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#api-user-agent-fields">API User-Agent Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#downloader-class">Downloader Class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#edgar.Downloader"><code class="docutils literal notranslate"><span class="pre">Downloader</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Downloader.generate_api_header"><code class="docutils literal notranslate"><span class="pre">Downloader.generate_api_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Downloader.get_dates"><code class="docutils literal notranslate"><span class="pre">Downloader.get_dates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Downloader.get_nearest_date_filename"><code class="docutils literal notranslate"><span class="pre">Downloader.get_nearest_date_filename()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Downloader.get_submissions"><code class="docutils literal notranslate"><span class="pre">Downloader.get_submissions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Downloader.get_unpackable_files"><code class="docutils literal notranslate"><span class="pre">Downloader.get_unpackable_files()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Downloader.query_server"><code class="docutils literal notranslate"><span class="pre">Downloader.query_server()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Downloader.unpack_bulk"><code class="docutils literal notranslate"><span class="pre">Downloader.unpack_bulk()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edgar.Downloader.unpack_file"><code class="docutils literal notranslate"><span class="pre">Downloader.unpack_file()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parser.html">Parsing Documents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metadata.html">Useful Metadata</a></li>
+<li class="toctree-l1"><a class="reference internal" href="document_type.html">DocumentType</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EDGAR-DOC-PARSER</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Downloading Files</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/downloader.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="downloading-files">
+<span id="downloader"></span><h1>Downloading Files<a class="headerlink" href="#downloading-files" title="Permalink to this heading"></a></h1>
+<section id="api-user-agent-fields">
+<h2>API User-Agent Fields<a class="headerlink" href="#api-user-agent-fields" title="Permalink to this heading"></a></h2>
+<p>The SEC requires all EDGAR users to identify themselves.
+When the <code class="docutils literal notranslate"><span class="pre">Downloader</span></code> is used for the first time, it will prompt the user for API key information then cache it and re-use it in future iterations.</p>
+<p>In order to edit these values after initialization, visit <code class="docutils literal notranslate"><span class="pre">.keys.yaml</span></code> in an associated data_directory.</p>
+</section>
+<section id="downloader-class">
+<h2>Downloader Class<a class="headerlink" href="#downloader-class" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="edgar.Downloader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">edgar.</span></span><span class="sig-name descname"><span class="pre">Downloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'edgar_data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Downloader" title="Permalink to this definition"></a></dt>
+<dd><p>Class for querying SEC-EDGAR database for files.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Downloader.generate_api_header">
+<span class="sig-name descname"><span class="pre">generate_api_header</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Downloader.generate_api_header" title="Permalink to this definition"></a></dt>
+<dd><p>Generate API key from command-line user input prompts.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Downloader.get_dates">
+<span class="sig-name descname"><span class="pre">get_dates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Downloader.get_dates" title="Permalink to this definition"></a></dt>
+<dd><p>Return the filing submission txt closest to provided date.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Downloader.get_nearest_date_filename">
+<span class="sig-name descname"><span class="pre">get_nearest_date_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefer_recent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Downloader.get_nearest_date_filename" title="Permalink to this definition"></a></dt>
+<dd><p>Get the nearest date of the filename.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – a company identifier to query</p></li>
+<li><p><strong>date</strong> (<em>str</em>) – date in format  AAAABBCC format (Year, Month, Day) with 0 padding</p></li>
+<li><p><strong>return_date</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>prefer_recent</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>document_type</strong> (<em>str</em>) – document type to unpack (10-Q, 8-K, or all)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Downloader.get_submissions">
+<span class="sig-name descname"><span class="pre">get_submissions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Downloader.get_submissions" title="Permalink to this definition"></a></dt>
+<dd><p>Get list of submissions under tikr.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – a company identifier to query</p></li>
+<li><p><strong>document_type</strong> (<em>str</em>) – document type to unpack (10-Q, 8-K, or all)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Downloader.get_unpackable_files">
+<span class="sig-name descname"><span class="pre">get_unpackable_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Downloader.get_unpackable_files" title="Permalink to this definition"></a></dt>
+<dd><p>Get list of targets for unpack_file func.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – a company identifier to query</p></li>
+<li><p><strong>document_type</strong> (<em>str</em>) – document type to unpack (10-Q, 8-K, or all)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Downloader.query_server">
+<span class="sig-name descname"><span class="pre">query_server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Downloader.query_server" title="Permalink to this definition"></a></dt>
+<dd><p>Download SEC filings to a local directory for parsing by TIKR.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – a company identifier to query</p></li>
+<li><p><strong>force</strong> (<em>bool</em>) – if (True), then ignore locally downloaded files
+and overwrite them. Otherwise, attempt to detect
+previous download and abort server query.</p></li>
+<li><p><strong>start_date</strong> (<em>optional</em>) – The earliest date to look for filings</p></li>
+<li><p><strong>end_date</strong> (<em>optional</em>) – The latest filing date retrievable</p></li>
+<li><p><strong>max_num_filings</strong> – The maximum number of documents to retrieve. Retrieves all
+documents if set to <cite>None</cite>.</p></li>
+<li><p><strong>delay_time</strong> – The time (in seconds) delayed at the
+beginning of this function.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Downloader.unpack_bulk">
+<span class="sig-name descname"><span class="pre">unpack_bulk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loading_bar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">desc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Inflating</span> <span class="pre">HTM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_remove_raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_supplementary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Downloader.unpack_bulk" title="Permalink to this definition"></a></dt>
+<dd><p>Process all raw data from one company.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – company ticker associated with unpacking</p></li>
+<li><p><strong>force</strong> (<em>bool</em>) – if (True), then ignore locally downloaded files and
+overwrite them. Otherwise, attempt to detect
+previous download and abort server query.</p></li>
+<li><p><strong>loading_bar</strong> (<em>bool</em>) – if True, will time and show progress</p></li>
+<li><p><strong>document_type</strong> (<em>str</em><em> or </em><a class="reference internal" href="document_type.html#edgar.DocumentType" title="edgar.DocumentType"><em>DocumentType</em></a>) – The type of filings in question</p></li>
+<li><p><strong>remove_raw</strong> (<em>bool</em><em>, </em><em>Optional</em>) – If True, will delete each raw file after it is extracted</p></li>
+<li><p><strong>force_remove_raw</strong> (<em>bool</em><em>, </em><em>Optional</em>) – If True, will delete all files in the unpacking directory
+even if some are not unpacked.</p></li>
+<li><p><strong>include_supplementary</strong> (<em>bool = False</em>) – If (True), then load all supplementary material as well.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edgar.Downloader.unpack_file">
+<span class="sig-name descname"><span class="pre">unpack_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tikr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_supplementary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#edgar.Downloader.unpack_file" title="Permalink to this definition"></a></dt>
+<dd><p>Process raw data from one filing at one company.</p>
+<blockquote>
+<div><p>See utility function for getting file names.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tikr</strong> (<em>str</em>) – company ticker associated with unpacking</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – filing submission to unpack</p></li>
+<li><p><strong>complete</strong> (<em>bool</em>) – If False, only unpacks 10-Q, otherwise all documents.</p></li>
+<li><p><strong>document_type</strong> (<em>str</em>) – document type to unpack (10-Q, 8-K, or all)</p></li>
+<li><p><strong>force</strong> (<em>bool</em>) – if (True), then ignore locally downloaded files and
+overwrite them. Otherwise, attempt to detect
+previous download and abort server query.</p></li>
+<li><p><strong>remove_raw</strong> (<em>bool = False</em>) – If (True), the raw data will be deleted after parsing.</p></li>
+<li><p><strong>include_supplementary</strong> (<em>bool = False</em>) – If (True), unpacks all supplementary documents to the main one.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dataloader.html" class="btn btn-neutral float-left" title="DataLoader Class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="parser.html" class="btn btn-neutral float-right" title="Parsing Documents" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Kamil Krukowski.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
