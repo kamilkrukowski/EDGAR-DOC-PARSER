@@ -42,7 +42,7 @@ entrypoints==0.4
 exceptiongroup==1.0.4
 eyeD3==0.8.10
 filelock==3.6.0
-fonttools==4.29.1
+fonttools==4.43.0
 fs==2.4.12
 gast==0.5.2
 google-auth==2.14.1
